@@ -1246,18 +1246,18 @@ using LinearAlgebra
 
             # Matrix-free H
             op = MatrixFreeOperator(solver, k)
-            H_mf = PhoXonic.MatrixFreeEffectiveHamiltonian(op, :approximate)
+            H_mf = PhoXonic.MatrixFreeEffectiveHamiltonian(op, ApproximateRHSInv())
 
             x = randn(ComplexF64, N)
             y_dense = H_dense * x
             y_mf = H_mf * x
 
-            # :approximate may have some error for inhomogeneous media
+            # ApproximateRHSInv() may have some error for inhomogeneous media
             # but should be reasonably close
             @test norm(y_dense - y_mf) / norm(y_dense) < 0.1
         end
 
-        @testset "H with :cg method" begin
+        @testset "H with CGRHSInv method" begin
             lat = square_lattice(1.0)
             air = Dielectric(1.0)
             rod = Dielectric(4.0)
@@ -1270,15 +1270,15 @@ using LinearAlgebra
             LHS, RHS = PhoXonic.build_matrices(solver, k)
             H_dense = RHS \ LHS
 
-            # Matrix-free H with :cg (should be more accurate)
+            # Matrix-free H with CGRHSInv() (should be more accurate)
             op = MatrixFreeOperator(solver, k)
-            H_mf = PhoXonic.MatrixFreeEffectiveHamiltonian(op, :cg)
+            H_mf = PhoXonic.MatrixFreeEffectiveHamiltonian(op, CGRHSInv())
 
             x = randn(ComplexF64, N)
             y_dense = H_dense * x
             y_mf = H_mf * x
 
-            # :cg should be very close to dense
+            # CGRHSInv() should be very close to dense
             @test norm(y_dense - y_mf) / norm(y_dense) < 1e-8
         end
     end
