@@ -1,0 +1,21 @@
+# Build artifacts
+docs/build/
+Manifest.toml
+
+# Examples output
+examples/*.png
+examples_rsk/*.png
+
+# System files
+.DS_Store
+
+# Julia specific
+*.jl.cov
+*.jl.mem
+deps/deps.jl
+
+# Editor
+*.swp
+*~
+.vscode/
+.idea/

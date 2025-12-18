@@ -1,0 +1,128 @@
+# Last-Modified: 2025-12-15T21:30:00+09:00
+
+"""
+    PhoXonic.jl
+
+A Julia package for computing band structures of photonic and phononic crystals
+using the plane wave expansion (PWE) method.
+
+Supports 1D, 2D, and 3D periodic structures with various wave types:
+- Photonic: TE, TM (2D), full vector (3D)
+- Phononic: SH, P-SV (2D), full elastic (3D)
+"""
+module PhoXonic
+
+using LinearAlgebra
+using StaticArrays
+using FFTW
+using FFTW: plan_fft, plan_ifft
+using Brillouin
+using LinearMaps
+using Krylov
+using KrylovKit
+using IterativeSolvers
+
+# Core types
+include("dimensions.jl")
+include("lattice.jl")
+include("material.jl")
+include("methods.jl")
+
+# Geometry
+include("shapes.jl")
+include("geometry.jl")
+
+# Plane wave basis
+include("planewave.jl")
+include("convmat.jl")
+
+# Wave types
+include("waves.jl")
+
+# Solvers
+include("solver.jl")
+include("matrixfree.jl")
+include("rscg.jl")
+
+# High-level API
+include("kpath.jl")
+include("bandstructure.jl")
+include("plotting.jl")
+include("io.jl")
+include("supercell.jl")
+
+# Exports - Dimensions
+export Dim1, Dim2, Dim3
+
+# Exports - Lattice
+export Lattice, lattice_1d, square_lattice, hexagonal_lattice, cubic_lattice, fcc_lattice
+export reciprocal_vectors
+
+# Exports - Materials
+export Dielectric, IsotropicElastic, from_E_ν
+
+# Exports - Shapes
+export Circle, Rectangle, Polygon, Sphere, Cylinder, Slab, Segment
+export translate  # Shape translation for supercell construction
+
+# Exports - Supercell
+export create_supercell, line_defect_positions
+
+# Exports - Geometry
+export Geometry
+export DiscretizationMethod, SimpleGrid, SubpixelAverage
+export discretize
+
+# Exports - Basis
+export PlaneWaveBasis, convolution_matrix
+
+# Exports - Waves
+export WaveType, PhotonicWave, PhononicWave
+export TEWave, TMWave, SHWave, PSVWave
+export Photonic1D, Longitudinal1D
+export FullVectorEM, FullElastic
+
+# Exports - Solver methods
+export SolverMethod, IterativeMethod, RSCGMethod
+export DenseMethod, BasicRSCG, KrylovKitMethod, LOBPCGMethod
+
+# Exports - Solver
+export Solver, solve, group_velocity
+
+# Exports - Matrix-free operators
+export FFTContext, MatrixFreeWorkspace
+export MatrixFreeOperator, apply_lhs!, apply_rhs!
+export to_linear_map_lhs, to_linear_map_rhs
+
+# Exports - Green's function and DOS/LDOS
+export compute_greens_function, compute_dos, compute_ldos
+export compute_dos_stochastic
+
+# Exports - EffectiveHamiltonian (for advanced users)
+export EffectiveHamiltonian, NegatedOperator
+export MatrixFreeEffectiveHamiltonian
+
+# Exports - Unified Green's function API
+export GFMethod, DirectGF, RSKGF, MatrixFreeGF
+export RHSInvMethod, ApproximateRHSInv, CGRHSInv
+
+# Exports - K-path
+export SimpleKPath, simple_kpath_square, simple_kpath_hexagonal
+export simple_kpath_cubic, simple_kpath_fcc, simple_kpath_bcc
+export kpath_from_brillouin, kpath_square, kpath_hexagonal
+export kpath_cubic, kpath_fcc, kpath_bcc
+
+# Exports - Band structure
+export BandStructure, compute_bands
+export find_bandgap, find_all_gaps
+export frequencies, distances, labels, nbands, nkpoints
+
+# Exports - Plotting (requires Plots.jl)
+export plot_bands, plot_bands!, band_plot_data
+
+# Exports - I/O (requires JLD2.jl)
+export save_bands, load_bands
+export save_modes, load_modes
+export save_epsilon, load_epsilon
+
+end # module

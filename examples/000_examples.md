@@ -1,0 +1,119 @@
+# PhoXonic.jl Examples
+
+Last-Modified: 2025-12-15
+
+## Numbering System
+
+| Range | Category |
+|-------|----------|
+| 000 | Documentation |
+| 1xx | 2D Photonic |
+| 2xx | 2D Phononic |
+| 3xx | 1D Structures |
+| 4xx | 3D Structures |
+| 5xx | Defects / Supercells |
+| 8xx | Utilities |
+| 9xx | Benchmarks / References |
+
+## File List
+
+### 1xx: 2D Photonic
+
+| File | Description |
+|------|-------------|
+| 101_triangular_rods.jl | Triangular lattice rods (TM band calculation) |
+| 102_triangular_rods_plot.jl | Triangular lattice plotting |
+| 103_square_rods.jl | Square lattice rods (TM/TE) |
+| 104_honeycomb_rods.jl | Honeycomb lattice |
+| 111_triangular_holes.jl | Triangular lattice air holes |
+| 121_subpixel_comparison.jl | Subpixel discretization comparison |
+
+### 2xx: 2D Phononic
+
+| File | Description |
+|------|-------------|
+| 201_phononic_steel_epoxy.jl | Steel/Epoxy phononic crystal (solver comparison) |
+| 202_phononic_pb_epoxy_benchmark.jl | Pb/Epoxy benchmark (Aravantinos-Zafiris 2014) |
+
+### 3xx: 1D Structures
+
+| File | Description |
+|------|-------------|
+| 301_bragg_reflector.jl | Bragg reflector (1D photonic) |
+| 302_elastic_superlattice.jl | Elastic superlattice (1D phononic) |
+| 311_joannopoulos_ch4_fig2.jl | Joannopoulos textbook Ch.4 Fig.2 |
+
+### 4xx: 3D Structures
+
+| File | Description |
+|------|-------------|
+| 401_fcc_spheres.jl | FCC lattice spheres (3D photonic) |
+| 402_sc_spheres.jl | SC lattice spheres (3D photonic) |
+| 403_sc_phononic.jl | SC phononic |
+
+### 5xx: Defects / Supercells
+
+| File | Description |
+|------|-------------|
+| 501_defect_mode.jl | Defect mode / LDOS (DirectGF) |
+| 511_supercell_study.jl | Supercell study |
+
+### 8xx: Utilities
+
+| File | Description |
+|------|-------------|
+| 801_plot_structures.jl | Structure plot generation |
+
+### 9xx: Benchmarks / References
+
+| File | Description |
+|------|-------------|
+| 901_mpb_benchmark.jl | MPB benchmark |
+| 911_joannopoulos_ch5_fig2.jl | Joannopoulos Ch.5 Fig.2 (rods) |
+| 912_joannopoulos_ch5_fig10.jl | Joannopoulos Ch.5 Fig.10 (holes) |
+
+## Examples Requiring ReducedShiftedKrylov.jl
+
+The following examples require `using ReducedShiftedKrylov` and are located in a **separate folder** `examples_rsk/` (not in `examples/`):
+
+| File (in `examples_rsk/`) | Description |
+|---------------------------|-------------|
+| 131_high_contrast_silicon.jl | High contrast Si/Air (RHSInvMethod comparison) |
+| 502_defect_mode_matrixfree.jl | Defect mode (matrix-free method) |
+
+> **Note**: These files were moved from `examples/` to `examples_rsk/` because they depend on the optional ReducedShiftedKrylov.jl package.
+
+## How to Run
+
+```bash
+cd PhoXonic.jl
+julia --project=. examples/101_triangular_rods.jl
+```
+
+Or from REPL:
+
+```julia
+using Pkg
+Pkg.activate(".")
+include("examples/101_triangular_rods.jl")
+```
+
+### Running RSK-dependent examples
+
+```bash
+cd PhoXonic.jl
+julia --project=. -e '
+using ReducedShiftedKrylov
+include("examples_rsk/502_defect_mode_matrixfree.jl")
+'
+```
+
+## Run All Examples
+
+```bash
+cd PhoXonic.jl
+for f in examples/[1-9]*.jl; do
+    echo "=== Running $f ==="
+    julia --project=. "$f" || { echo "FAILED: $f"; exit 1; }
+done
+```
