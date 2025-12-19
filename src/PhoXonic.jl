@@ -87,7 +87,7 @@ export SolverMethod, IterativeMethod, RSCGMethod
 export DenseMethod, BasicRSCG, KrylovKitMethod, LOBPCGMethod
 
 # Exports - Solver
-export Solver, solve, group_velocity
+export Solver, solve, solve_at_k, group_velocity, matrix_dimension
 
 # Exports - Matrix-free operators
 export FFTContext, MatrixFreeWorkspace

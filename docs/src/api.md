@@ -94,6 +94,8 @@ FullElastic
 ```@docs
 Solver
 solve
+solve_at_k
+matrix_dimension
 group_velocity
 ```
 

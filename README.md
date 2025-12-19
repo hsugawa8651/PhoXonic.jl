@@ -1,7 +1,7 @@
 # PhoXonic.jl
 
-[![CI](https://github.com/hsugawa8651/PhoXonic.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/hsugawa8651/PhoXonic.jl/actions/workflows/CI.yml)
-[![Documentation](https://github.com/hsugawa8651/PhoXonic.jl/actions/workflows/Documentation.yml/badge.svg)](https://hsugawa8651.github.io/PhoXonic.jl/dev/)
+[![CI](https://github.com/phoxonic-dev/PhoXonic.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/phoxonic-dev/PhoXonic.jl/actions/workflows/CI.yml)
+[![Documentation](https://github.com/phoxonic-dev/PhoXonic.jl/actions/workflows/Documentation.yml/badge.svg)](https://phoxonic-dev.github.io/PhoXonic.jl/dev/)
 
 Band structure calculation for photonic and phononic crystals using the plane wave expansion (PWE) method.
 
@@ -18,7 +18,7 @@ Band structure calculation for photonic and phononic crystals using the plane wa
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/hsugawa8651/PhoXonic.jl")
+Pkg.add(url="https://github.com/phoxonic-dev/PhoXonic.jl")
 ```
 
 ## Quick Start

@@ -119,14 +119,19 @@ dists = bands_tm.distances
 label_positions = [dists[i] for (i, _) in bands_tm.labels]
 label_names = [l for (_, l) in bands_tm.labels]
 
+# Common y-axis range
+ymax = max(maximum(bands_tm.frequencies), maximum(bands_te.frequencies)) * 1.05
+ylims_common = (0, ymax)
+
 # TM plot
 p_tm = plot(
     xlabel="Wave vector",
     ylabel="Frequency (ωa/2πc)",
-    title="TM Bands: Square Lattice (ε=11.56 rods, r=0.2a)",
+    title="TM Bands (ε=11.56 rods)",
     legend=false,
     grid=true,
-    size=(700, 450)
+    size=(700, 450),
+    ylims=ylims_common
 )
 for b in 1:size(bands_tm.frequencies, 2)
     plot!(p_tm, dists, bands_tm.frequencies[:, b], linewidth=2, color=:blue)
@@ -138,17 +143,18 @@ xticks!(p_tm, label_positions, label_names)
 gap_tm_1_2 = find_bandgap(bands_tm, 1, 2)
 if gap_tm_1_2.gap > 0
     hspan!(p_tm, [gap_tm_1_2.max_lower, gap_tm_1_2.min_upper],
-           alpha=0.2, color=:yellow, label="")
+           alpha=0.2, color=:blue, label="")
 end
 
 # TE plot
 p_te = plot(
     xlabel="Wave vector",
     ylabel="Frequency (ωa/2πc)",
-    title="TE Bands: Square Lattice (ε=11.56 rods, r=0.2a)",
+    title="TE Bands (ε=11.56 rods)",
     legend=false,
     grid=true,
-    size=(700, 450)
+    size=(700, 450),
+    ylims=ylims_common
 )
 for b in 1:size(bands_te.frequencies, 2)
     plot!(p_te, dists, bands_te.frequencies[:, b], linewidth=2, color=:red)
@@ -156,23 +162,9 @@ end
 vline!(p_te, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
 xticks!(p_te, label_positions, label_names)
 
-# Combined plot
-p_combined = plot(
-    xlabel="Wave vector",
-    ylabel="Frequency (ωa/2πc)",
-    title="Square Lattice: TM (blue) and TE (red)",
-    legend=false,
-    grid=true,
-    size=(700, 450)
-)
-for b in 1:size(bands_tm.frequencies, 2)
-    plot!(p_combined, dists, bands_tm.frequencies[:, b], linewidth=2, color=:blue)
-end
-for b in 1:size(bands_te.frequencies, 2)
-    plot!(p_combined, dists, bands_te.frequencies[:, b], linewidth=2, color=:red, linestyle=:dash)
-end
-vline!(p_combined, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
-xticks!(p_combined, label_positions, label_names)
+# Combined plot (side by side)
+p_combined = plot(p_tm, p_te, layout=(1, 2), size=(1200, 450),
+    plot_title="Square Lattice Photonic Crystal (r=0.2a)")
 
 # Save plots
 savefig(p_tm, joinpath(@__DIR__, "103_square_tm_bands.png"))

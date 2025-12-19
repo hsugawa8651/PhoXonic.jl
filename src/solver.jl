@@ -71,6 +71,40 @@ function Solver(wave::W, geometry::Geometry{Dim1}, resolution::Int,
 end
 
 # ============================================================================
+# Matrix dimension helper
+# ============================================================================
+
+"""
+    matrix_dimension(solver::Solver) -> Int
+
+Return the dimension of the eigenvalue problem matrix.
+
+This is the size of the matrices A and B in the generalized eigenvalue problem
+`A x = λ B x`. Use this to determine the size of initial vectors for iterative
+solvers like LOBPCG.
+
+# Returns
+- `num_pw` for scalar waves (TE, TM, SH, 1D waves)
+- `2 * num_pw` for 2D vector waves (P-SV)
+- `3 * num_pw` for 3D vector waves (FullVectorEM, FullElastic)
+
+# Example
+```julia
+solver = Solver(PSVWave(), geo, (64, 64); cutoff=20)
+dim = matrix_dimension(solver)  # 2 * num_pw
+
+# Create initial vectors for LOBPCG
+X0 = randn(ComplexF64, dim, 20)
+X0, _ = qr(X0)
+X0 = Matrix(X0)
+```
+
+"""
+function matrix_dimension(solver::Solver)
+    ncomponents(solver.wave) * solver.basis.num_pw
+end
+
+# ============================================================================
 # Bands selection helpers (multiple dispatch instead of isa checks)
 # ============================================================================
 
@@ -520,6 +554,95 @@ function solve(solver::Solver{Dim3}, k::Tuple{Real,Real,Real}; bands=1:10)
 end
 
 # ============================================================================
+# solve_at_k: Single k-point solver with manual control
+# ============================================================================
+
+"""
+    solve_at_k(solver, k, method; bands=1:10, X0=nothing, P=nothing, return_eigenvectors=false)
+
+Solve eigenvalue problem at a single k-point with explicit control over method,
+initial vectors, and preconditioner.
+
+# Arguments
+- `solver::Solver`: Solver instance
+- `k`: Wave vector (2D: Vector{Float64}, 1D: Float64)
+- `method::SolverMethod`: Solver method (DenseMethod, LOBPCGMethod, etc.)
+
+# Keyword Arguments
+- `bands`: Range of bands to compute (default: 1:10)
+- `X0`: Initial guess for eigenvectors (default: nothing = auto)
+  - Size: `dim × nev` where `dim = matrix_dimension(solver)` and `nev = maximum(bands)`
+  - Type: `Matrix{ComplexF64}`
+  - If `nothing`, random orthonormal vectors are used
+- `P`: Preconditioner (default: nothing = use method's preconditioner setting)
+  - Must implement `ldiv!(y, P, x)`
+- `return_eigenvectors::Bool`: If true, return (frequencies, eigenvectors) (default: false)
+
+# Returns
+- If `return_eigenvectors=false`: Vector of frequencies
+- If `return_eigenvectors=true`: Tuple (frequencies, eigenvectors)
+  - eigenvectors: `dim × nev` matrix
+
+# Example
+```julia
+solver = Solver(PSVWave(), geo, (64, 64); cutoff=20)
+dim = matrix_dimension(solver)  # 2514 for cutoff=20
+
+# Frequencies only
+freqs = solve_at_k(solver, k, LOBPCGMethod(); bands=1:20)
+
+# With eigenvectors (for warm start)
+freqs, vecs = solve_at_k(solver, k, DenseMethod();
+                         bands=1:20, return_eigenvectors=true)
+
+# Manual warm start
+freqs2, vecs2 = solve_at_k(solver, k_next, LOBPCGMethod();
+                           bands=1:20, X0=vecs, return_eigenvectors=true)
+
+# Custom preconditioner
+using LinearAlgebra
+LHS, _ = build_matrices(solver, k)
+P = Diagonal(1.0 ./ diag(LHS))
+freqs = solve_at_k(solver, k, LOBPCGMethod(); bands=1:20, P=P)
+```
+
+See also: [`solve`](@ref), [`matrix_dimension`](@ref), [`compute_bands`](@ref)
+"""
+function solve_at_k(solver::Solver, k, method::SolverMethod;
+                    bands=1:10,
+                    X0=nothing,
+                    P=nothing,
+                    return_eigenvectors::Bool=false)
+    frequencies, eigenvectors = _solve_at_k_impl(solver, k, method; bands=bands, X0=X0, P=P)
+    if return_eigenvectors
+        return (frequencies, eigenvectors)
+    else
+        return frequencies
+    end
+end
+
+# Internal implementation dispatching by method type
+function _solve_at_k_impl(solver::Solver, k, method::DenseMethod; bands=1:10, X0=nothing, P=nothing)
+    # Dense method ignores X0 and P
+    LHS, RHS = build_matrices(solver, k)
+    _solve_dense(LHS, RHS, bands, method.shift)
+end
+
+function _solve_at_k_impl(solver::Solver, k, method::KrylovKitMethod; bands=1:10, X0=nothing, P=nothing)
+    # KrylovKit currently ignores X0 and P
+    _solve_krylovkit(solver, k, method, bands)
+end
+
+function _solve_at_k_impl(solver::Solver, k, method::LOBPCGMethod; bands=1:10, X0=nothing, P=nothing)
+    _solve_lobpcg_at_k(solver, k, method; bands=bands, X0=X0, P=P)
+end
+
+# Fallback
+function _solve_at_k_impl(solver::Solver, k, method::SolverMethod; bands=1:10, X0=nothing, P=nothing)
+    error("solve_at_k not implemented for method: $(typeof(method))")
+end
+
+# ============================================================================
 # Dense method implementation (2D)
 # ============================================================================
 
@@ -900,6 +1023,95 @@ function _solve_lobpcg(solver::Solver, k, method::LOBPCGMethod; bands=1:10)
     else
         _solve_lobpcg_standard(solver, k, method; bands=bands)
     end
+end
+
+"""
+    _solve_lobpcg_at_k(solver, k, method; bands, X0, P)
+
+LOBPCG solver with explicit initial vectors and preconditioner support.
+Used by solve_at_k for fine-grained control.
+
+Supports:
+- X0: Initial eigenvector guess (warm start)
+- P: Custom preconditioner (overrides method.preconditioner)
+- scale: Matrix scaling for better conditioning
+"""
+function _solve_lobpcg_at_k(solver::Solver, k, method::LOBPCGMethod; bands=1:10, X0=nothing, P=nothing)
+    # Note: shift-and-invert not yet supported with X0/P
+    if method.shift > 0
+        return _solve_lobpcg_shifted(solver, k, method; bands=bands)
+    end
+
+    # Build dense matrices
+    LHS, RHS = build_matrices(solver, k)
+    dim = size(LHS, 1)
+    nev = _nev(bands, dim)
+
+    # Apply scaling if enabled
+    scale_factor = 1.0
+    if method.scale
+        scale_factor = maximum(abs.(LHS))
+        A = Hermitian(LHS / scale_factor)
+    else
+        A = Hermitian(LHS)
+    end
+    B = Hermitian(RHS)
+
+    # Prepare initial vectors
+    if X0 === nothing
+        # Random orthonormal vectors
+        X0_use = randn(ComplexF64, dim, nev)
+        X0_use, _ = qr(X0_use)
+        X0_use = Matrix(X0_use)
+    else
+        # Use provided initial vectors (re-orthonormalize)
+        X0_use, _ = qr(X0)
+        X0_use = Matrix(X0_use)
+    end
+
+    # Prepare preconditioner
+    if P !== nothing
+        # Use provided preconditioner
+        P_use = P
+    elseif method.preconditioner == :diagonal
+        # Diagonal preconditioner
+        d = diag(A)
+        d_safe = [abs(x) > 1e-10 ? x : 1e-10 for x in d]
+        P_use = Diagonal(1.0 ./ d_safe)
+    elseif method.preconditioner == :none
+        P_use = nothing
+    else
+        # Assume it's a custom preconditioner object
+        P_use = method.preconditioner
+    end
+
+    # Solve using LOBPCG
+    results = IterativeSolvers.lobpcg(A, B, false, X0_use;
+                                       P=P_use,
+                                       tol=method.tol,
+                                       maxiter=method.maxiter)
+
+    # Extract eigenvalues and eigenvectors
+    λ_vals = results.λ
+    eigvecs = results.X
+
+    # Rescale eigenvalues if scaling was applied
+    if method.scale
+        λ_vals = λ_vals * scale_factor
+    end
+
+    # Convert to frequencies: ω = √λ
+    ω² = real.(λ_vals)
+    ω² = max.(ω², 0.0)
+    frequencies = sqrt.(ω²)
+
+    # Sort by frequency
+    perm = sortperm(frequencies)
+    frequencies = frequencies[perm]
+    eigenvectors = eigvecs[:, perm]
+
+    # Select requested bands
+    return _select_bands(frequencies, eigenvectors, bands)
 end
 
 """
