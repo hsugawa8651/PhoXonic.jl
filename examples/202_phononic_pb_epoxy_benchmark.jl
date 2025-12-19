@@ -250,15 +250,19 @@ dists = bands_sh.distances
 label_positions = [dists[i] for (i, _) in bands_sh.labels]
 label_names = [l for (_, l) in bands_sh.labels]
 
+# Common y-axis range
+ymax = max(maximum(freqs_sh_norm), maximum(freqs_psv_norm[:, 1:min(10, end)])) * 1.05
+ylims_common = (0, ymax)
+
 # SH bands plot
 p_sh = plot(
     xlabel="Wave vector",
     ylabel="Normalized frequency (ωa/2πcₜ)",
-    title="Pb/Epoxy Phononic Crystal - SH Wave\n(Benchmark: Aravantinos-Zafiris 2014)",
+    title="SH Wave",
     legend=false,
     grid=true,
     size=(700, 500),
-    ylims=(0, maximum(freqs_sh_norm) * 1.1)
+    ylims=ylims_common
 )
 for b in 1:size(freqs_sh_norm, 2)
     plot!(p_sh, dists, freqs_sh_norm[:, b], linewidth=2, color=:blue)
@@ -269,7 +273,7 @@ if !isempty(gaps_sh)
     g = gaps_sh[1]
     gmin = g.max_lower * norm_factor
     gmax = g.min_upper * norm_factor
-    hspan!(p_sh, [gmin, gmax], alpha=0.2, color=:red, label="Band Gap")
+    hspan!(p_sh, [gmin, gmax], alpha=0.2, color=:blue, label="")
 end
 
 vline!(p_sh, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
@@ -279,11 +283,11 @@ xticks!(p_sh, label_positions, label_names)
 p_psv = plot(
     xlabel="Wave vector",
     ylabel="Normalized frequency (ωa/2πcₜ)",
-    title="Pb/Epoxy Phononic Crystal - P-SV Wave",
+    title="P-SV Wave",
     legend=false,
     grid=true,
     size=(700, 500),
-    ylims=(0, maximum(freqs_psv_norm[:, 1:min(10, end)]) * 1.1)
+    ylims=ylims_common
 )
 for b in 1:min(10, size(freqs_psv_norm, 2))
     plot!(p_psv, dists, freqs_psv_norm[:, b], linewidth=2, color=:red)
@@ -291,24 +295,9 @@ end
 vline!(p_psv, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
 xticks!(p_psv, label_positions, label_names)
 
-# Combined comparison plot
-p_combined = plot(
-    xlabel="Wave vector",
-    ylabel="Normalized frequency (ωa/2πcₜ)",
-    title="Pb/Epoxy: SH (blue) vs P-SV (red)",
-    legend=false,
-    grid=true,
-    size=(700, 500)
-)
-for b in 1:size(freqs_sh_norm, 2)
-    plot!(p_combined, dists, freqs_sh_norm[:, b], linewidth=2, color=:blue)
-end
-for b in 1:min(8, size(freqs_psv_norm, 2))
-    plot!(p_combined, dists, freqs_psv_norm[:, b], linewidth=2, color=:red,
-          linestyle=:dash, alpha=0.7)
-end
-vline!(p_combined, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
-xticks!(p_combined, label_positions, label_names)
+# Combined comparison plot (side by side)
+p_combined = plot(p_sh, p_psv, layout=(1, 2), size=(1200, 500),
+    plot_title="Pb/Epoxy Phononic Crystal (Aravantinos-Zafiris 2014)")
 
 # Save plots
 savefig(p_sh, joinpath(@__DIR__, "202_pb_epoxy_sh_bands.png"))

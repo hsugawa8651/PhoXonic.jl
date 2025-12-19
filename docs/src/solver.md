@@ -232,11 +232,77 @@ returns eigenvalues λ > σ, effectively filtering out the spurious modes.
 
 ```julia
 method = LOBPCGMethod(
-    tol = 1e-8,       # Convergence tolerance
-    maxiter = 200,    # Maximum iterations
-    shift = 0.0       # Spectral shift (0 = no shift, required for 3D)
+    tol = 1e-4,              # Convergence tolerance
+    maxiter = 200,           # Maximum iterations
+    shift = 0.0,             # Spectral shift (0 = no shift, required for 3D)
+    warm_start = true,       # Use previous eigenvectors as initial guess
+    scale = true,            # Scale matrix A for better conditioning
+    first_dense = true,      # Solve first k-point with Dense
+    preconditioner = :diagonal  # Preconditioner (:none, :diagonal, or custom)
 )
 ```
+
+### Warm Start for Band Structure Calculations
+
+When computing band structures with `compute_bands`, LOBPCG can use **warm start**
+to significantly speed up calculations. This uses the eigenvectors from the previous
+k-point as the initial guess for the next k-point.
+
+**How it works:**
+
+1. First k-point is solved with `DenseMethod` for accurate eigenvectors (when `first_dense=true`)
+2. Matrix A is scaled by `max|A|` for better conditioning (when `scale=true`)
+3. Subsequent k-points use previous eigenvectors as initial guess
+4. Diagonal preconditioner `P = diag(A)⁻¹` accelerates convergence
+
+**Performance:**
+
+For large problems, warm start achieves dramatic speedups:
+
+| Cutoff | Matrix Size | Dense | LOBPCG (warm start) | Speedup |
+|--------|-------------|-------|---------------------|---------|
+| 12 | 882×882 | 33 s | 4.5 s | **7.5x** |
+| 20 | 2514×2514 | 1055 s | 27 s | **38x** |
+
+**Usage:**
+
+```julia
+# Automatic warm start (default)
+solver = Solver(PSVWave(), geo, (64, 64), LOBPCGMethod(); cutoff=20)
+bands = compute_bands(solver, kpath; bands=1:20)
+
+# Disable warm start (traditional behavior)
+method = LOBPCGMethod(warm_start=false, scale=false, first_dense=false)
+solver = Solver(PSVWave(), geo, (64, 64), method; cutoff=20)
+```
+
+**Manual control with solve_at_k:**
+
+For fine-grained control, use `solve_at_k` directly:
+
+```julia
+solver = Solver(PSVWave(), geo, (64, 64); cutoff=20)
+
+# Get matrix dimension for X0
+dim = matrix_dimension(solver)  # 2514 for cutoff=20
+
+# First k-point with Dense
+freqs1, vecs1 = solve_at_k(solver, k_points[1], DenseMethod();
+                           bands=1:20, return_eigenvectors=true)
+
+# Subsequent k-points with warm start
+for k in k_points[2:end]
+    freqs, vecs = solve_at_k(solver, k, LOBPCGMethod();
+                             bands=1:20, X0=vecs, return_eigenvectors=true)
+    vecs1 = vecs  # Update for next iteration
+end
+```
+
+### Limitations
+
+- Warm start works best for photonic problems (TE/TM waves)
+- Phononic problems with band crossings at Γ point may require additional band tracking
+- For small problems (N < 1000), Dense is often faster due to BLAS optimization
 
 ### LOBPCG vs KrylovKit
 

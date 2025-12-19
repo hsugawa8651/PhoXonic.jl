@@ -14,6 +14,7 @@
 
 using PhoXonic
 using Printf
+using Plots
 
 println("=" ^ 70)
 println("Joannopoulos Book - Chapter 4, Figure 2")
@@ -175,38 +176,71 @@ println("|-----------------|-------------------|-----------------|--------|")
 println()
 
 # ============================================================================
-# Output data for plotting
+# Generate plots
 # ============================================================================
 
 println("-" ^ 70)
-println("Band structure data (for plotting)")
+println("Generating plots...")
 println("-" ^ 70)
-println()
-println("k (normalized) | Case1 Band1 | Case2 Band1 | Case2 Band2 | Case3 Band1 | Case3 Band2")
-println("-" ^ 90)
 
-# Print selected k-points
-for i in [1, nk÷4, nk÷2, 3*nk÷4, nk]
-    @printf("    %+.2f      |   %.4f    |   %.4f    |   %.4f    |   %.4f    |   %.4f\n",
-            k_normalized[i], freqs1[i,1], freqs2[i,1], freqs2[i,2], freqs3[i,1], freqs3[i,2])
+# Common y-axis range
+ymax = max(maximum(freqs1), maximum(freqs2), maximum(freqs3)) * 1.05
+ylims_common = (0, ymax)
+
+# Case 1: GaAs Bulk
+p1 = plot(
+    xlabel="Wave vector (ka/2π)",
+    ylabel="Frequency (ωa/2πc)",
+    title="GaAs Bulk (ε=13)",
+    legend=false,
+    grid=true,
+    ylims=ylims_common
+)
+for b in 1:nbands
+    plot!(p1, k_normalized, freqs1[:, b], linewidth=2, color=:blue)
+end
+vline!(p1, [-0.5, 0, 0.5], color=:gray, linestyle=:dash, alpha=0.5)
+
+# Case 2: GaAs/GaAlAs
+p2 = plot(
+    xlabel="Wave vector (ka/2π)",
+    ylabel="Frequency (ωa/2πc)",
+    title="GaAs/GaAlAs (ε=13/12)",
+    legend=false,
+    grid=true,
+    ylims=ylims_common
+)
+for b in 1:nbands
+    plot!(p2, k_normalized, freqs2[:, b], linewidth=2, color=:blue)
+end
+vline!(p2, [-0.5, 0, 0.5], color=:gray, linestyle=:dash, alpha=0.5)
+if gap2 > 0
+    hspan!(p2, [band1_max_2, band2_min_2], alpha=0.2, color=:yellow, label="")
 end
 
-println()
-println("=" ^ 70)
-println("To plot: Use the frequency arrays freqs1, freqs2, freqs3")
-println("  x-axis: k_normalized (ka/2π)")
-println("  y-axis: ωa/(2πc)")
-println("=" ^ 70)
+# Case 3: GaAs/Air
+p3 = plot(
+    xlabel="Wave vector (ka/2π)",
+    ylabel="Frequency (ωa/2πc)",
+    title="GaAs/Air (ε=13/1)",
+    legend=false,
+    grid=true,
+    ylims=ylims_common
+)
+for b in 1:nbands
+    plot!(p3, k_normalized, freqs3[:, b], linewidth=2, color=:blue)
+end
+vline!(p3, [-0.5, 0, 0.5], color=:gray, linestyle=:dash, alpha=0.5)
+if gap3 > 0
+    hspan!(p3, [band1_max_3, band2_min_3], alpha=0.2, color=:yellow, label="")
+end
 
-# ============================================================================
-# Optional: Save data for external plotting
-# ============================================================================
+# Combined plot
+p_combined = plot(p1, p2, p3, layout=(1, 3), size=(1400, 400),
+    plot_title="1D Photonic Crystal: Joannopoulos Ch.4 Fig.2")
 
-# Uncomment to save CSV data:
-# using DelimitedFiles
-# data = hcat(k_normalized, freqs1, freqs2, freqs3)
-# header = "k_norm,bulk_b1,bulk_b2,bulk_b3,bulk_b4,low_b1,low_b2,low_b3,low_b4,high_b1,high_b2,high_b3,high_b4"
-# writedlm("joannopoulos_ch4_fig2_data.csv", data, ',')
+savefig(p_combined, joinpath(@__DIR__, "311_joannopoulos_ch4_fig2.png"))
+println("Saved: 311_joannopoulos_ch4_fig2.png")
 
 println()
 println("Example complete!")

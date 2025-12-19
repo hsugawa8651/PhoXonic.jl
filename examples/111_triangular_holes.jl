@@ -100,14 +100,19 @@ dists = bands_tm.distances
 label_positions = [dists[i] for (i, _) in bands_tm.labels]
 label_names = [l for (_, l) in bands_tm.labels]
 
+# Common y-axis range
+ymax = max(maximum(bands_tm.frequencies), maximum(bands_te.frequencies)) * 1.05
+ylims_common = (0, ymax)
+
 # TM plot
 p_tm = plot(
     xlabel="Wave vector",
     ylabel="Frequency (ωa/2πc)",
-    title="TM Bands: Air Holes in ε=12 (r=0.45a)",
+    title="TM Bands (r=0.45a)",
     legend=false,
     grid=true,
-    size=(700, 450)
+    size=(700, 450),
+    ylims=ylims_common
 )
 for b in 1:size(bands_tm.frequencies, 2)
     plot!(p_tm, dists, bands_tm.frequencies[:, b], linewidth=2, color=:blue)
@@ -119,10 +124,11 @@ xticks!(p_tm, label_positions, label_names)
 p_te = plot(
     xlabel="Wave vector",
     ylabel="Frequency (ωa/2πc)",
-    title="TE Bands: Air Holes in ε=12 (r=0.45a)",
+    title="TE Bands (r=0.45a)",
     legend=false,
     grid=true,
-    size=(700, 450)
+    size=(700, 450),
+    ylims=ylims_common
 )
 for b in 1:size(bands_te.frequencies, 2)
     plot!(p_te, dists, bands_te.frequencies[:, b], linewidth=2, color=:red)
@@ -134,26 +140,12 @@ xticks!(p_te, label_positions, label_names)
 te_gap_1_2 = find_bandgap(bands_te, 1, 2)
 if te_gap_1_2.gap > 0
     hspan!(p_te, [te_gap_1_2.max_lower, te_gap_1_2.min_upper],
-           alpha=0.2, color=:yellow, label="")
+           alpha=0.2, color=:red, label="")
 end
 
-# Combined plot
-p_combined = plot(
-    xlabel="Wave vector",
-    ylabel="Frequency (ωa/2πc)",
-    title="Triangular Holes: TM (blue) and TE (red)",
-    legend=false,
-    grid=true,
-    size=(700, 450)
-)
-for b in 1:size(bands_tm.frequencies, 2)
-    plot!(p_combined, dists, bands_tm.frequencies[:, b], linewidth=2, color=:blue)
-end
-for b in 1:size(bands_te.frequencies, 2)
-    plot!(p_combined, dists, bands_te.frequencies[:, b], linewidth=2, color=:red, linestyle=:dash)
-end
-vline!(p_combined, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
-xticks!(p_combined, label_positions, label_names)
+# Combined plot (side by side)
+p_combined = plot(p_tm, p_te, layout=(1, 2), size=(1200, 450),
+    plot_title="Triangular Lattice Air Holes in ε=12")
 
 # Save plots
 savefig(p_tm, joinpath(@__DIR__, "111_triholes_tm_bands.png"))

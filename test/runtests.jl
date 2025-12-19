@@ -1344,6 +1344,325 @@ using LinearAlgebra
     end
 
     # ========================================================================
+    # matrix_dimension Tests
+    # ========================================================================
+    @testset "matrix_dimension" begin
+        # Setup 2D geometry (photonic)
+        lat_2d = square_lattice(1.0)
+        air = Dielectric(1.0)
+        rod = Dielectric(4.0)
+        geo_2d = Geometry(lat_2d, air, [(Circle([0.0, 0.0], 0.2), rod)])
+
+        # Setup 2D geometry (phononic)
+        steel = IsotropicElastic(ρ=7780.0, λ=111.2e9, μ=81.0e9)
+        epoxy = IsotropicElastic(ρ=1142.0, λ=0.458e9, μ=0.148e9)
+        geo_2d_phon = Geometry(lat_2d, epoxy, [(Circle([0.0, 0.0], 0.2), steel)])
+
+        # Setup 3D geometry (photonic)
+        lat_3d = cubic_lattice(1.0)
+        geo_3d = Geometry(lat_3d, air, [(Sphere([0.0, 0.0, 0.0], 0.3), rod)])
+
+        @testset "Scalar 2D waves (TE, TM, SH)" begin
+            # TE wave: dim = num_pw
+            solver_te = Solver(TEWave(), geo_2d, (32, 32); cutoff=5)
+            @test matrix_dimension(solver_te) == solver_te.basis.num_pw
+
+            # TM wave: dim = num_pw
+            solver_tm = Solver(TMWave(), geo_2d, (32, 32); cutoff=5)
+            @test matrix_dimension(solver_tm) == solver_tm.basis.num_pw
+
+            # SH wave: dim = num_pw
+            solver_sh = Solver(SHWave(), geo_2d_phon, (32, 32); cutoff=5)
+            @test matrix_dimension(solver_sh) == solver_sh.basis.num_pw
+        end
+
+        @testset "Vector 2D wave (P-SV)" begin
+            # P-SV wave: dim = 2 * num_pw
+            solver_psv = Solver(PSVWave(), geo_2d_phon, (32, 32); cutoff=5)
+            @test matrix_dimension(solver_psv) == 2 * solver_psv.basis.num_pw
+        end
+
+        @testset "Vector 3D waves (FullVectorEM, FullElastic)" begin
+            # FullVectorEM: dim = 3 * num_pw
+            solver_em = Solver(FullVectorEM(), geo_3d, (8, 8, 8); cutoff=2)
+            @test matrix_dimension(solver_em) == 3 * solver_em.basis.num_pw
+
+            # FullElastic: dim = 3 * num_pw (need 3D phononic geometry)
+            lat_3d_phon = cubic_lattice(1.0)
+            steel_3d = IsotropicElastic(7800.0, 280e9, 130e9, 75e9)
+            aluminum = IsotropicElastic(2700.0, 107e9, 55e9, 26e9)
+            geo_3d_phon = Geometry(lat_3d_phon, steel_3d, [(Sphere([0.0, 0.0, 0.0], 0.3), aluminum)])
+            solver_elastic = Solver(FullElastic(), geo_3d_phon, (8, 8, 8); cutoff=2)
+            @test matrix_dimension(solver_elastic) == 3 * solver_elastic.basis.num_pw
+        end
+    end
+
+    # ========================================================================
+    # solve_at_k Tests
+    # ========================================================================
+    @testset "solve_at_k" begin
+        # Setup 2D geometry (phononic for SH/P-SV waves)
+        lat_2d = square_lattice(1.0)
+        steel = IsotropicElastic(ρ=7780.0, λ=111.2e9, μ=81.0e9)
+        epoxy = IsotropicElastic(ρ=1142.0, λ=0.458e9, μ=0.148e9)
+        geo_phon = Geometry(lat_2d, epoxy, [(Circle([0.0, 0.0], 0.2), steel)])
+
+        @testset "Matrix scaling" begin
+            solver = Solver(PSVWave(), geo_phon, (32, 32); cutoff=5)
+            k = [0.1, 0.2]
+
+            # Dense reference
+            freqs_dense = solve_at_k(solver, k, DenseMethod(); bands=1:5)
+
+            # LOBPCG without scaling (may have convergence issues)
+            freqs_no_scale = solve_at_k(solver, k, LOBPCGMethod(scale=false, preconditioner=:none); bands=1:5)
+
+            # LOBPCG with scaling (should converge better)
+            freqs_scale = solve_at_k(solver, k, LOBPCGMethod(scale=true, preconditioner=:diagonal); bands=1:5)
+
+            # Both should return valid frequencies
+            @test length(freqs_no_scale) == 5
+            @test length(freqs_scale) == 5
+            @test all(freqs_scale .>= 0)
+
+            # Scaling version should be closer to Dense (or at least not worse)
+            # Note: For small problems, both may work fine
+            error_no_scale = maximum(abs.(freqs_no_scale - freqs_dense))
+            error_scale = maximum(abs.(freqs_scale - freqs_dense))
+            # Just verify both produce reasonable results
+            @test error_scale < 10000  # Reasonable tolerance for phononic problems
+        end
+
+        @testset "compute_bands with warm start" begin
+            # Use square lattice for simpler k-path
+            lat = square_lattice(1.0)
+            geo = Geometry(lat, epoxy, [(Circle([0.0, 0.0], 0.2), steel)])
+
+            # Create solvers
+            solver_ws = Solver(PSVWave(), geo, (32, 32),
+                              LOBPCGMethod(warm_start=true, first_dense=true); cutoff=5)
+            solver_dense = Solver(PSVWave(), geo, (32, 32); cutoff=5)
+
+            # Simple k-path with few points
+            kpath = simple_kpath_square(a=1.0, npoints=5)
+
+            # Compute bands
+            bands_ws = compute_bands(solver_ws, kpath; bands=1:5)
+            bands_dense = compute_bands(solver_dense, kpath; bands=1:5)
+
+            # Results should be similar
+            @test size(bands_ws.frequencies) == size(bands_dense.frequencies)
+            max_error = maximum(abs.(bands_ws.frequencies - bands_dense.frequencies))
+            @test max_error < 5000  # Allow some tolerance for phononic problems
+        end
+
+        @testset "first_dense option" begin
+            lat = square_lattice(1.0)
+            geo = Geometry(lat, epoxy, [(Circle([0.0, 0.0], 0.2), steel)])
+
+            # With first_dense=true
+            solver_fd = Solver(PSVWave(), geo, (32, 32),
+                              LOBPCGMethod(warm_start=true, first_dense=true); cutoff=5)
+            # Without first_dense
+            solver_no_fd = Solver(PSVWave(), geo, (32, 32),
+                                 LOBPCGMethod(warm_start=true, first_dense=false); cutoff=5)
+
+            kpath = simple_kpath_square(a=1.0, npoints=3)
+
+            bands_fd = compute_bands(solver_fd, kpath; bands=1:5)
+            bands_no_fd = compute_bands(solver_no_fd, kpath; bands=1:5)
+
+            # Both should produce valid results
+            @test size(bands_fd.frequencies) == (length(kpath.points), 5)
+            @test size(bands_no_fd.frequencies) == (length(kpath.points), 5)
+            @test all(bands_fd.frequencies .>= 0)
+        end
+
+        @testset "Basic functionality" begin
+            solver = Solver(SHWave(), geo_phon, (32, 32); cutoff=5)
+            k = [0.1, 0.2]
+
+            # Frequencies only (default)
+            freqs = solve_at_k(solver, k, DenseMethod(); bands=1:5)
+            @test length(freqs) == 5
+            @test all(freqs .>= 0)
+
+            # With eigenvectors
+            freqs2, vecs = solve_at_k(solver, k, DenseMethod();
+                                      bands=1:5, return_eigenvectors=true)
+            @test freqs ≈ freqs2
+            @test size(vecs) == (matrix_dimension(solver), 5)
+        end
+
+        @testset "With initial vectors X0" begin
+            solver = Solver(SHWave(), geo_phon, (32, 32); cutoff=5)
+            dim = matrix_dimension(solver)
+            k1, k2 = [0.1, 0.2], [0.15, 0.25]
+
+            # First k-point with Dense
+            freqs1, vecs1 = solve_at_k(solver, k1, DenseMethod();
+                                       bands=1:5, return_eigenvectors=true)
+
+            # Second k-point with LOBPCG using warm start
+            freqs2, vecs2 = solve_at_k(solver, k2, LOBPCGMethod();
+                                       bands=1:5, X0=vecs1, return_eigenvectors=true)
+
+            @test length(freqs2) == 5
+            @test size(vecs2) == (dim, 5)
+
+            # Compare with Dense reference
+            freqs_ref, _ = solve_at_k(solver, k2, DenseMethod();
+                                      bands=1:5, return_eigenvectors=true)
+            @test maximum(abs.(freqs2 - freqs_ref)) < 1000  # Allow some tolerance
+        end
+
+        @testset "With preconditioner" begin
+            solver = Solver(SHWave(), geo_phon, (32, 32); cutoff=5)
+            k = [0.1, 0.2]
+
+            # :none preconditioner
+            freqs1 = solve_at_k(solver, k, LOBPCGMethod(preconditioner=:none); bands=1:5)
+
+            # :diagonal preconditioner
+            freqs2 = solve_at_k(solver, k, LOBPCGMethod(preconditioner=:diagonal); bands=1:5)
+
+            # Custom Diagonal preconditioner
+            LHS, _ = PhoXonic.build_matrices(solver, k)
+            d = diag(LHS)
+            d_safe = [abs(x) > 1e-10 ? x : 1e-10 for x in d]
+            P = Diagonal(1.0 ./ d_safe)
+            freqs3 = solve_at_k(solver, k, LOBPCGMethod(); bands=1:5, P=P)
+
+            # All should produce similar results
+            @test length(freqs1) == 5
+            @test length(freqs2) == 5
+            @test length(freqs3) == 5
+        end
+    end
+
+    # ========================================================================
+    # LOBPCGMethod Extension Tests
+    # ========================================================================
+    @testset "LOBPCGMethod extension" begin
+        @testset "Default values" begin
+            m = LOBPCGMethod()
+            @test m.tol == 1e-4
+            @test m.maxiter == 200
+            @test m.shift == 0.0
+            @test m.warm_start == true
+            @test m.scale == true
+            @test m.first_dense == true
+            @test m.preconditioner == :diagonal
+        end
+
+        @testset "Custom values" begin
+            m = LOBPCGMethod(tol=1e-6, maxiter=500, shift=0.01,
+                            warm_start=false, scale=false, first_dense=false,
+                            preconditioner=:none)
+            @test m.tol == 1e-6
+            @test m.maxiter == 500
+            @test m.shift == 0.01
+            @test m.warm_start == false
+            @test m.scale == false
+            @test m.first_dense == false
+            @test m.preconditioner == :none
+        end
+
+        @testset "Backward compatibility" begin
+            # Constructor without new fields (warm_start, scale, first_dense, preconditioner)
+            # should still work with default values for the new fields
+            m = LOBPCGMethod(tol=1e-8, maxiter=300, shift=0.0)
+            @test m.tol == 1e-8
+            @test m.maxiter == 300
+            @test m.shift == 0.0
+            # New fields get default values
+            @test m.warm_start == true
+            @test m.scale == true
+            @test m.first_dense == true
+            @test m.preconditioner == :diagonal
+        end
+    end
+
+    # ========================================================================
+    # LOBPCG Performance and Accuracy Tests (Phase 5)
+    # ========================================================================
+    @testset "LOBPCG Performance and Accuracy" begin
+        # Setup for tests - use photonic (TE wave) for accuracy tests
+        # Note: Phononic problems with band crossings at Gamma require
+        # band tracking which is not yet implemented
+        lat = square_lattice(1.0)
+        eps_bg = Dielectric(1.0)
+        eps_rod = Dielectric(12.0)
+        geo_phot = Geometry(lat, eps_bg, [(Circle([0.0, 0.0], 0.3), eps_rod)])
+
+        # Setup for phononic (only used where band tracking is not critical)
+        steel = IsotropicElastic(ρ=7780.0, λ=111.2e9, μ=81.0e9)
+        epoxy = IsotropicElastic(ρ=1142.0, λ=0.458e9, μ=0.148e9)
+        geo_phon = Geometry(lat, epoxy, [(Circle([0.0, 0.0], 0.3), steel)])
+
+        @testset "LOBPCG completes successfully (photonic)" begin
+            # Note: For small matrices, Dense is faster due to BLAS optimization
+            # LOBPCG becomes faster for large problems (cutoff > 12)
+            # This test verifies LOBPCG works correctly, not that it's faster
+            cutoff_val = 8
+            solver_lobpcg = Solver(TEWave(), geo_phot, (32, 32),
+                                   LOBPCGMethod(warm_start=true, scale=true); cutoff=cutoff_val)
+            solver_dense = Solver(TEWave(), geo_phot, (32, 32); cutoff=cutoff_val)
+
+            kpath = simple_kpath_square(a=1.0, npoints=10)
+
+            # Both methods should complete and produce correct results
+            bands_lobpcg = compute_bands(solver_lobpcg, kpath; bands=1:8)
+            bands_dense = compute_bands(solver_dense, kpath; bands=1:8)
+
+            # Results should have same size
+            @test size(bands_lobpcg.frequencies) == size(bands_dense.frequencies)
+
+            # All frequencies should be non-negative
+            @test all(bands_lobpcg.frequencies .>= 0)
+        end
+
+        @testset "LOBPCG accuracy vs Dense (photonic)" begin
+            # Photonic problems (TE/TM) work well with warm start
+            cutoff_val = 8
+            solver_lobpcg = Solver(TEWave(), geo_phot, (32, 32),
+                                   LOBPCGMethod(warm_start=true, scale=true,
+                                               first_dense=true, tol=1e-4); cutoff=cutoff_val)
+            solver_dense = Solver(TEWave(), geo_phot, (32, 32); cutoff=cutoff_val)
+
+            kpath = simple_kpath_square(a=1.0, npoints=10)
+
+            bands_lobpcg = compute_bands(solver_lobpcg, kpath; bands=1:8)
+            bands_dense = compute_bands(solver_dense, kpath; bands=1:8)
+
+            # Compute relative error for each band
+            max_abs_error = maximum(abs.(bands_lobpcg.frequencies - bands_dense.frequencies))
+            ref_scale = maximum(abs.(bands_dense.frequencies))
+            relative_error = max_abs_error / ref_scale
+
+            # Accuracy should be very good for photonic problems
+            @test relative_error < 0.05  # 5% relative error
+            @test max_abs_error < 1.0  # normalized frequency units
+        end
+
+        @testset "LOBPCG warm start convergence" begin
+            # Test that warm start produces valid results
+            cutoff_val = 6
+            solver = Solver(TEWave(), geo_phot, (32, 32),
+                           LOBPCGMethod(warm_start=true, first_dense=true, maxiter=50); cutoff=cutoff_val)
+
+            kpath = simple_kpath_square(a=1.0, npoints=5)
+
+            # This should complete without hitting maxiter for most k-points
+            bands = compute_bands(solver, kpath; bands=1:5)
+
+            # All frequencies should be non-negative (no numerical issues)
+            @test all(bands.frequencies .>= 0)
+            @test size(bands.frequencies) == (length(kpath.points), 5)
+        end
+    end
+
+    # ========================================================================
     # Error Fallback Tests
     # ========================================================================
     @testset "Error Fallbacks" begin

@@ -95,32 +95,57 @@ dists = bands_ref.distances
 label_positions = [dists[i] for (i, _) in bands_ref.labels]
 label_names = [l for (_, l) in bands_ref.labels]
 
-p2 = plot(
+# Common y-axis range
+ymax = max(maximum(bands_ref.frequencies), maximum(bands_s.frequencies), maximum(bands_p.frequencies)) * 1.05
+ylims_common = (0, ymax)
+
+# SimpleGrid plot
+p_simple = plot(
     xlabel="Wave vector",
     ylabel="Frequency (ωa/2πc)",
-    title="TM Bands at $(res_low)×$(res_low): Simple (blue) vs Subpixel (red) vs Ref (black)",
+    title="SimpleGrid $(res_low)×$(res_low)",
     legend=false,
     grid=true,
-    size=(700, 450)
+    size=(600, 450),
+    ylims=ylims_common
 )
 
 # Reference (black dashed)
 for b in 1:6
-    plot!(p2, dists, bands_ref.frequencies[:, b], linewidth=1, color=:black, linestyle=:dash)
+    plot!(p_simple, dists, bands_ref.frequencies[:, b], linewidth=1, color=:black, linestyle=:dash)
 end
-
 # SimpleGrid (blue)
 for b in 1:6
-    plot!(p2, dists, bands_s.frequencies[:, b], linewidth=2, color=:blue, alpha=0.7)
+    plot!(p_simple, dists, bands_s.frequencies[:, b], linewidth=2, color=:blue)
 end
+vline!(p_simple, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
+xticks!(p_simple, label_positions, label_names)
 
+# SubpixelAverage plot
+p_subpix = plot(
+    xlabel="Wave vector",
+    ylabel="Frequency (ωa/2πc)",
+    title="SubpixelAverage $(res_low)×$(res_low)",
+    legend=false,
+    grid=true,
+    size=(600, 450),
+    ylims=ylims_common
+)
+
+# Reference (black dashed)
+for b in 1:6
+    plot!(p_subpix, dists, bands_ref.frequencies[:, b], linewidth=1, color=:black, linestyle=:dash)
+end
 # SubpixelAverage (red)
 for b in 1:6
-    plot!(p2, dists, bands_p.frequencies[:, b], linewidth=2, color=:red, alpha=0.7)
+    plot!(p_subpix, dists, bands_p.frequencies[:, b], linewidth=2, color=:red)
 end
+vline!(p_subpix, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
+xticks!(p_subpix, label_positions, label_names)
 
-vline!(p2, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
-xticks!(p2, label_positions, label_names)
+# Combined plot (side by side)
+p2 = plot(p_simple, p_subpix, layout=(1, 2), size=(1200, 450),
+    plot_title="Discretization Comparison (black dashed = 128×128 reference)")
 
 savefig(p2, joinpath(@__DIR__, "121_bands_comparison.png"))
 println("Saved: 121_bands_comparison.png")
