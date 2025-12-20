@@ -1731,4 +1731,67 @@ using LinearAlgebra
         end
     end
 
+    # ========================================================================
+    # ElasticVoid (Tanaka Limit) Tests
+    # ========================================================================
+    @testset "ElasticVoid (Tanaka Limit)" begin
+        @testset "ElasticVoid basic" begin
+            # Basic construction
+            void = ElasticVoid()
+            @test void isa ElasticMaterial
+
+            # Default ρ_ratio = 1e-7
+            @test density(void) ≈ 1e-7
+            @test shear_modulus(void) ≈ 1.0
+
+            # Transverse velocity: √(μ/ρ) = √(1/1e-7) ≈ 3162
+            @test transverse_velocity(void) ≈ sqrt(1e7) atol=1.0
+
+            # Custom ρ_ratio
+            void2 = ElasticVoid(ρ_ratio=1e-8)
+            @test density(void2) ≈ 1e-8
+            @test transverse_velocity(void2) ≈ 10000.0
+
+            # C11, C12, C44 consistency (isotropic: C44 = (C11-C12)/2)
+            @test void.C44 ≈ (void.C11 - void.C12) / 2
+        end
+
+        @testset "Geometry with ElasticVoid" begin
+            lat = square_lattice(1.0)
+            al = IsotropicElastic(ρ=2700.0, λ=58.7e9, μ=26.1e9)
+            void = ElasticVoid()
+
+            # Geometry creation should succeed
+            geo = Geometry(lat, al, [(Circle([0.0, 0.0], 0.4), void)])
+            @test geo isa Geometry
+
+            # Material detection
+            @test get_material(geo, [0.0, 0.0]) isa ElasticVoid
+            @test get_material(geo, [0.49, 0.49]) isa IsotropicElastic
+
+            # discretize should work
+            ρ_grid = PhoXonic.discretize(geo, (32, 32), :ρ)
+            @test size(ρ_grid) == (32, 32)
+            @test minimum(ρ_grid) < 1.0  # void region has ρ << 1
+        end
+
+        @testset "Solver with ElasticVoid" begin
+            lat = square_lattice(1.0)
+            al = IsotropicElastic(ρ=2700.0, λ=58.7e9, μ=26.1e9)
+            void = ElasticVoid()
+
+            geo = Geometry(lat, al, [(Circle([0.0, 0.0], 0.3), void)])
+
+            # Solver creation should succeed
+            solver = Solver(SHWave(), geo, (32, 32); cutoff=3)
+            @test solver isa Solver
+
+            # Band computation should work (no errors)
+            k = [0.25, 0.0]
+            freqs = solve_at_k(solver, k, DenseMethod(); bands=1:3)
+            @test length(freqs) == 3
+            @test all(freqs .>= 0)
+        end
+    end
+
 end
