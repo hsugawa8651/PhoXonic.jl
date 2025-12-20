@@ -43,11 +43,11 @@ end
 Create a geometry with inclusions.
 """
 function Geometry(lattice::Lattice{D}, background::M,
-                  inclusions::Vector{<:Tuple{Shape{D},M2}}) where {D,M<:Material,M2<:Material}
+                  inclusions::Vector{<:Tuple{<:Shape{D},M2}}) where {D,M<:Material,M2<:Material}
     # Ensure all materials have compatible types
     MT = promote_type(M, M2)
-    incl = Vector{Tuple{Shape{D},MT}}(inclusions)
-    Geometry{D,MT}(lattice, background, incl)
+    incl = Vector{Tuple{Shape{D},MT}}([(s, convert(MT, m)) for (s, m) in inclusions])
+    Geometry{D,MT}(lattice, convert(MT, background), incl)
 end
 
 # Helper to extract dimension type from Shape
@@ -62,7 +62,7 @@ _dim_name(::Type{Dim3}) = "3D"
 Provides a helpful error message when shape dimensions don't match lattice dimension.
 """
 function Geometry(lattice::Lattice{D}, background::M,
-                  inclusions::Vector{<:Tuple{<:Shape,<:Material}}) where {D<:Dimension,M<:Material}
+                  inclusions::Vector{<:Tuple{<:Shape,M2}}) where {D<:Dimension,M<:Material,M2<:Material}
     lat_dim = _dim_name(D)
     for (i, (shape, _)) in enumerate(inclusions)
         shape_dim_type = _shape_dim(shape)
@@ -75,9 +75,10 @@ function Geometry(lattice::Lattice{D}, background::M,
             ))
         end
     end
-    # If dimensions all match, convert and call the typed constructor
-    typed_incl = Vector{Tuple{Shape{D},M}}(inclusions)
-    Geometry{D,M}(lattice, background, typed_incl)
+    # If dimensions all match, use promote_type for mixed materials
+    MT = promote_type(M, M2)
+    typed_incl = Vector{Tuple{Shape{D},MT}}([(s, convert(MT, m)) for (s, m) in inclusions])
+    Geometry{D,MT}(lattice, convert(MT, background), typed_incl)
 end
 
 """
@@ -383,6 +384,20 @@ function get_property(mat::IsotropicElastic, property::Symbol)
         return mat.C44
     else
         error("Unknown property $property for IsotropicElastic")
+    end
+end
+
+function get_property(mat::ElasticVoid, property::Symbol)
+    if property == :ρ
+        return mat.ρ
+    elseif property == :C11
+        return mat.C11
+    elseif property == :C12
+        return mat.C12
+    elseif property == :C44
+        return mat.C44
+    else
+        error("Unknown property $property for ElasticVoid")
     end
 end
 
