@@ -147,6 +147,9 @@ Dielectric(ε)
 # Isotropic elastic
 IsotropicElastic(ρ=..., λ=..., μ=...)
 IsotropicElastic(ρ=..., C11=..., C44=...)
+
+# Elastic void (Tanaka limit for vacuum/air regions)
+ElasticVoid(ρ_ratio=1e-7)
 ```
 
 ## Shapes
