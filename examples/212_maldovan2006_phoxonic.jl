@@ -66,7 +66,7 @@ println("  Structure: Air/vacuum holes in Si matrix")
 # =============================================================================
 
 resolution = (64, 64)
-cutoff = 7
+cutoff = 8
 n_bands = 10
 
 println("\nSolver: resolution=$resolution, cutoff=$cutoff")
@@ -228,7 +228,7 @@ end
 # Draw unit cell boundary
 corners = [[0.0, 0.0], collect(a1), collect(a1 + a2), collect(a2), [0.0, 0.0]]
 plot!(p_struct, [c[1] for c in corners], [c[2] for c in corners],
-      color=:yellow, linewidth=2, linestyle=:dash, label="")
+      color=:black, linewidth=2, linestyle=:dash, label="")
 
 # Add material labels
 annotate!(p_struct, 0.8, 0.9, text("Si", :white, 12))
