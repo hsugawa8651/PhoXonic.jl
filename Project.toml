@@ -1,6 +1,6 @@
 name = "PhoXonic"
 uuid = "f8e5d5a0-1234-4567-89ab-cdef01234567"
-authors = ["hsugawa8651"]
+authors = ["Hiroharu Sugawara <hsugawa@gmail.com>"]
 version = "0.1.0"
 
 [deps]
