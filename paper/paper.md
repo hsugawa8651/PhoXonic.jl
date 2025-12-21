@@ -28,7 +28,7 @@ Photonic and phononic crystals are periodic structures that exhibit band gaps—
 
 # Statement of Need
 
-Several tools exist for photonic crystal simulations, including MIT Photonic Bands (MPB) [@johnson2001block] and Peacock.jl [@palmer2020peacock]. However, these packages focus exclusively on electromagnetic waves. For phononic crystals, researchers typically rely on commercial finite element software or custom implementations. No open-source package provides a unified framework for both photonic and phononic crystals within a single, consistent API.
+Several tools exist for photonic crystal simulations, including MIT Photonic Bands (MPB) [@johnson2001block] and Peacock.jl [@palmer2020peacock]. However, these packages focus exclusively on electromagnetic waves. For phononic crystals, researchers typically rely on commercial finite element method (FEM) software such as COMSOL Multiphysics, or custom implementations. No open-source package provides a unified framework for both photonic and phononic crystals within a single, consistent API using the plane wave expansion method.
 
 `PhoXonic.jl` addresses this gap by offering:
 
@@ -37,6 +37,7 @@ Several tools exist for photonic crystal simulations, including MIT Photonic Ban
 - **Multiple solver backends**: Dense eigensolvers for small systems, Krylov methods for large-scale problems, and LOBPCG with warm-start acceleration for efficient band structure sweeps.
 - **Green's function methods**: Density of states (DOS) and local density of states (LDOS) calculations for defect mode analysis.
 - **Supercell support**: Point and line defect simulations via supercell construction.
+- **Void region modeling**: The `ElasticVoid` type enables phononic crystal simulations with vacuum or air inclusions using the Tanaka limit approach [@tanaka2000band].
 
 The package is implemented in pure Julia, requiring no external compiled dependencies, which simplifies installation and enables interactive development in Jupyter notebooks and the Julia REPL.
 
@@ -52,6 +53,7 @@ The package is implemented in pure Julia, requiring no external compiled depende
 | Pure Julia | No | Yes | Yes |
 | LDOS/DOS | Limited | No | Yes |
 | Supercell defects | Yes | No | Yes |
+| Void inclusions | N/A | N/A | Yes |
 
 # Example Usage
 
@@ -105,6 +107,7 @@ bands = compute_bands(solver, simple_kpath_fcc(); bands=1:10)
 
 - MIT Photonic Bands (MPB) for 3D FCC structures
 - Published results from Kushwaha et al. [@kushwaha1993acoustic] for phononic crystals
+- Tanaka et al. [@tanaka2000band] for phononic crystals with void inclusions
 - Textbook examples from Joannopoulos et al. [@joannopoulos2008photonic]
 
 The package includes over 1,100 unit tests and 25 example scripts demonstrating various use cases.
