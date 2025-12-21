@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "PhoXonic.jl"
+abstract: "Band structure calculation for photonic and phononic crystals using the plane wave expansion method."
+authors:
+  - family-names: Sugawara
+    given-names: Hiroharu
+    orcid: "https://orcid.org/0000-0002-0071-2396"
+    affiliation: "Graduate School of Systems Design, Tokyo Metropolitan University"
+    email: hsugawa@tmu.ac.jp
+repository-code: "https://github.com/phoxonic-dev/PhoXonic.jl"
+url: "https://github.com/phoxonic-dev/PhoXonic.jl"
+license: MIT
+version: 0.1.0
+date-released: 2025-12-19
+keywords:
+  - photonic crystals
+  - phononic crystals
+  - phoxonic crystals
+  - plane wave expansion
+  - band structure
+  - Julia
