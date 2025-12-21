@@ -5,7 +5,6 @@
 # Requires: Plots.jl
 #
 # NOTE: 1D phononic PWE shows larger errors due to missing inverse rule.
-#       See ../TODO-1d-phononic-inverse-rule.md for details.
 #       When inverse rule is implemented, verify this example converges.
 
 using PhoXonic
