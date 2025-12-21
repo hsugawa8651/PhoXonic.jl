@@ -6,6 +6,9 @@ using LinearAlgebra
 
 @testset "PhoXonic.jl" begin
 
+    # Material type tests (LossyDielectric, etc.)
+    include("test_material.jl")
+
     @testset "Lattice" begin
         @testset "Square lattice" begin
             lat = square_lattice(1.0)
@@ -1793,5 +1796,8 @@ using LinearAlgebra
             @test all(freqs .>= 0)
         end
     end
+
+    # TMM (Transfer Matrix Method) tests
+    include("tmm/runtests.jl")
 
 end
