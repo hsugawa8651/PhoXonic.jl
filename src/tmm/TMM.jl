@@ -5,3 +5,6 @@
 
 # Layer types
 include("layers.jl")
+
+# Transfer matrix calculations
+include("matrices.jl")
