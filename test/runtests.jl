@@ -1794,4 +1794,7 @@ using LinearAlgebra
         end
     end
 
+    # TMM (Transfer Matrix Method) tests
+    include("tmm/runtests.jl")
+
 end

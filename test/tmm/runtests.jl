@@ -4,5 +4,5 @@ using Test
 using PhoXonic
 
 @testset "TMM" begin
-    # Tests will be added here
+    include("test_layers.jl")
 end

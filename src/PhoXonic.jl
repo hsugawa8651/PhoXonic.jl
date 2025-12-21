@@ -51,6 +51,9 @@ include("plotting.jl")
 include("io.jl")
 include("supercell.jl")
 
+# Transfer Matrix Method
+include("tmm/TMM.jl")
+
 # Exports - Dimensions
 export Dim1, Dim2, Dim3
 
@@ -126,5 +129,11 @@ export plot_bands, plot_bands!, band_plot_data
 export save_bands, load_bands
 export save_modes, load_modes
 export save_epsilon, load_epsilon
+
+# Exports - TMM (Transfer Matrix Method)
+export Layer, Multilayer
+export thickness, material, layers, incident, substrate
+export nlayers, total_thickness
+export periodic_multilayer, bragg_mirror
 
 end # module
