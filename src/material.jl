@@ -142,3 +142,89 @@ longitudinal_velocity(m::IsotropicElastic) = sqrt(m.C11 / m.ρ)
 Return the transverse (shear) wave velocity v_T = √(C44/ρ).
 """
 transverse_velocity(m::IsotropicElastic) = sqrt(m.C44 / m.ρ)
+
+# ============================================================================
+# ElasticVoid (Tanaka Limit)
+# ============================================================================
+
+"""
+    ElasticVoid(; ρ_ratio=1e-7)
+
+Void region for phononic crystals using the Tanaka limit approach.
+
+The Tanaka limit (Tanaka et al., Phys. Rev. B 62, 7387 (2000)) handles void
+regions in PWE by setting ρ/C → 0, which pushes spurious flat bands to
+high frequency (ω ~ √(C/ρ) → ∞).
+
+The implementation uses normalized elastic constants (C = 1) and small
+density (ρ = ρ_ratio), giving transverse velocity v_T = √(μ/ρ) = √(1/ρ_ratio).
+
+# Arguments
+- `ρ_ratio::Real=1e-7`: Density ratio. Smaller values push spurious bands
+  higher but may affect numerical stability. Default 1e-7 gives v_T ≈ 3162.
+
+# Examples
+```julia
+void = ElasticVoid()              # Default: ρ = 1e-7, v_T ≈ 3162
+void = ElasticVoid(ρ_ratio=1e-8)  # Higher v_T = 10000
+```
+
+# References
+- Tanaka et al., Phys. Rev. B 62, 7387 (2000)
+- Maldovan & Thomas, Appl. Phys. B 83, 595 (2006)
+"""
+struct ElasticVoid <: ElasticMaterial
+    ρ::Float64    # Density (very small)
+    C11::Float64  # λ + 2μ
+    C12::Float64  # λ
+    C44::Float64  # μ (shear modulus)
+end
+
+function ElasticVoid(; ρ_ratio::Real=1e-7)
+    # Normalized elastic constants: μ = 1, λ = 1
+    μ = 1.0
+    λ = 1.0
+    ρ = ρ_ratio * μ  # Small density for Tanaka limit
+    ElasticVoid(Float64(ρ), Float64(λ + 2μ), Float64(λ), Float64(μ))
+end
+
+"""
+    density(m::ElasticVoid)
+
+Return the mass density of the void material.
+"""
+density(m::ElasticVoid) = m.ρ
+
+"""
+    shear_modulus(m::ElasticVoid)
+
+Return the shear modulus (μ = C44).
+"""
+shear_modulus(m::ElasticVoid) = m.C44
+
+"""
+    longitudinal_velocity(m::ElasticVoid)
+
+Return the longitudinal wave velocity v_L = √(C11/ρ).
+"""
+longitudinal_velocity(m::ElasticVoid) = sqrt(m.C11 / m.ρ)
+
+"""
+    transverse_velocity(m::ElasticVoid)
+
+Return the transverse (shear) wave velocity v_T = √(C44/ρ).
+For Tanaka limit: v_T → ∞ as ρ → 0.
+"""
+transverse_velocity(m::ElasticVoid) = sqrt(m.C44 / m.ρ)
+
+# ============================================================================
+# Type Promotion for Mixed Elastic Materials
+# ============================================================================
+
+# Enable Geometry to mix IsotropicElastic and ElasticVoid
+Base.promote_rule(::Type{IsotropicElastic}, ::Type{ElasticVoid}) = ElasticMaterial
+Base.promote_rule(::Type{ElasticVoid}, ::Type{IsotropicElastic}) = ElasticMaterial
+
+# Convert to common supertype
+Base.convert(::Type{ElasticMaterial}, x::IsotropicElastic) = x
+Base.convert(::Type{ElasticMaterial}, x::ElasticVoid) = x

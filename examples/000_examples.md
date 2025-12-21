@@ -1,6 +1,6 @@
 # PhoXonic.jl Examples
 
-Last-Modified: 2025-12-15
+Last-Modified: 2025-12-20
 
 ## Numbering System
 
@@ -34,6 +34,14 @@ Last-Modified: 2025-12-15
 |------|-------------|
 | 201_phononic_steel_epoxy.jl | Steel/Epoxy phononic crystal (solver comparison) |
 | 202_phononic_pb_epoxy_benchmark.jl | Pb/Epoxy benchmark (Aravantinos-Zafiris 2014) |
+| 203_vasseur2001_benchmark.jl | Vasseur 2001 benchmark |
+| 205_kushwaha1993_benchmark.jl | Kushwaha 1993 benchmark |
+| 207_solver_simple.jl | Simple solver usage |
+| 208_solver_comparison.jl | Solver comparison |
+| 209_warmstart_benchmark.jl | LOBPCG warm start benchmark |
+| 210_vacuum_phononic.jl | Vacuum phononic crystal (ElasticVoid) |
+| 211_tanaka2000_vacuum_al.jl | Tanaka 2000: Al/vacuum (Tanaka limit validation) |
+| 212_maldovan2006_phoxonic.jl | Maldovan 2006: Phoxonic crystal (Si/air) |
 
 ### 3xx: 1D Structures
 

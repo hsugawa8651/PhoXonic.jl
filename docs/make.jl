@@ -16,6 +16,7 @@ makedocs(
         "DOS / LDOS" => "greens_function.md",
         "Examples" => "examples.md",
         "Matrix-Free Methods" => "matrixfree.md",
+        "Elastic Void (Tanaka Limit)" => "elastic_void.md",
         "API Reference" => "api.md",
     ],
     remotes = nothing,

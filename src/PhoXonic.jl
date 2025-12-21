@@ -59,7 +59,9 @@ export Lattice, lattice_1d, square_lattice, hexagonal_lattice, cubic_lattice, fc
 export reciprocal_vectors
 
 # Exports - Materials
-export Dielectric, IsotropicElastic, from_E_ν
+export Material, PhotonicMaterial, ElasticMaterial
+export Dielectric, IsotropicElastic, ElasticVoid, from_E_ν
+export density, shear_modulus, transverse_velocity, longitudinal_velocity
 
 # Exports - Shapes
 export Circle, Rectangle, Polygon, Sphere, Cylinder, Slab, Segment
@@ -69,7 +71,7 @@ export translate  # Shape translation for supercell construction
 export create_supercell, line_defect_positions
 
 # Exports - Geometry
-export Geometry
+export Geometry, get_material
 export DiscretizationMethod, SimpleGrid, SubpixelAverage
 export discretize
 
