@@ -111,7 +111,7 @@ bands = compute_bands(solver, simple_kpath_fcc(); bands=1:10)
 - Maldovan & Thomas [@maldovan2006simultaneous] for phoxonic crystals (\autoref{fig:phoxonic})
 - Textbook examples from Joannopoulos et al. [@joannopoulos2008photonic]
 
-![Phoxonic crystal band structure for Si with air holes (r/a=0.46), reproducing Maldovan & Thomas [@maldovan2006simultaneous]. Left: unit cell structure. Right: photonic (TE, TM) and phononic (SH, PSV) dispersion relations. Shaded regions (green for photonic, orange for phononic) indicate the complete band gaps reported in the original paper.\label{fig:phoxonic}](212_maldovan2006_phoxonic.png)
+![Phoxonic crystal band structure for Si with air holes (r/a=0.46), reproducing Maldovan & Thomas [@maldovan2006simultaneous]. Left: unit cell structure. Right: photonic (TE, TM) and phononic (SH, PSV) dispersion relations. Frequencies are normalized by the speed of light c (photonic) and the transverse wave velocity cT in silicon (phononic). Shaded regions indicate the complete band gaps reported in the original paper.\label{fig:phoxonic}](212_maldovan2006_phoxonic.png)
 
 The package includes over 1,100 unit tests and 25 example scripts demonstrating various use cases.
 
