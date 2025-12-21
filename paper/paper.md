@@ -6,6 +6,7 @@ tags:
   - phononic crystals
   - phoxonic crystals
   - plane wave expansion
+  - transfer matrix method
   - band structure
 authors:
   - name: Hiroharu Sugawara
@@ -24,7 +25,7 @@ bibliography: paper.bib
 
 Photonic and phononic crystals are periodic structures that exhibit band gaps—frequency ranges where electromagnetic or elastic waves cannot propagate. These materials enable precise control over light and sound at the wavelength scale, with applications ranging from optical fibers and lasers to acoustic filters and vibration isolation. When a single structure simultaneously exhibits both photonic and phononic band gaps, it is called a phoxonic crystal, enabling coupled optomechanical interactions.
 
-`PhoXonic.jl` is a Julia package for computing band structures of photonic, phononic, and phoxonic crystals using the plane wave expansion (PWE) method. It provides a unified interface for simulating electromagnetic and elastic wave propagation in periodic media across one, two, and three dimensions.
+`PhoXonic.jl` is a Julia package for computing band structures of photonic, phononic, and phoxonic crystals. It provides a unified interface for simulating electromagnetic and elastic wave propagation in periodic media across one, two, and three dimensions. The package implements both the plane wave expansion (PWE) method for arbitrary periodic geometries in 1D, 2D, and 3D, and the transfer matrix method (TMM) for exact solutions of 1D multilayer structures.
 
 # Statement of Need
 
@@ -38,6 +39,7 @@ Several tools exist for photonic crystal simulations, including MIT Photonic Ban
 - **Green's function methods**: Density of states (DOS) and local density of states (LDOS) calculations for defect mode analysis.
 - **Supercell support**: Point and line defect simulations via supercell construction.
 - **Void region modeling**: The `ElasticVoid` type enables phononic crystal simulations with vacuum or air inclusions using the Tanaka limit approach [@tanaka2000band].
+- **Transfer matrix method**: Exact solutions for 1D multilayer structures, including transmission/reflection spectra, oblique incidence with TE/TM polarization, and support for lossy materials.
 
 The package is implemented in pure Julia, requiring no external compiled dependencies, which simplifies installation and enables interactive development in Jupyter notebooks and the Julia REPL.
 
@@ -54,6 +56,7 @@ The package is implemented in pure Julia, requiring no external compiled depende
 | LDOS/DOS | Limited | No | Yes |
 | Supercell defects | Yes | No | Yes |
 | Void inclusions | N/A | N/A | Yes |
+| Transfer matrix (1D) | No | No | Yes |
 
 # Example Usage
 
@@ -113,7 +116,7 @@ bands = compute_bands(solver, simple_kpath_fcc(); bands=1:10)
 
 ![Phoxonic crystal band structure for Si with air holes (r/a=0.46), reproducing Maldovan & Thomas [@maldovan2006simultaneous]. Left: unit cell structure. Right: photonic (TE, TM) and phononic (SH, PSV) dispersion relations. Frequencies are normalized by the speed of light c (photonic) and the transverse wave velocity cT in silicon (phononic). Shaded regions indicate the complete band gaps reported in the original paper.\label{fig:phoxonic}](212_maldovan2006_phoxonic.png)
 
-The package includes over 1,100 unit tests and 25 example scripts demonstrating various use cases.
+The package includes over 1,400 unit tests and 32 example scripts demonstrating various use cases.
 
 # Acknowledgements
 
