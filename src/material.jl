@@ -63,6 +63,67 @@ Return the refractive index n = √(εμ).
 refractive_index(m::Dielectric) = sqrt(m.ε * m.μ)
 
 # ============================================================================
+# LossyDielectric (TMM only)
+# ============================================================================
+
+"""
+    LossyDielectric(ε, μ=1.0)
+
+Lossy dielectric material with complex permittivity. TMM only.
+
+Complex permittivity ε = ε' + iε'' supports absorption.
+Relation to refractive index: ε = n² where n = n' + in''.
+
+# Examples
+```julia
+# Metallic absorption
+gold = LossyDielectric(-10.0 + 1.0im)
+
+# Weak absorption
+glass_absorbing = LossyDielectric(2.25 + 0.01im)
+```
+
+# Note
+Cannot be used with PWE (band structure). PWE requires Hermitian eigenvalue
+problems, which need real ε. Complex ε produces complex eigenvalues.
+"""
+struct LossyDielectric <: PhotonicMaterial
+    ε::ComplexF64
+    μ::ComplexF64
+end
+
+LossyDielectric(ε::Number) = LossyDielectric(ComplexF64(ε), ComplexF64(1.0))
+LossyDielectric(ε::Number, μ::Number) = LossyDielectric(ComplexF64(ε), ComplexF64(μ))
+
+"""
+    permittivity(m::LossyDielectric)
+
+Return the complex permittivity.
+"""
+permittivity(m::LossyDielectric) = m.ε
+
+"""
+    permeability(m::LossyDielectric)
+
+Return the complex permeability.
+"""
+permeability(m::LossyDielectric) = m.μ
+
+"""
+    refractive_index(m::LossyDielectric)
+
+Return the complex refractive index n = √(εμ).
+"""
+refractive_index(m::LossyDielectric) = sqrt(m.ε * m.μ)
+
+# Type conversion: Dielectric → LossyDielectric
+Base.convert(::Type{LossyDielectric}, d::Dielectric) =
+    LossyDielectric(ComplexF64(d.ε), ComplexF64(d.μ))
+
+# Type promotion rules
+Base.promote_rule(::Type{Dielectric}, ::Type{LossyDielectric}) = LossyDielectric
+
+# ============================================================================
 # Elastic Materials
 # ============================================================================
 

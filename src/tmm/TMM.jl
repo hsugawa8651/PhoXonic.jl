@@ -8,3 +8,9 @@ include("layers.jl")
 
 # Transfer matrix calculations
 include("matrices.jl")
+
+# TMM solver
+include("solver.jl")
+
+# Band structure calculation
+include("bands.jl")

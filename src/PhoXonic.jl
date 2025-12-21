@@ -63,7 +63,8 @@ export reciprocal_vectors
 
 # Exports - Materials
 export Material, PhotonicMaterial, ElasticMaterial
-export Dielectric, IsotropicElastic, ElasticVoid, from_E_ν
+export Dielectric, LossyDielectric, IsotropicElastic, ElasticVoid, from_E_ν
+export permittivity, permeability, refractive_index
 export density, shear_modulus, transverse_velocity, longitudinal_velocity
 
 # Exports - Shapes
@@ -135,5 +136,6 @@ export Layer, Multilayer
 export thickness, material, layers, incident, substrate
 export nlayers, total_thickness
 export periodic_multilayer, bragg_mirror
+export TMMSolver, TMMResult, tmm_spectrum, tmm_bandstructure, bloch_k
 
 end # module

@@ -1,6 +1,6 @@
 # PhoXonic.jl Examples
 
-Last-Modified: 2025-12-20
+Last-Modified: 2025-12-22
 
 ## Numbering System
 
@@ -9,9 +9,10 @@ Last-Modified: 2025-12-20
 | 000 | Documentation |
 | 1xx | 2D Photonic |
 | 2xx | 2D Phononic |
-| 3xx | 1D Structures |
+| 3xx | 1D Structures (PWE) |
 | 4xx | 3D Structures |
 | 5xx | Defects / Supercells |
+| 6xx | Transfer Matrix Method (TMM) |
 | 8xx | Utilities |
 | 9xx | Benchmarks / References |
 
@@ -65,6 +66,15 @@ Last-Modified: 2025-12-20
 |------|-------------|
 | 501_defect_mode.jl | Defect mode / LDOS (DirectGF) |
 | 511_supercell_study.jl | Supercell study |
+
+### 6xx: Transfer Matrix Method (TMM)
+
+| File | Description | Plots |
+|------|-------------|-------|
+| 601_tmm_bragg_mirror.jl | Bragg mirror transmission spectrum | 601_bragg_*.png |
+| 602_tmm_fabry_perot.jl | Fabry-Pérot cavity resonance | 602_fabry_perot_*.png |
+| 603_tmm_phononic.jl | Phononic TMM (Steel/Epoxy) | 603_phononic_*.png |
+| 604_tmm_vs_pwe.jl | PWE vs TMM comparison | 604_*.png |
 
 ### 8xx: Utilities
 

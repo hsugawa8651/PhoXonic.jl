@@ -17,10 +17,11 @@ makedocs(
         "Examples" => "examples.md",
         "Matrix-Free Methods" => "matrixfree.md",
         "Elastic Void (Tanaka Limit)" => "elastic_void.md",
+        "Transfer Matrix Method (1D)" => "tmm.md",
         "API Reference" => "api.md",
     ],
     remotes = nothing,
-    warnonly = [:missing_docs],
+    warnonly = [:missing_docs, :cross_references],
 )
 
 # Deploy to GitHub Pages
