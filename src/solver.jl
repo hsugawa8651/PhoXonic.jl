@@ -309,69 +309,58 @@ Build the eigenvalue problem matrices LHS * ψ = ω² * RHS * ψ for wave vector
 """
 function build_matrices(solver::Solver{Dim2,TEWave}, k::AbstractVector{<:Real})
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
     # Wave vector operators: K_x = k_x + G_x, K_y = k_y + G_y
     Kx = Diagonal([k[1] + G[1] for G in basis.G])
     Ky = Diagonal([k[2] + G[2] for G in basis.G])
 
-    # Convolution matrices
-    ε_inv_c = convolution_matrix(mats.ε_inv, basis)
-    μ_c = convolution_matrix(mats.μ, basis)
-
     # LHS = Kx * ε⁻¹ * Kx + Ky * ε⁻¹ * Ky
+    ε_inv_c = convolution_matrix(mats.ε_inv, basis)
     LHS = Kx * ε_inv_c * Kx + Ky * ε_inv_c * Ky
 
-    # RHS = μ
-    RHS = μ_c
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
 end
 
 function build_matrices(solver::Solver{Dim2,TMWave}, k::AbstractVector{<:Real})
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
     Kx = Diagonal([k[1] + G[1] for G in basis.G])
     Ky = Diagonal([k[2] + G[2] for G in basis.G])
 
-    μ_inv_c = convolution_matrix(mats.μ_inv, basis)
-    ε_c = convolution_matrix(mats.ε, basis)
-
     # LHS = Kx * μ⁻¹ * Kx + Ky * μ⁻¹ * Ky
+    μ_inv_c = convolution_matrix(mats.μ_inv, basis)
     LHS = Kx * μ_inv_c * Kx + Ky * μ_inv_c * Ky
 
-    # RHS = ε
-    RHS = ε_c
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
 end
 
 function build_matrices(solver::Solver{Dim2,SHWave}, k::AbstractVector{<:Real})
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
     Kx = Diagonal([k[1] + G[1] for G in basis.G])
     Ky = Diagonal([k[2] + G[2] for G in basis.G])
 
-    C44_c = convolution_matrix(mats.C44, basis)
-    ρ_c = convolution_matrix(mats.ρ, basis)
-
     # LHS = Kx * C44 * Kx + Ky * C44 * Ky
+    C44_c = convolution_matrix(mats.C44, basis)
     LHS = Kx * C44_c * Kx + Ky * C44_c * Ky
 
-    # RHS = ρ
-    RHS = ρ_c
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
 end
 
 function build_matrices(solver::Solver{Dim2,PSVWave}, k::AbstractVector{<:Real})
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
     Kx = Diagonal([k[1] + G[1] for G in basis.G])
@@ -380,7 +369,6 @@ function build_matrices(solver::Solver{Dim2,PSVWave}, k::AbstractVector{<:Real})
     C11_c = convolution_matrix(mats.C11, basis)
     C12_c = convolution_matrix(mats.C12, basis)
     C44_c = convolution_matrix(mats.C44, basis)
-    ρ_c = convolution_matrix(mats.ρ, basis)
 
     # Block matrix construction
     # K_xx = ∂_x C₁₁ ∂_x + ∂_y C₄₄ ∂_y
@@ -398,8 +386,8 @@ function build_matrices(solver::Solver{Dim2,PSVWave}, k::AbstractVector{<:Real})
     # Assemble 2N × 2N block matrices
     LHS = [K_xx K_xy; K_yx K_yy]
 
-    Z = zeros(ComplexF64, N, N)
-    RHS = [ρ_c Z; Z ρ_c]
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
 end
@@ -410,42 +398,34 @@ end
 
 function build_matrices(solver::Solver{Dim1,Photonic1D}, k::Real)
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
     # Wave vector operator: K = k + G
     K = Diagonal([k + G[1] for G in basis.G])
 
-    # Convolution matrices
-    ε_inv_c = convolution_matrix(mats.ε_inv, basis)
-    μ_c = convolution_matrix(mats.μ, basis)
-
     # LHS = K * ε⁻¹ * K
+    ε_inv_c = convolution_matrix(mats.ε_inv, basis)
     LHS = K * ε_inv_c * K
 
-    # RHS = μ
-    RHS = μ_c
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
 end
 
 function build_matrices(solver::Solver{Dim1,Longitudinal1D}, k::Real)
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
     # Wave vector operator: K = k + G
     K = Diagonal([k + G[1] for G in basis.G])
 
-    # Convolution matrices
-    C11_c = convolution_matrix(mats.C11, basis)
-    ρ_c = convolution_matrix(mats.ρ, basis)
-
     # LHS = K * C11 * K
+    C11_c = convolution_matrix(mats.C11, basis)
     LHS = K * C11_c * K
 
-    # RHS = ρ
-    RHS = ρ_c
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
 end
@@ -486,12 +466,10 @@ Storage order: [H_x; H_y; H_z] (component-order for FFT efficiency)
 """
 function build_matrices(solver::Solver{Dim3,FullVectorEM}, k::AbstractVector{<:Real})
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
-    # Convolution matrices (N×N each)
+    # Convolution matrix for LHS
     ε_inv_c = convolution_matrix(mats.ε_inv, basis)
-    μ_c = convolution_matrix(mats.μ, basis)
 
     # Wave vectors K = k + G for each plane wave
     Kx = Diagonal([k[1] + G[1] for G in basis.G])
@@ -527,13 +505,8 @@ function build_matrices(solver::Solver{Dim3,FullVectorEM}, k::AbstractVector{<:R
         L_zx L_zy L_zz
     ]
 
-    # RHS: block diagonal μ
-    Z = zeros(ComplexF64, N, N)
-    RHS = [
-        μ_c Z Z;
-        Z μ_c Z;
-        Z Z μ_c
-    ]
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
 end
@@ -549,14 +522,12 @@ Storage order: [u_x; u_y; u_z] (component-order)
 """
 function build_matrices(solver::Solver{Dim3,FullElastic}, k::AbstractVector{<:Real})
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
-    # Convolution matrices
+    # Convolution matrices for LHS
     C11_c = convolution_matrix(mats.C11, basis)
     C12_c = convolution_matrix(mats.C12, basis)
     C44_c = convolution_matrix(mats.C44, basis)
-    ρ_c = convolution_matrix(mats.ρ, basis)
 
     # Wave vectors
     Kx = Diagonal([k[1] + G[1] for G in basis.G])
@@ -584,13 +555,8 @@ function build_matrices(solver::Solver{Dim3,FullElastic}, k::AbstractVector{<:Re
         K_zx K_zy K_zz
     ]
 
-    # RHS: block diagonal ρ
-    Z = zeros(ComplexF64, N, N)
-    RHS = [
-        ρ_c Z Z;
-        Z ρ_c Z;
-        Z Z ρ_c
-    ]
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
 end
