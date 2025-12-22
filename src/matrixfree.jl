@@ -3,23 +3,24 @@
 #=
 Matrix-free operators for iterative solvers.
 
-The Hamiltonian H is applied without explicitly constructing the full matrix.
+The operators are applied without explicitly constructing the full matrix.
 This reduces memory from O(N²) to O(N) and computation from O(N²) to O(N log N).
 
-For photonic/phononic crystals, the eigenvalue problem is:
-    LHS * ψ = ω² * RHS * ψ
+For photonic/phononic crystals, the generalized eigenvalue problem is:
+    A * ψ = ω² * B * ψ   (or equivalently: LHS * ψ = ω² * RHS * ψ)
 
 where:
-    LHS = K * M * K  (with K = k + G diagonal, M = convolution matrix)
-    RHS = convolution matrix of ρ or μ
+    A (LHS) = K * M * K  (with K = k + G diagonal, M = convolution matrix)
+    B (RHS) = convolution matrix of ρ or μ
 
-The matrix-free approach computes H*v = RHS⁻¹ * LHS * v via FFT:
+The matrix-free approach computes A*v and B*v separately via FFT:
     1. Apply K in Fourier space (diagonal, O(N))
     2. FFT to real space (O(N log N))
     3. Multiply by material property in real space (O(N))
     4. FFT back to Fourier space (O(N log N))
     5. Apply K in Fourier space (diagonal, O(N))
-    6. Solve RHS * y = result (or apply RHS⁻¹)
+
+The iterative solver (KrylovKit.geneigsolve) handles the generalized problem directly.
 
 ## Thread Safety (FFTW)
 
@@ -543,7 +544,7 @@ function apply_lhs!(
     return y
 end
 
-# SH wave (phononic)
+# SH wave (phononic) - LHS = Kx * C44 * Kx + Ky * C44 * Ky
 function apply_lhs!(
     y::AbstractVector{T}, op::MatrixFreeOperator{Dim2,SHWave,T}, x::AbstractVector{T}
 ) where {T}
@@ -580,7 +581,7 @@ function apply_lhs!(
     return y
 end
 
-# Longitudinal 1D (phononic)
+# Longitudinal 1D (phononic) - LHS = K * C11 * K
 function apply_lhs!(
     y::AbstractVector{T},
     op::MatrixFreeOperator{Dim1,Longitudinal1D,T},
@@ -823,6 +824,7 @@ function apply_rhs!(
     return y
 end
 
+# SH wave (phononic) - RHS = ρ
 function apply_rhs!(
     y::AbstractVector{T}, op::MatrixFreeOperator{Dim2,SHWave,T}, x::AbstractVector{T}
 ) where {T}
@@ -870,6 +872,7 @@ function apply_rhs!(
     return y
 end
 
+# Photonic 1D - RHS = μ
 function apply_rhs!(
     y::AbstractVector{T}, op::MatrixFreeOperator{Dim1,Photonic1D,T}, x::AbstractVector{T}
 ) where {T}
@@ -887,6 +890,7 @@ function apply_rhs!(
     return y
 end
 
+# Longitudinal 1D (phononic) - RHS = ρ
 function apply_rhs!(
     y::AbstractVector{T},
     op::MatrixFreeOperator{Dim1,Longitudinal1D,T},
