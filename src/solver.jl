@@ -303,6 +303,32 @@ end
 # ============================================================================
 
 """
+    wave_vector_diagonals(basis::PlaneWaveBasis, k::AbstractVector)
+
+Create diagonal matrices for wave vector components K_i = k_i + G_i.
+
+Returns a tuple of Diagonal matrices (Kx, Ky) for 2D or (Kx, Ky, Kz) for 3D.
+
+# Example
+```julia
+Kx, Ky = wave_vector_diagonals(basis, k)  # 2D
+Kx, Ky, Kz = wave_vector_diagonals(basis, k)  # 3D
+```
+"""
+function wave_vector_diagonals(basis::PlaneWaveBasis{Dim2}, k::AbstractVector)
+    Kx = Diagonal([k[1] + G[1] for G in basis.G])
+    Ky = Diagonal([k[2] + G[2] for G in basis.G])
+    return (Kx, Ky)
+end
+
+function wave_vector_diagonals(basis::PlaneWaveBasis{Dim3}, k::AbstractVector)
+    Kx = Diagonal([k[1] + G[1] for G in basis.G])
+    Ky = Diagonal([k[2] + G[2] for G in basis.G])
+    Kz = Diagonal([k[3] + G[3] for G in basis.G])
+    return (Kx, Ky, Kz)
+end
+
+"""
     build_matrices(solver::Solver, k)
 
 Build the eigenvalue problem matrices LHS * ψ = ω² * RHS * ψ for wave vector k.
@@ -311,9 +337,7 @@ function build_matrices(solver::Solver{Dim2,TEWave}, k::AbstractVector{<:Real})
     basis = solver.basis
     mats = solver.material_arrays
 
-    # Wave vector operators: K_x = k_x + G_x, K_y = k_y + G_y
-    Kx = Diagonal([k[1] + G[1] for G in basis.G])
-    Ky = Diagonal([k[2] + G[2] for G in basis.G])
+    Kx, Ky = wave_vector_diagonals(basis, k)
 
     # LHS = Kx * ε⁻¹ * Kx + Ky * ε⁻¹ * Ky
     ε_inv_c = convolution_matrix(mats.ε_inv, basis)
@@ -329,8 +353,7 @@ function build_matrices(solver::Solver{Dim2,TMWave}, k::AbstractVector{<:Real})
     basis = solver.basis
     mats = solver.material_arrays
 
-    Kx = Diagonal([k[1] + G[1] for G in basis.G])
-    Ky = Diagonal([k[2] + G[2] for G in basis.G])
+    Kx, Ky = wave_vector_diagonals(basis, k)
 
     # LHS = Kx * μ⁻¹ * Kx + Ky * μ⁻¹ * Ky
     μ_inv_c = convolution_matrix(mats.μ_inv, basis)
@@ -346,8 +369,7 @@ function build_matrices(solver::Solver{Dim2,SHWave}, k::AbstractVector{<:Real})
     basis = solver.basis
     mats = solver.material_arrays
 
-    Kx = Diagonal([k[1] + G[1] for G in basis.G])
-    Ky = Diagonal([k[2] + G[2] for G in basis.G])
+    Kx, Ky = wave_vector_diagonals(basis, k)
 
     # LHS = Kx * C44 * Kx + Ky * C44 * Ky
     C44_c = convolution_matrix(mats.C44, basis)
@@ -363,8 +385,7 @@ function build_matrices(solver::Solver{Dim2,PSVWave}, k::AbstractVector{<:Real})
     basis = solver.basis
     mats = solver.material_arrays
 
-    Kx = Diagonal([k[1] + G[1] for G in basis.G])
-    Ky = Diagonal([k[2] + G[2] for G in basis.G])
+    Kx, Ky = wave_vector_diagonals(basis, k)
 
     C11_c = convolution_matrix(mats.C11, basis)
     C12_c = convolution_matrix(mats.C12, basis)
@@ -471,10 +492,7 @@ function build_matrices(solver::Solver{Dim3,FullVectorEM}, k::AbstractVector{<:R
     # Convolution matrix for LHS
     ε_inv_c = convolution_matrix(mats.ε_inv, basis)
 
-    # Wave vectors K = k + G for each plane wave
-    Kx = Diagonal([k[1] + G[1] for G in basis.G])
-    Ky = Diagonal([k[2] + G[2] for G in basis.G])
-    Kz = Diagonal([k[3] + G[3] for G in basis.G])
+    Kx, Ky, Kz = wave_vector_diagonals(basis, k)
 
     # Build LHS: 9 blocks L_ij where L_ij = curl_i × ε⁻¹ × curl_j
     # curl_i is the i-th row of the curl operator in Fourier space
@@ -529,10 +547,7 @@ function build_matrices(solver::Solver{Dim3,FullElastic}, k::AbstractVector{<:Re
     C12_c = convolution_matrix(mats.C12, basis)
     C44_c = convolution_matrix(mats.C44, basis)
 
-    # Wave vectors
-    Kx = Diagonal([k[1] + G[1] for G in basis.G])
-    Ky = Diagonal([k[2] + G[2] for G in basis.G])
-    Kz = Diagonal([k[3] + G[3] for G in basis.G])
+    Kx, Ky, Kz = wave_vector_diagonals(basis, k)
 
     # Build stiffness matrix blocks for isotropic material
     # K_xx = Kx*C11*Kx + Ky*C44*Ky + Kz*C44*Kz
@@ -601,6 +616,16 @@ overlap = vecs' * W * vecs  # ≈ I(4)
 
 See also: [`solve_at_k_with_vectors`](@ref), [`build_matrices`](@ref)
 """
+
+# Helper for block diagonal weight matrices
+function block_diagonal_weight(M::AbstractMatrix, n::Int)
+    N = size(M, 1)
+    Z = zeros(eltype(M), N, N)
+    n == 2 && return [M Z; Z M]
+    n == 3 && return [M Z Z; Z M Z; Z Z M]
+    error("Unsupported block size: $n")
+end
+
 function get_weight_matrix(solver::Solver{Dim2,TEWave})
     # TE: W = μ (permeability convolution matrix)
     return convolution_matrix(solver.material_arrays.μ, solver.basis)
@@ -618,13 +643,8 @@ end
 
 function get_weight_matrix(solver::Solver{Dim2,PSVWave})
     # PSV: W = diag(ρ, ρ)
-    N = solver.basis.num_pw
     ρ_c = convolution_matrix(solver.material_arrays.ρ, solver.basis)
-    Z = zeros(ComplexF64, N, N)
-    return [
-        ρ_c Z
-        Z ρ_c
-    ]
+    return block_diagonal_weight(ρ_c, 2)
 end
 
 function get_weight_matrix(solver::Solver{Dim1,Photonic1D})
@@ -639,26 +659,14 @@ end
 
 function get_weight_matrix(solver::Solver{Dim3,FullVectorEM})
     # 3D EM: W = diag(μ, μ, μ) (consistent with RHS in build_matrices)
-    N = solver.basis.num_pw
     μ_c = convolution_matrix(solver.material_arrays.μ, solver.basis)
-    Z = zeros(ComplexF64, N, N)
-    return [
-        μ_c Z Z
-        Z μ_c Z
-        Z Z μ_c
-    ]
+    return block_diagonal_weight(μ_c, 3)
 end
 
 function get_weight_matrix(solver::Solver{Dim3,FullElastic})
     # 3D Elastic: W = diag(ρ, ρ, ρ)
-    N = solver.basis.num_pw
     ρ_c = convolution_matrix(solver.material_arrays.ρ, solver.basis)
-    Z = zeros(ComplexF64, N, N)
-    return [
-        ρ_c Z Z
-        Z ρ_c Z
-        Z Z ρ_c
-    ]
+    return block_diagonal_weight(ρ_c, 3)
 end
 
 # ============================================================================
