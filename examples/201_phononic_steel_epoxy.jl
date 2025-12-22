@@ -2,6 +2,7 @@
 # Phononic Crystal Band Structure - P-SV Wave (In-plane elastic)
 # Steel cylinders in epoxy matrix
 # Reference: Kushwaha et al., Phys. Rev. Lett. 71, 2022 (1993)
+# DOI: https://doi.org/10.1103/PhysRevLett.71.2022
 
 using PhoXonic
 using Plots

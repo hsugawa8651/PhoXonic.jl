@@ -2,6 +2,7 @@
 # Joannopoulos Book Chapter 4, Figure 2 Reproduction
 #
 # Reference: "Photonic Crystals: Molding the Flow of Light" (2nd edition)
+# ISBN: 978-0-691-12456-8, http://ab-initio.mit.edu/book/
 #            Chapter 4: The Multilayer Film: A One-Dimensional Photonic Crystal
 #            Figure 2 (page 46)
 #

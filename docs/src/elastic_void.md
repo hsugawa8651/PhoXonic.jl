@@ -100,6 +100,10 @@ If you see suspicious flat bands in your frequency range of interest, try decrea
 
 ## References
 
-1. Y. Tanaka, Y. Tomoyasu, S. Tamura, "Band structure of acoustic waves in phononic lattices: Two-dimensional composites with large acoustic mismatch," Phys. Rev. B **62**, 7387 (2000)
+1. Y. Tanaka, Y. Tomoyasu, S. Tamura, "Band structure of acoustic waves in phononic lattices: Two-dimensional composites with large acoustic mismatch," Phys. Rev. B **62**, 7387 (2000). [DOI:10.1103/PhysRevB.62.7387](https://doi.org/10.1103/PhysRevB.62.7387)
 
-2. M. Maldovan, E.L. Thomas, "Simultaneous complete elastic and electromagnetic band gaps in periodic structures," Appl. Phys. B **83**, 595 (2006)
+2. M. Maldovan, E.L. Thomas, "Simultaneous complete elastic and electromagnetic band gaps in periodic structures," Appl. Phys. B **83**, 595 (2006). [DOI:10.1007/s00340-006-2241-y](https://doi.org/10.1007/s00340-006-2241-y)
+
+## API Reference
+
+- [Core API](api.md) - IsotropicElastic, ElasticVoid, from_E_ν

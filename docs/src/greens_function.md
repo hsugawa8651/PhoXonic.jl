@@ -27,9 +27,9 @@ G = compute_greens_function(solver, k, ω_values, source, MatrixFreeGF(); η=0.0
 
 | Method | Memory | Best For | Requires RSK |
 |--------|--------|----------|:------------:|
-| `DirectGF()` | O(N²) | Small systems, high accuracy | No |
-| `RSKGF()` | O(N²) | Many frequencies, 2D | Yes |
-| `MatrixFreeGF()` | O(N) | Large systems, 2D/3D | Yes |
+| [`DirectGF()`](api-advanced.md#PhoXonic.DirectGF) | O(N²) | Small systems, high accuracy | No |
+| [`RSKGF()`](api-advanced.md#PhoXonic.RSKGF) | O(N²) | Many frequencies, 2D | Yes |
+| [`MatrixFreeGF()`](api-advanced.md#PhoXonic.MatrixFreeGF) | O(N) | Large systems, 2D/3D | Yes |
 
 ### DirectGF
 
@@ -68,12 +68,12 @@ method = MatrixFreeGF(rhs_inv_method=CGRHSInv(atol=1e-12, rtol=1e-12, maxiter=20
 
 ## RHSInvMethod Options
 
-For `MatrixFreeGF`, you can choose how to handle the RHS (right-hand side) matrix inversion:
+For [`MatrixFreeGF`](api-advanced.md#PhoXonic.MatrixFreeGF), you can choose how to handle the RHS (right-hand side) matrix inversion:
 
 | Method | Description | Best For |
 |--------|-------------|----------|
-| `ApproximateRHSInv()` | Element-wise 1/ε in real space | Low contrast materials |
-| `CGRHSInv()` | Iterative CG solve | High contrast materials |
+| [`ApproximateRHSInv()`](api-advanced.md#PhoXonic.ApproximateRHSInv) | Element-wise 1/ε in real space | Low contrast materials |
+| [`CGRHSInv()`](api-advanced.md#PhoXonic.CGRHSInv) | Iterative CG solve | High contrast materials |
 
 ```julia
 # CGRHSInv parameters
@@ -82,7 +82,7 @@ CGRHSInv(; atol=1e-10, rtol=1e-10, maxiter=100)
 
 ## Functions
 
-### compute_greens_function
+### [compute_greens_function](api-advanced.md#PhoXonic.compute_greens_function)
 
 Compute the Green's function G(ω) = (ω² - H)⁻¹ for multiple frequencies.
 
@@ -100,7 +100,7 @@ G_values = compute_greens_function(solver, k, ω_values, source, method; η=1e-3
 
 **Returns:** Vector of Green's function solutions, one for each frequency.
 
-### compute_ldos
+### [compute_ldos](api-advanced.md#PhoXonic.compute_ldos)
 
 Compute the Local Density of States at a specific position.
 
@@ -118,7 +118,7 @@ ldos = compute_ldos(solver, position, ω_values, k_points, method; η=1e-3)
 
 **Returns:** Vector of LDOS values for each frequency.
 
-### compute_dos
+### [compute_dos](api-advanced.md#PhoXonic.compute_dos)
 
 Compute the Density of States (stochastic trace method for RSKGF/MatrixFreeGF).
 
@@ -182,12 +182,12 @@ See `examples_rsk/502_defect_mode_matrixfree.jl` for a complete example of using
 
 | Method | 1D | 2D | 3D |
 |--------|:--:|:--:|:--:|
-| `DirectGF()` | ✅ | ✅ | ❌ |
-| `RSKGF()` | ❌ | ✅ | ❌ |
-| `MatrixFreeGF()` | ❌ | ✅ | ✅ |
+| [`DirectGF()`](api-advanced.md#PhoXonic.DirectGF) | Yes | Yes | No |
+| [`RSKGF()`](api-advanced.md#PhoXonic.RSKGF) | No | Yes | No |
+| [`MatrixFreeGF()`](api-advanced.md#PhoXonic.MatrixFreeGF) | No | Yes | Yes |
 
 ## See Also
 
-- [API Reference](api.md) for complete function signatures
+- [Advanced API](api-advanced.md) - GFMethod, compute_dos, compute_ldos
 - [Matrix-Free Methods](matrixfree.md) for operators and FFT context
 - `examples_rsk/` directory for RSK-dependent examples

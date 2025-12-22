@@ -142,3 +142,8 @@ For solver methods (DenseMethod, KrylovKitMethod, LOBPCGMethod), see [Solver Met
 
 For post-processing (convergence, group velocity, k-path, plotting, saving/loading),
 see [Analysis and Post-Processing](@ref).
+
+## API Reference
+
+- [Core API](api.md) - Lattice, Materials, Shapes, Geometry
+- [Solver API](api-solver.md) - Wave types, Solver, BandStructure

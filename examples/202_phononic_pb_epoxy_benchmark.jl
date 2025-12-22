@@ -1,6 +1,7 @@
 # Last-Modified: 2025-12-15
 # Phononic Crystal Benchmark: Pb cylinders in Epoxy matrix
 # Reference: Aravantinos-Zafiris et al., AIP Advances 4, 124203 (2014)
+# DOI: https://doi.org/10.1063/1.4905012
 #
 # This example validates PhoXonic.jl against literature data.
 # Expected: Large bandgap for SH wave, gap-midgap ratio ~40%

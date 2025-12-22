@@ -1,5 +1,6 @@
 # 211_tanaka2000_vacuum_al.jl
 # Reproduce Tanaka et al. 2000, Phys. Rev. B 62, 7387
+# DOI: https://doi.org/10.1103/PhysRevB.62.7387
 # Figure 4: Vacuum cylinders in Al, square lattice, f=0.55
 #
 # This is the original paper that proposed the Tanaka limit (ρ/C → 0)

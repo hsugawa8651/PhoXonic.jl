@@ -601,3 +601,19 @@ function discretize_elastic(geo::Geometry{Dim2}, resolution;
     C44 = discretize(geo, resolution, :C44, method)
     return ρ, C11, C12, C44
 end
+
+# ============================================================================
+# Error fallback for invalid argument types
+# ============================================================================
+
+"""
+    discretize(geometry, resolution, ...)
+
+Discretize geometry on a grid.
+
+See concrete method signatures for detailed documentation and keyword arguments.
+"""
+function discretize(geometry::Any, args...; kwargs...)
+    error("discretize: expected geometry::Geometry as first argument, " *
+          "got $(typeof(geometry))")
+end

@@ -4,12 +4,12 @@ PhoXonic.jl provides multiple solver methods for different problem sizes:
 
 | Method | Matrix Storage | Algorithm | Best For |
 |--------|---------------|-----------|----------|
-| `DenseMethod()` | Dense (N×N) | LAPACK `eigen` | Small/medium systems |
-| `DenseMethod(shift=σ)` | Dense (N×N) | LAPACK `eigen` + filter | 3D (skip spurious modes) |
-| `KrylovKitMethod()` | Matrix-free | Arnoldi iteration | Large 2D systems |
-| `KrylovKitMethod(shift=σ)` | Dense + LU | Shift-and-invert | 3D, targeted frequencies |
-| `LOBPCGMethod()` | Dense (N×N) | Block CG | Symmetric problems |
-| `LOBPCGMethod(shift=σ)` | Dense + LU | Shift-and-invert LOBPCG | 3D systems |
+| [`DenseMethod()`](api-solver.md#PhoXonic.DenseMethod) | Dense (N×N) | LAPACK `eigen` | Small/medium systems |
+| [`DenseMethod(shift=σ)`](api-solver.md#PhoXonic.DenseMethod) | Dense (N×N) | LAPACK `eigen` + filter | 3D (skip spurious modes) |
+| [`KrylovKitMethod()`](api-solver.md#PhoXonic.KrylovKitMethod) | Matrix-free | Arnoldi iteration | Large 2D systems |
+| [`KrylovKitMethod(shift=σ)`](api-solver.md#PhoXonic.KrylovKitMethod) | Dense + LU | Shift-and-invert | 3D, targeted frequencies |
+| [`LOBPCGMethod()`](api-solver.md#PhoXonic.LOBPCGMethod) | Dense (N×N) | Block CG | Symmetric problems |
+| [`LOBPCGMethod(shift=σ)`](api-solver.md#PhoXonic.LOBPCGMethod) | Dense + LU | Shift-and-invert LOBPCG | 3D systems |
 
 ## Memory and Computational Cost
 
@@ -28,15 +28,15 @@ For large-scale calculations with N > 10,000, see [Matrix-Free Methods](@ref).
 
 | Dimension | Wave Type | N (typical) | Recommended Method |
 |-----------|-----------|-------------|-------------------|
-| 1D | Photonic1D | < 100 | `DenseMethod()` |
-| 2D | TE/TM/SH | 100–1,000 | `DenseMethod()` |
-| 2D | TE/TM/SH | 1,000–10,000 | `KrylovKitMethod()` or `LOBPCGMethod()` |
-| 2D | PSVWave | 200–2,000 | `DenseMethod()` |
-| 2D | PSVWave | > 2,000 | `KrylovKitMethod()` or `LOBPCGMethod()` |
-| 3D | FullVectorEM | < 500 | `DenseMethod(shift=0.01)` |
-| 3D | FullVectorEM | 500–5,000 | `KrylovKitMethod(shift=0.01)` or `LOBPCGMethod(shift=0.01)` |
-| 3D | FullElastic | < 500 | `DenseMethod(shift=0.01)` |
-| 3D | FullElastic | 500–5,000 | `KrylovKitMethod(shift=0.01)` or `LOBPCGMethod(shift=0.01)` |
+| 1D | [`Photonic1D`](api-solver.md#PhoXonic.Photonic1D) | < 100 | [`DenseMethod()`](api-solver.md#PhoXonic.DenseMethod) |
+| 2D | [`TEWave`](api-solver.md#PhoXonic.TEWave)/[`TMWave`](api-solver.md#PhoXonic.TMWave)/[`SHWave`](api-solver.md#PhoXonic.SHWave) | 100–1,000 | [`DenseMethod()`](api-solver.md#PhoXonic.DenseMethod) |
+| 2D | TE/TM/SH | 1,000–10,000 | [`KrylovKitMethod()`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod()`](api-solver.md#PhoXonic.LOBPCGMethod) |
+| 2D | [`PSVWave`](api-solver.md#PhoXonic.PSVWave) | 200–2,000 | [`DenseMethod()`](api-solver.md#PhoXonic.DenseMethod) |
+| 2D | PSVWave | > 2,000 | [`KrylovKitMethod()`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod()`](api-solver.md#PhoXonic.LOBPCGMethod) |
+| 3D | [`FullVectorEM`](api-solver.md#PhoXonic.FullVectorEM) | < 500 | [`DenseMethod(shift=0.01)`](api-solver.md#PhoXonic.DenseMethod) |
+| 3D | FullVectorEM | 500–5,000 | [`KrylovKitMethod(shift=0.01)`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod(shift=0.01)`](api-solver.md#PhoXonic.LOBPCGMethod) |
+| 3D | [`FullElastic`](api-solver.md#PhoXonic.FullElastic) | < 500 | [`DenseMethod(shift=0.01)`](api-solver.md#PhoXonic.DenseMethod) |
+| 3D | FullElastic | 500–5,000 | [`KrylovKitMethod(shift=0.01)`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod(shift=0.01)`](api-solver.md#PhoXonic.LOBPCGMethod) |
 
 ## DenseMethod
 
@@ -187,7 +187,7 @@ method = KrylovKitMethod(
 ## LOBPCGMethod
 
 LOBPCG (Locally Optimal Block Preconditioned Conjugate Gradient) is an alternative
-iterative solver based on [Knyazev (2001)](https://epubs.siam.org/doi/10.1137/S1064827500366124).
+iterative solver. A. V. Knyazev, SIAM J. Sci. Comput. 23, 517 (2001). [DOI:10.1137/S1064827500366124](https://doi.org/10.1137/S1064827500366124)
 
 ### When to Use LOBPCG
 
@@ -306,12 +306,17 @@ end
 
 ### LOBPCG vs KrylovKit
 
-| Feature | KrylovKitMethod | LOBPCGMethod |
+| Feature | [KrylovKitMethod](api-solver.md#PhoXonic.KrylovKitMethod) | [LOBPCGMethod](api-solver.md#PhoXonic.LOBPCGMethod) |
 |---------|-----------------|--------------|
+| Backend | [KrylovKit.jl](https://jutho.github.io/KrylovKit.jl/stable/) | [IterativeSolvers.jl](https://iterativesolvers.julialinearalgebra.org/stable/) |
 | Algorithm | Arnoldi (Krylov) | Block CG |
-| Matrix-free | ✅ (2D/3D) | ❌ |
+| Matrix-free | Yes (2D/3D) | No |
 | Phononic scaling | Required | Not required |
 | Block computation | No | Yes |
-| 3D shift-invert | ✅ | ✅ |
+| 3D shift-invert | Yes | Yes |
 
 For details on matrix-free methods and their resolution constraints, see [Matrix-Free Methods](@ref).
+
+## API Reference
+
+- [Solver API](api-solver.md) - DenseMethod, KrylovKitMethod, LOBPCGMethod

@@ -101,7 +101,7 @@ end
 ```
 
 **Note:** Higher cutoff increases computation time significantly.
-Use iterative methods (`KrylovKitMethod` or `LOBPCGMethod`) for cutoff ≥ 7.
+Use iterative methods ([`KrylovKitMethod`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod`](api-solver.md#PhoXonic.LOBPCGMethod)) for cutoff ≥ 7.
 
 ## 3D Phononic Crystals
 
@@ -198,3 +198,8 @@ solver = Solver(FullVectorEM(), geo, resolution, KrylovKitMethod(shift=0.01); cu
 | 20×20×20 | ~2700 | ~175 GB |
 
 For large 3D systems, use matrix-free methods. See [Matrix-Free Methods](@ref).
+
+## API Reference
+
+- [Solver API](api-solver.md) - FullVectorEM, FullElastic, Solver methods
+- [Advanced API](api-advanced.md) - Matrix-free operators

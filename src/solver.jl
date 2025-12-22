@@ -1375,3 +1375,42 @@ end
 function group_velocity_impl(solver::Solver, k, method::Any; bands=1:10, δk=1e-5)
     error("Unsupported solver method for group_velocity: $(typeof(method)).")
 end
+
+# ============================================================================
+# Error fallbacks for invalid argument types
+# ============================================================================
+
+"""
+    Solver(wave, geometry, resolution)
+
+Construct a solver for photonic/phononic crystal eigenvalue problems.
+
+See concrete method signatures for detailed documentation and keyword arguments.
+"""
+function Solver(wave::Any, geometry::Any, resolution::Any; kwargs...)
+    error("Solver: expected (wave::WaveType, geometry::Geometry, resolution::Tuple{Int,...}), " *
+          "got ($(typeof(wave)), $(typeof(geometry)), $(typeof(resolution)))")
+end
+
+"""
+    solve_at_k(solver, k, method; kwargs...)
+
+Solve eigenvalue problem at a single k-point.
+
+See concrete method signatures for detailed documentation and keyword arguments.
+"""
+function solve_at_k(solver::Any, k::Any, method::Any; kwargs...)
+    error("solve_at_k: expected (solver::Solver, k, method::SolverMethod), " *
+          "got ($(typeof(solver)), $(typeof(k)), $(typeof(method)))")
+end
+
+"""
+    matrix_dimension(solver)
+
+Return the matrix dimension for the eigenvalue problem.
+
+See concrete method signatures for detailed documentation.
+"""
+function matrix_dimension(solver::Any)
+    error("matrix_dimension: expected solver::Solver, got $(typeof(solver))")
+end

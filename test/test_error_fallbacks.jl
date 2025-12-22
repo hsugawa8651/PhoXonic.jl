@@ -57,4 +57,36 @@ using PhoXonic
         @test_throws ArgumentError compute_ldos(solver, position, ω_values, k_points, UnsupportedGF())
     end
 
+    @testset "High-level API fallbacks" begin
+        @testset "Solver constructor" begin
+            @test_throws ErrorException Solver("not a wave", "not a geometry", (64, 64))
+            @test_throws ErrorException Solver(123, nothing, (64, 64))
+            @test_throws ErrorException Solver(:invalid, [], 64)
+        end
+
+        @testset "compute_bands" begin
+            @test_throws ErrorException compute_bands("not a solver", "not a kpath")
+            @test_throws ErrorException compute_bands(123, [0.0, 0.0])
+        end
+
+        @testset "discretize" begin
+            @test_throws ErrorException discretize("not a geometry", "not a basis")
+            @test_throws ErrorException discretize(nothing, nothing, nothing)
+        end
+    end
+
+    @testset "Mid-level API fallbacks" begin
+        @testset "solve_at_k" begin
+            @test_throws ErrorException solve_at_k("not a solver", [0.0, 0.0], DenseMethod())
+            @test_throws ErrorException solve_at_k(123, [0.0, 0.0], DenseMethod())
+            @test_throws ErrorException solve_at_k(nothing, 0.0, nothing)
+        end
+
+        @testset "matrix_dimension" begin
+            @test_throws ErrorException matrix_dimension("not a solver")
+            @test_throws ErrorException matrix_dimension(123)
+            @test_throws ErrorException matrix_dimension([1, 2, 3])
+        end
+    end
+
 end

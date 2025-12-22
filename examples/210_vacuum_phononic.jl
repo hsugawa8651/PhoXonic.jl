@@ -2,6 +2,7 @@
 # Phononic crystal with vacuum holes using ElasticVoid (Tanaka limit)
 #
 # Reference: Maldovan & Thomas, Appl. Phys. B 83, 595 (2006)
+# DOI: https://doi.org/10.1007/s00340-006-2241-y
 # Structure: Air holes in Si, triangular lattice, r/a = 0.46
 
 using Pkg

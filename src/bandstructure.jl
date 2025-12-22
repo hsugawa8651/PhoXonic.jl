@@ -409,3 +409,19 @@ function _compute_bands_warmstart!(frequencies::Matrix{Float64},
         end
     end
 end
+
+# ============================================================================
+# Error fallback for invalid argument types
+# ============================================================================
+
+"""
+    compute_bands(solver, kpath; kwargs...)
+
+Compute band structure along a k-path.
+
+See concrete method signatures for detailed documentation and keyword arguments.
+"""
+function compute_bands(solver::Any, kpath::Any; kwargs...)
+    error("compute_bands: expected (solver::Solver, kpath), " *
+          "got ($(typeof(solver)), $(typeof(kpath)))")
+end

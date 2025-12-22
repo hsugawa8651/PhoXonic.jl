@@ -75,10 +75,10 @@ For physical frequencies, material constants should be in consistent SI units (P
 - Subpixel averaging for smooth boundaries
 - Band gap detection
 - Group velocity computation
-- Brillouin.jl integration for k-paths
-- Multiple solver methods: Dense, KrylovKit (iterative), LOBPCG
-- Matrix-free operators for large-scale 3D calculations
-- RSCG for Green's function / DOS / LDOS computation
+- [Brillouin.jl](https://thchr.github.io/Brillouin.jl/stable/) integration for k-paths
+- Multiple solver methods: Dense, [KrylovKit.jl](https://jutho.github.io/KrylovKit.jl/stable/) (iterative), LOBPCG ([IterativeSolvers.jl](https://iterativesolvers.julialinearalgebra.org/stable/))
+- Matrix-free operators for large-scale 3D calculations ([FFTW.jl](https://juliamath.github.io/FFTW.jl/stable/), [LinearMaps.jl](https://julialinearalgebra.github.io/LinearMaps.jl/stable/))
+- RSCG for Green's function / DOS / LDOS computation ([Krylov.jl](https://jso.dev/Krylov.jl/stable/))
 
 ## Related Projects
 

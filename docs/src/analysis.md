@@ -28,7 +28,7 @@ kpath = simple_kpath_square(a=1.0, npoints=30)    # Γ-X-M-Γ
 kpath = simple_kpath_hexagonal(a=1.0, npoints=30) # Γ-M-K-Γ
 ```
 
-### Brillouin.jl integration
+### [Brillouin.jl](https://thchr.github.io/Brillouin.jl/stable/) integration
 
 ```julia
 using Brillouin
@@ -40,7 +40,7 @@ kpath = kpath_from_brillouin(kpi, npoints=100)
 
 ## Plotting
 
-Requires `Plots.jl`:
+Requires [Plots.jl](https://docs.juliaplots.org/stable/):
 
 ```julia
 using Plots
@@ -49,7 +49,7 @@ plot_bands(bands)
 
 ## Saving and Loading Results
 
-PhoXonic.jl uses JLD2 for saving and loading results.
+PhoXonic.jl uses [JLD2.jl](https://juliaio.github.io/JLD2.jl/stable/) for saving and loading results.
 
 ### Bands
 
@@ -95,3 +95,9 @@ eps = load_epsilon("epsilon.jld2")
 | `save_bands` | frequencies, kpoints, distances, labels, metadata |
 | `save_modes` | modes, k (optional), frequencies (optional), metadata |
 | `save_epsilon` | Material arrays depend on wave type (see above) |
+
+## API Reference
+
+- [Solver API](api-solver.md) - BandStructure, find_bandgap, group_velocity
+- [Plotting API](api-plotting.md) - plot_bands (requires Plots.jl)
+- [I/O API](api-io.md) - save/load functions (requires JLD2.jl)

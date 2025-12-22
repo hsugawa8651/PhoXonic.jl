@@ -2,6 +2,7 @@
 # Joannopoulos Book Chapter 5, Figure 10 Reproduction
 #
 # Reference: "Photonic Crystals: Molding the Flow of Light" (2nd edition)
+# ISBN: 978-0-691-12456-8, http://ab-initio.mit.edu/book/
 #            Chapter 5: Two-Dimensional Photonic Crystals
 #            Figure 10 (page 76)
 #

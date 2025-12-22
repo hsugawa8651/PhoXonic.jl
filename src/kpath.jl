@@ -204,7 +204,7 @@ kpath = kpath_cubic(a=1.0, N=100)
 bands = compute_bands(solver, kpath; bands=1:6)
 ```
 
-Reference: Setyawan & Curtarolo, Comp. Mat. Sci. 49, 299 (2010)
+Reference: Setyawan & Curtarolo, Comp. Mat. Sci. 49, 299 (2010). DOI:10.1016/j.commatsci.2010.05.010
 """
 function kpath_cubic(; a::Real=1.0, N::Int=100)
     Rs = [[a, 0.0, 0.0], [0.0, a, 0.0], [0.0, 0.0, a]]
@@ -238,7 +238,7 @@ kpath = kpath_fcc(a=1.0, N=100)
 bands = compute_bands(solver, kpath; bands=1:6)
 ```
 
-Reference: Setyawan & Curtarolo, Comp. Mat. Sci. 49, 299 (2010)
+Reference: Setyawan & Curtarolo, Comp. Mat. Sci. 49, 299 (2010). DOI:10.1016/j.commatsci.2010.05.010
 """
 function kpath_fcc(; a::Real=1.0, N::Int=100)
     # FCC primitive vectors
@@ -274,7 +274,7 @@ kpath = kpath_bcc(a=1.0, N=100)
 bands = compute_bands(solver, kpath; bands=1:6)
 ```
 
-Reference: Setyawan & Curtarolo, Comp. Mat. Sci. 49, 299 (2010)
+Reference: Setyawan & Curtarolo, Comp. Mat. Sci. 49, 299 (2010). DOI:10.1016/j.commatsci.2010.05.010
 """
 function kpath_bcc(; a::Real=1.0, N::Int=100)
     # BCC primitive vectors

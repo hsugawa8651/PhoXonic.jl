@@ -140,9 +140,9 @@ For detailed documentation on DOS/LDOS functions, see [DOS / LDOS](@ref).
 
 | Method | Memory | Description |
 |--------|--------|-------------|
-| `DirectGF()` | O(N²) | LU factorization, most accurate |
-| `RSKGF()` | O(N²) | ReducedShiftedKrylov.jl |
-| `MatrixFreeGF()` | O(N) | Matrix-free RSCG, best for large systems |
+| [`DirectGF()`](api-advanced.md#PhoXonic.DirectGF) | O(N²) | LU factorization, most accurate |
+| [`RSKGF()`](api-advanced.md#PhoXonic.RSKGF) | O(N²) | [ReducedShiftedKrylov.jl](https://github.com/hsugawa8651/ReducedShiftedKrylov.jl) |
+| [`MatrixFreeGF()`](api-advanced.md#PhoXonic.MatrixFreeGF) | O(N) | Matrix-free RSCG, best for large systems |
 
 ### Basic Usage
 
@@ -227,7 +227,7 @@ G_mf_cg = compute_greens_function(solver, k, ω_values, source, MatrixFreeGF(rhs
 
 ## Low-Level API
 
-### FFTContext and MatrixFreeWorkspace
+### [FFTContext](api-advanced.md#PhoXonic.FFTContext) and [MatrixFreeWorkspace](api-advanced.md#PhoXonic.MatrixFreeWorkspace)
 
 For optimal performance in loops, separate FFT plan creation from workspace allocation:
 
@@ -243,14 +243,14 @@ op = MatrixFreeOperator(solver, k, ctx, workspace)
 ```
 
 !!! warning "Thread Safety"
-    **FFT plan creation is NOT thread-safe** (FFTW limitation).
+    **FFT plan creation is NOT thread-safe** ([FFTW.jl](https://juliamath.github.io/FFTW.jl/stable/) limitation).
     Create `FFTContext` from a single thread before entering parallel regions.
 
     **FFT plan execution IS thread-safe**.
     The same `FFTContext` can be shared across threads, but each thread
     must have its own `MatrixFreeWorkspace` to avoid data races.
 
-### MatrixFreeOperator
+### [MatrixFreeOperator](api-advanced.md#PhoXonic.MatrixFreeOperator)
 
 ```julia
 # Simple usage (creates new FFT plans internally)
@@ -269,7 +269,7 @@ apply_lhs!(y, op, x)
 apply_rhs!(y, op, x)
 ```
 
-### MatrixFreeEffectiveHamiltonian
+### [MatrixFreeEffectiveHamiltonian](api-advanced.md#PhoXonic.MatrixFreeEffectiveHamiltonian)
 
 For RSCG integration:
 
@@ -289,7 +289,7 @@ x_solutions, stats = ReducedShiftedKrylov.rscg(A, b, shifts)
 ### LinearMap Interface
 
 ```julia
-using LinearMaps
+using LinearMaps  # https://julialinearalgebra.github.io/LinearMaps.jl/stable/
 
 # Convert to LinearMap for use with other iterative solvers
 A_lhs = to_linear_map_lhs(op)  # LHS as LinearMap
@@ -331,3 +331,7 @@ B_rhs = to_linear_map_rhs(op)  # RHS as LinearMap
 
 5. **RSCG convergence**: Matrix-free RSCG often converges better than dense RSCG
    due to better numerical conditioning.
+
+## API Reference
+
+- [Advanced API](api-advanced.md) - MatrixFreeOperator, FFTContext, EffectiveHamiltonian

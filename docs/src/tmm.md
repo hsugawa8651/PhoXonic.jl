@@ -282,3 +282,7 @@ For 1D periodic structures, TMM and PWE should give identical band structures wi
 - `periodic_multilayer(unit_cell, n)` - create periodic structure
 - `refractive_index(material)` - get refractive index
 - `acoustic_impedance(material)` - get acoustic impedance (phononic)
+
+### See Also
+
+- [Core API](api.md) - Dielectric, IsotropicElastic materials

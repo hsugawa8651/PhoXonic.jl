@@ -1,6 +1,7 @@
 # Last-Modified: 2025-12-19
 # Kushwaha 1993: Phononic crystal band structure
 # Reference: M.S. Kushwaha et al., Phys. Rev. Lett. 71, 2022 (1993)
+# DOI: https://doi.org/10.1103/PhysRevLett.71.2022
 #
 # Demonstrates:
 # 1. Dense vs LOBPCG result consistency

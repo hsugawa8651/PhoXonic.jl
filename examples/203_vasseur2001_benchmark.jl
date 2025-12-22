@@ -1,6 +1,7 @@
 # Last-Modified: 2025-12-19
 # Vasseur 2001: Steel/Epoxy phononic crystal (hexagonal lattice)
 # Reference: M. Vasseur et al., J. Phys.: Condens. Matter 13, 8759 (2001)
+# DOI: https://doi.org/10.1088/0953-8984/13/41/305
 #
 # Demonstrates:
 # 1. Dense vs LOBPCG result consistency
