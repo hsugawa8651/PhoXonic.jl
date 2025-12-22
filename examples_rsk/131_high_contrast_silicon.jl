@@ -63,7 +63,7 @@ println()
 # ============================================================================
 
 println("Computing band structure...")
-kpath = simple_kpath_square(a=a, npoints=20)
+kpath = simple_kpath_square(; a=a, npoints=20)
 bands = compute_bands(solver, kpath; bands=1:6)
 
 # Find bandgap
@@ -90,10 +90,22 @@ source_warmup = zeros(ComplexF64, solver.basis.num_pw)
 source_warmup[1] = 1.0
 
 compute_greens_function(solver, k_warmup, ω_warmup, source_warmup, DirectGF(); η=0.01)
-compute_greens_function(solver, k_warmup, ω_warmup, source_warmup,
-    MatrixFreeGF(rhs_inv_method=ApproximateRHSInv()); η=0.01)
-compute_greens_function(solver, k_warmup, ω_warmup, source_warmup,
-    MatrixFreeGF(rhs_inv_method=CGRHSInv()); η=0.01)
+compute_greens_function(
+    solver,
+    k_warmup,
+    ω_warmup,
+    source_warmup,
+    MatrixFreeGF(; rhs_inv_method=ApproximateRHSInv());
+    η=0.01,
+)
+compute_greens_function(
+    solver,
+    k_warmup,
+    ω_warmup,
+    source_warmup,
+    MatrixFreeGF(; rhs_inv_method=CGRHSInv());
+    η=0.01,
+)
 println("Warmup complete.")
 
 # ============================================================================
@@ -107,7 +119,7 @@ println("="^60)
 # Parameters
 k = [0.1, 0.1]  # Off-center k-point
 n_freq = 30
-ω_values = collect(range(ω_center - ω_width, ω_center + ω_width, length=n_freq))
+ω_values = collect(range(ω_center - ω_width, ω_center + ω_width; length=n_freq))
 η = 0.005  # Small broadening for sharper features
 
 # Source vector (point source at origin)
@@ -129,8 +141,9 @@ ldos_direct = [-imag(dot(source, G)) / π for G in G_direct]
 # --- ApproximateRHSInv ---
 println("\n--- MatrixFreeGF(ApproximateRHSInv()) ---")
 t_approx = @elapsed begin
-    G_approx = compute_greens_function(solver, k, ω_values, source,
-        MatrixFreeGF(rhs_inv_method=ApproximateRHSInv()); η=η)
+    G_approx = compute_greens_function(
+        solver, k, ω_values, source, MatrixFreeGF(rhs_inv_method=ApproximateRHSInv()); η=η
+    )
 end
 ldos_approx = [-imag(dot(source, G)) / π for G in G_approx]
 @printf("  Time: %.3f sec\n", t_approx)
@@ -138,8 +151,9 @@ ldos_approx = [-imag(dot(source, G)) / π for G in G_approx]
 # --- CGRHSInv with default parameters ---
 println("\n--- MatrixFreeGF(CGRHSInv()) [default] ---")
 t_cg_default = @elapsed begin
-    G_cg_default = compute_greens_function(solver, k, ω_values, source,
-        MatrixFreeGF(rhs_inv_method=CGRHSInv()); η=η)
+    G_cg_default = compute_greens_function(
+        solver, k, ω_values, source, MatrixFreeGF(rhs_inv_method=CGRHSInv()); η=η
+    )
 end
 ldos_cg_default = [-imag(dot(source, G)) / π for G in G_cg_default]
 @printf("  Time: %.3f sec\n", t_cg_default)
@@ -147,8 +161,14 @@ ldos_cg_default = [-imag(dot(source, G)) / π for G in G_cg_default]
 # --- CGRHSInv with tighter tolerance ---
 println("\n--- MatrixFreeGF(CGRHSInv(atol=1e-12)) [tight] ---")
 t_cg_tight = @elapsed begin
-    G_cg_tight = compute_greens_function(solver, k, ω_values, source,
-        MatrixFreeGF(rhs_inv_method=CGRHSInv(atol=1e-12, rtol=1e-12, maxiter=200)); η=η)
+    G_cg_tight = compute_greens_function(
+        solver,
+        k,
+        ω_values,
+        source,
+        MatrixFreeGF(rhs_inv_method=CGRHSInv(atol=1e-12, rtol=1e-12, maxiter=200));
+        η=η,
+    )
 end
 ldos_cg_tight = [-imag(dot(source, G)) / π for G in G_cg_tight]
 @printf("  Time: %.3f sec\n", t_cg_tight)

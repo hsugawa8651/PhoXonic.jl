@@ -1,13 +1,11 @@
 using Documenter
 using PhoXonic
 
-makedocs(
-    sitename = "PhoXonic.jl",
-    modules = [PhoXonic],
-    format = Documenter.HTML(
-        prettyurls = get(ENV, "CI", nothing) == "true"
-    ),
-    pages = [
+makedocs(;
+    sitename="PhoXonic.jl",
+    modules=[PhoXonic],
+    format=Documenter.HTML(; prettyurls=get(ENV, "CI", nothing) == "true"),
+    pages=[
         "Home" => "index.md",
         "Workflow" => "workflow.md",
         "3D Calculations" => "workflow_3d.md",
@@ -26,13 +24,11 @@ makedocs(
             "I/O" => "api-io.md",
         ],
     ],
-    remotes = nothing,
-    warnonly = [:missing_docs, :cross_references],
+    remotes=nothing,
+    warnonly=[:missing_docs, :cross_references],
 )
 
 # Deploy to GitHub Pages
-deploydocs(
-    repo = "github.com/hsugawa8651/PhoXonic.jl.git",
-    devbranch = "main",
-    push_preview = true,
+deploydocs(;
+    repo="github.com/hsugawa8651/PhoXonic.jl.git", devbranch="main", push_preview=true
 )
