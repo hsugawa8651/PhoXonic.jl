@@ -37,6 +37,25 @@ using LinearAlgebra
             @test abs(dot(a1, b2)) < 1e-10
             @test abs(dot(a2, b1)) < 1e-10
         end
+
+        @testset "Error fallbacks" begin
+            @test_throws ErrorException Lattice()  # no arguments
+            @test_throws ErrorException Lattice("invalid")
+            @test_throws ErrorException Lattice([1.0, 2.0])  # single vector
+            @test_throws ErrorException Lattice(1, 2, 3, 4)  # too many arguments
+        end
+    end
+
+    @testset "Geometry error fallbacks" begin
+        @test_throws ErrorException Geometry()  # no arguments
+        @test_throws ErrorException Geometry("invalid")
+        @test_throws ErrorException Geometry(square_lattice())  # missing background
+    end
+
+    @testset "PlaneWaveBasis error fallbacks" begin
+        @test_throws ErrorException PlaneWaveBasis()  # no arguments
+        @test_throws ErrorException PlaneWaveBasis("invalid")
+        @test_throws ErrorException PlaneWaveBasis(square_lattice())  # missing cutoff
     end
 
     @testset "Shapes" begin

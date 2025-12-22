@@ -660,3 +660,12 @@ function discretize(geometry::Any, args...; kwargs...)
         "got $(typeof(geometry))",
     )
 end
+
+# Error fallback for invalid Geometry constructor arguments
+function Geometry(args...)
+    arg_types = isempty(args) ? "()" : "(" * join(typeof.(args), ", ") * ")"
+    error(
+        "No matching Geometry constructor for arguments: $arg_types. " *
+        "Use Geometry(lattice, background) or Geometry(lattice, background, inclusions).",
+    )
+end

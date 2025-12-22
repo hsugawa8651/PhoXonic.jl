@@ -155,3 +155,12 @@ Return the number of plane waves in the basis.
 num_planewaves(basis::PlaneWaveBasis) = basis.num_pw
 
 Base.length(basis::PlaneWaveBasis) = basis.num_pw
+
+# Error fallback for invalid PlaneWaveBasis constructor arguments
+function PlaneWaveBasis(args...)
+    arg_types = isempty(args) ? "()" : "(" * join(typeof.(args), ", ") * ")"
+    error(
+        "No matching PlaneWaveBasis constructor for arguments: $arg_types. " *
+        "Use PlaneWaveBasis(lattice, cutoff).",
+    )
+end

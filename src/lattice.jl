@@ -164,3 +164,12 @@ function cell_volume(lattice::Lattice{Dim3})
     a1, a2, a3 = lattice.vectors
     abs(dot(a1, cross(a2, a3)))
 end
+
+# Error fallback for invalid constructor arguments
+function Lattice(args...)
+    arg_types = isempty(args) ? "()" : "(" * join(typeof.(args), ", ") * ")"
+    error(
+        "No matching Lattice constructor for arguments: $arg_types. " *
+        "Use Lattice(a::Real) for 1D, Lattice(a1, a2) for 2D, or Lattice(a1, a2, a3) for 3D.",
+    )
+end

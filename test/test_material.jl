@@ -86,3 +86,9 @@ end
         end
     end
 end
+
+@testset "Dielectric error fallbacks" begin
+    @test_throws ErrorException Dielectric()  # no arguments
+    @test_throws ErrorException Dielectric("invalid")
+    @test_throws ErrorException Dielectric([1.0, 2.0])  # wrong type
+end
