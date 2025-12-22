@@ -51,7 +51,7 @@ r = 0.3  # Rod radius
 # Perfect crystal for reference bandgap
 geo_perfect = Geometry(lat, air, [(Circle([0.0, 0.0], r), rod_material)])
 solver_perfect = Solver(TMWave(), geo_perfect, (32, 32); cutoff=5)
-kpath = simple_kpath_square(a=a, npoints=30)
+kpath = simple_kpath_square(; a=a, npoints=30)
 bands_perfect = compute_bands(solver_perfect, kpath; bands=1:8)
 
 gaps = find_all_gaps(bands_perfect; threshold=0.01)
@@ -70,12 +70,9 @@ end
 # ============================================================================
 
 function create_defect_supercell(N_super, a, r, rod_material, air)
-    lat_super = Lattice(
-        SVector(N_super * a, 0.0),
-        SVector(0.0, N_super * a)
-    )
+    lat_super = Lattice(SVector(N_super * a, 0.0), SVector(0.0, N_super * a))
 
-    inclusions = Tuple{Circle, Dielectric}[]
+    inclusions = Tuple{Circle,Dielectric}[]
     center_idx = (N_super + 1) / 2
 
     for i in 1:N_super
@@ -118,7 +115,7 @@ println("Matrix size: $(solver.basis.num_pw) x $(solver.basis.num_pw)")
 # Parameters
 defect_pos = [N_super * a / 2, N_super * a / 2]
 n_freq = 30
-ω_range = collect(range(ω_min * 0.9, ω_max * 1.1, length=n_freq))
+ω_range = collect(range(ω_min * 0.9, ω_max * 1.1; length=n_freq))
 k_points = [[0.0, 0.0]]
 η = 0.02
 
@@ -135,14 +132,18 @@ end
 # --- Matrix-free LDOS (approximate) ---
 println("\n--- MatrixFreeGF() ---")
 t_mf_approx = @elapsed begin
-    ldos_mf_approx = compute_ldos(solver, defect_pos, ω_range, k_points, MatrixFreeGF(); η=η)
+    ldos_mf_approx = compute_ldos(
+        solver, defect_pos, ω_range, k_points, MatrixFreeGF(); η=η
+    )
 end
 @printf("  Time: %.2f sec\n", t_mf_approx)
 
 # --- Matrix-free LDOS (CG) ---
 println("\n--- MatrixFreeGF(rhs_inv_method=CGRHSInv()) ---")
 t_mf_cg = @elapsed begin
-    ldos_mf_cg = compute_ldos(solver, defect_pos, ω_range, k_points, MatrixFreeGF(rhs_inv_method=CGRHSInv()); η=η)
+    ldos_mf_cg = compute_ldos(
+        solver, defect_pos, ω_range, k_points, MatrixFreeGF(rhs_inv_method=CGRHSInv()); η=η
+    )
 end
 @printf("  Time: %.2f sec\n", t_mf_cg)
 
@@ -178,7 +179,9 @@ println("="^60)
 N_super_large = 7
 geo_defect_large = create_defect_supercell(N_super_large, a, r, rod_material, air)
 
-resolution_large = (N_super_large * resolution_per_cell, N_super_large * resolution_per_cell)
+resolution_large = (
+    N_super_large * resolution_per_cell, N_super_large * resolution_per_cell
+)
 solver_large = Solver(TMWave(), geo_defect_large, resolution_large; cutoff=cutoff)
 
 println("\nSupercell: $(N_super_large)x$(N_super_large)")
@@ -196,7 +199,14 @@ defect_pos_large = [N_super_large * a / 2, N_super_large * a / 2]
 
 println("\n--- MatrixFreeGF (7x7 supercell, CGRHSInv) ---")
 t_mf_large = @elapsed begin
-    ldos_mf_large = compute_ldos(solver_large, defect_pos_large, ω_range, k_points, MatrixFreeGF(rhs_inv_method=CGRHSInv()); η=η)
+    ldos_mf_large = compute_ldos(
+        solver_large,
+        defect_pos_large,
+        ω_range,
+        k_points,
+        MatrixFreeGF(rhs_inv_method=CGRHSInv());
+        η=η,
+    )
 end
 @printf("  Time: %.2f sec\n", t_mf_large)
 
@@ -213,68 +223,102 @@ println("Creating Plots")
 println("="^60)
 
 # Plot 1: Dense vs Matrix-free comparison (5x5)
-p1 = plot(
+p1 = plot(;
     xlabel="Frequency (2πc/a)",
     ylabel="LDOS (arb. units)",
     title="5×5 Supercell: Dense vs Matrix-free",
     legend=:topright,
     grid=true,
-    size=(600, 400)
+    size=(600, 400),
 )
 
-plot!(p1, ω_range * a / (2π), ldos_dense,
-      label="Dense", linewidth=2, color=:blue)
-plot!(p1, ω_range * a / (2π), ldos_mf_approx,
-      label="MF approx", linewidth=2, color=:red, linestyle=:dash)
-plot!(p1, ω_range * a / (2π), ldos_mf_cg,
-      label="MF CG", linewidth=2, color=:green, linestyle=:dot)
+plot!(p1, ω_range * a / (2π), ldos_dense; label="Dense", linewidth=2, color=:blue)
+plot!(
+    p1,
+    ω_range * a / (2π),
+    ldos_mf_approx;
+    label="MF approx",
+    linewidth=2,
+    color=:red,
+    linestyle=:dash,
+)
+plot!(
+    p1,
+    ω_range * a / (2π),
+    ldos_mf_cg;
+    label="MF CG",
+    linewidth=2,
+    color=:green,
+    linestyle=:dot,
+)
 
-vspan!(p1, [ω_min * a / (2π), ω_max * a / (2π)],
-       alpha=0.2, color=:yellow, label="Bandgap")
+vspan!(p1, [ω_min * a / (2π), ω_max * a / (2π)]; alpha=0.2, color=:yellow, label="Bandgap")
 
 # Plot 2: Large supercell (7x7)
-p2 = plot(
+p2 = plot(;
     xlabel="Frequency (2πc/a)",
     ylabel="LDOS (arb. units)",
     title="7×7 Supercell: Matrix-free LDOS",
     legend=:topright,
     grid=true,
-    size=(600, 400)
+    size=(600, 400),
 )
 
-plot!(p2, ω_range * a / (2π), ldos_mf_large,
-      label="Matrix-free (7×7)", linewidth=2, color=:green)
+plot!(
+    p2,
+    ω_range * a / (2π),
+    ldos_mf_large;
+    label="Matrix-free (7×7)",
+    linewidth=2,
+    color=:green,
+)
 
-vspan!(p2, [ω_min * a / (2π), ω_max * a / (2π)],
-       alpha=0.2, color=:yellow, label="Bandgap")
+vspan!(p2, [ω_min * a / (2π), ω_max * a / (2π)]; alpha=0.2, color=:yellow, label="Bandgap")
 
-vline!(p2, [ω_defect_large * a / (2π)],
-       color=:red, linestyle=:dash, linewidth=2, label="Defect mode")
+vline!(
+    p2,
+    [ω_defect_large * a / (2π)];
+    color=:red,
+    linestyle=:dash,
+    linewidth=2,
+    label="Defect mode",
+)
 
 # Plot 3: Supercell size comparison
-p3 = plot(
+p3 = plot(;
     xlabel="Frequency (2πc/a)",
     ylabel="LDOS (normalized)",
     title="Supercell Size Comparison",
     legend=:topright,
     grid=true,
-    size=(600, 400)
+    size=(600, 400),
 )
 
 # Normalize for comparison
 ldos_mf_cg_norm = ldos_mf_cg / maximum(ldos_mf_cg)
 ldos_mf_large_norm = ldos_mf_large / maximum(ldos_mf_large)
 
-plot!(p3, ω_range * a / (2π), ldos_mf_cg_norm,
-      label="5×5 supercell (CG)", linewidth=2, color=:blue)
-plot!(p3, ω_range * a / (2π), ldos_mf_large_norm,
-      label="7×7 supercell (CG)", linewidth=2, color=:green)
+plot!(
+    p3,
+    ω_range * a / (2π),
+    ldos_mf_cg_norm;
+    label="5×5 supercell (CG)",
+    linewidth=2,
+    color=:blue,
+)
+plot!(
+    p3,
+    ω_range * a / (2π),
+    ldos_mf_large_norm;
+    label="7×7 supercell (CG)",
+    linewidth=2,
+    color=:green,
+)
 
-vspan!(p3, [ω_min * a / (2π), ω_max * a / (2π)],
-       alpha=0.2, color=:yellow, label="Bandgap")
+vspan!(p3, [ω_min * a / (2π), ω_max * a / (2π)]; alpha=0.2, color=:yellow, label="Bandgap")
 
 # Combined plot
-p_combined = plot(p1, p2, p3, layout=(1, 3), size=(1500, 400))
+p_combined = plot(p1, p2, p3; layout=(1, 3), size=(1500, 400))
 
 # Save plots
 savefig(p1, joinpath(@__DIR__, "502_dense_vs_matrixfree.png"))

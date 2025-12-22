@@ -42,23 +42,24 @@ plot_bands(bands; color=:blue)
 plot_bands(bands; scatter=true, markersize=2, color=:blue)
 ```
 """
-function PhoXonic.plot_bands(bs::BandStructure;
-                              color=:blue,
-                              linewidth::Real=2,
-                              scatter::Bool=false,
-                              markersize::Real=3,
-                              markershape::Symbol=:circle,
-                              title::String="Band Structure",
-                              ylabel::String="Frequency",
-                              xlabel::String="Wave vector",
-                              show_gaps::Bool=false,
-                              gap_color=:yellow,
-                              gap_alpha::Real=0.2,
-                              gap_threshold::Real=0.0,
-                              normalize::Real=1.0,
-                              size::Tuple{Int,Int}=(600, 400),
-                              kwargs...)
-
+function PhoXonic.plot_bands(
+    bs::BandStructure;
+    color=:blue,
+    linewidth::Real=2,
+    scatter::Bool=false,
+    markersize::Real=3,
+    markershape::Symbol=:circle,
+    title::String="Band Structure",
+    ylabel::String="Frequency",
+    xlabel::String="Wave vector",
+    show_gaps::Bool=false,
+    gap_color=:yellow,
+    gap_alpha::Real=0.2,
+    gap_threshold::Real=0.0,
+    normalize::Real=1.0,
+    size::Tuple{Int,Int}=(600, 400),
+    kwargs...,
+)
     data = band_plot_data(bs; normalize=normalize)
 
     # Create plot
@@ -69,19 +70,26 @@ function PhoXonic.plot_bands(bs::BandStructure;
         legend=false,
         grid=true,
         size=size,
-        kwargs...
+        kwargs...,
     )
 
     # Plot each band
     nbands = Base.size(data.frequencies, 2)
     for b in 1:nbands
         if scatter
-            Plots.scatter!(p, data.distances, data.frequencies[:, b];
-                          markersize=markersize, markershape=markershape,
-                          color=color, markerstrokewidth=0)
+            Plots.scatter!(
+                p,
+                data.distances,
+                data.frequencies[:, b];
+                markersize=markersize,
+                markershape=markershape,
+                color=color,
+                markerstrokewidth=0,
+            )
         else
-            plot!(p, data.distances, data.frequencies[:, b];
-                  linewidth=linewidth, color=color)
+            plot!(
+                p, data.distances, data.frequencies[:, b]; linewidth=linewidth, color=color
+            )
         end
     end
 
@@ -95,8 +103,13 @@ function PhoXonic.plot_bands(bs::BandStructure;
     if show_gaps
         gaps = find_all_gaps(bs; threshold=gap_threshold)
         for g in gaps
-            hspan!(p, [g.max_lower * normalize, g.min_upper * normalize];
-                   alpha=gap_alpha, color=gap_color, label="")
+            hspan!(
+                p,
+                [g.max_lower * normalize, g.min_upper * normalize];
+                alpha=gap_alpha,
+                color=gap_color,
+                label="",
+            )
         end
     end
 
@@ -117,27 +130,43 @@ Add band structure to an existing plot.
 - `markershape`: Marker shape for scatter plot (default: :circle)
 - `normalize`: Normalization factor for frequency (default: 1.0)
 """
-function PhoXonic.plot_bands!(p, bs::BandStructure;
-                               color=:blue,
-                               linewidth::Real=2,
-                               linestyle=:solid,
-                               scatter::Bool=false,
-                               markersize::Real=3,
-                               markershape::Symbol=:circle,
-                               normalize::Real=1.0,
-                               kwargs...)
-
+function PhoXonic.plot_bands!(
+    p,
+    bs::BandStructure;
+    color=:blue,
+    linewidth::Real=2,
+    linestyle=:solid,
+    scatter::Bool=false,
+    markersize::Real=3,
+    markershape::Symbol=:circle,
+    normalize::Real=1.0,
+    kwargs...,
+)
     data = band_plot_data(bs; normalize=normalize)
 
     nbands = Base.size(data.frequencies, 2)
     for b in 1:nbands
         if scatter
-            Plots.scatter!(p, data.distances, data.frequencies[:, b];
-                          markersize=markersize, markershape=markershape,
-                          color=color, markerstrokewidth=0, kwargs...)
+            Plots.scatter!(
+                p,
+                data.distances,
+                data.frequencies[:, b];
+                markersize=markersize,
+                markershape=markershape,
+                color=color,
+                markerstrokewidth=0,
+                kwargs...,
+            )
         else
-            plot!(p, data.distances, data.frequencies[:, b];
-                  linewidth=linewidth, color=color, linestyle=linestyle, kwargs...)
+            plot!(
+                p,
+                data.distances,
+                data.frequencies[:, b];
+                linewidth=linewidth,
+                color=color,
+                linestyle=linestyle,
+                kwargs...,
+            )
         end
     end
 
