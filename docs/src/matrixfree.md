@@ -171,20 +171,24 @@ ldos = compute_ldos(solver, [0.5, 0.5], ω_values, k_points, RSKGF(); η=1e-2)
 
 | Option | Description | Speed | Accuracy |
 |--------|-------------|-------|----------|
-| `:approximate` | Element-wise 1/ε (default) | Fast | Approximate for inhomogeneous media |
-| `:cg` | Inner CG iteration | Slower | Exact |
+| `ApproximateRHSInv()` | Element-wise 1/ε (default) | Fast | Approximate for inhomogeneous media |
+| `CGRHSInv()` | Inner CG iteration | Slower | Exact |
 
 ```julia
 # Fast approximate method (default)
 ldos = compute_ldos(solver, pos, ω_values, k_points, MatrixFreeGF(); η=1e-2)
 
 # Exact CG method
-ldos = compute_ldos(solver, pos, ω_values, k_points, MatrixFreeGF(rhs_inv_method=:cg); η=1e-2)
+ldos = compute_ldos(solver, pos, ω_values, k_points, MatrixFreeGF(rhs_inv_method=CGRHSInv()); η=1e-2)
+
+# CGRHSInv with custom parameters
+ldos = compute_ldos(solver, pos, ω_values, k_points,
+    MatrixFreeGF(rhs_inv_method=CGRHSInv(atol=1e-12, rtol=1e-12, maxiter=200)); η=1e-2)
 ```
 
-!!! note "When to use :cg"
-    - `:approximate` is sufficient for most cases, especially for peak detection
-    - Use `:cg` when accurate absolute values are needed for high-contrast structures
+!!! note "When to use CGRHSInv"
+    - `ApproximateRHSInv()` is sufficient for most cases, especially for peak detection
+    - Use `CGRHSInv()` when accurate absolute values are needed for high-contrast structures
 
 !!! warning "RSCG Convergence"
     The RSCG solver may not fully converge for all problems.
@@ -222,7 +226,7 @@ G_rsk = compute_greens_function(solver, k, ω_values, source, RSKGF(); η=1e-2)
 G_mf = compute_greens_function(solver, k, ω_values, source, MatrixFreeGF(); η=1e-2)
 
 # Matrix-free with exact RHS⁻¹
-G_mf_cg = compute_greens_function(solver, k, ω_values, source, MatrixFreeGF(rhs_inv_method=:cg); η=1e-2)
+G_mf_cg = compute_greens_function(solver, k, ω_values, source, MatrixFreeGF(rhs_inv_method=CGRHSInv()); η=1e-2)
 ```
 
 ## Low-Level API
