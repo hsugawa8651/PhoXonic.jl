@@ -4,11 +4,11 @@
 
 ### Triangular Lattice Rods (TM mode)
 
-Source: `examples/11_triangular_rods.jl`
+Source: `examples/101_triangular_rods.jl`
 
 Dielectric rods (ε=12) in air, radius r=0.2a.
 
-![Triangular lattice structure](assets/05_structure_tri_rods.png)
+![Triangular lattice structure](assets/801_structure_tri_rods.png)
 
 ```julia
 lat = hexagonal_lattice(1.0)
@@ -21,7 +21,7 @@ kpath = simple_kpath_hexagonal(npoints=30)
 bands = compute_bands(solver, kpath; bands=1:8)
 ```
 
-![TM band structure](assets/11_triangular_tm_bands.png)
+![TM band structure](assets/101_triangular_tm_bands.png)
 
 The TM mode shows a clear band gap between bands 1 and 2.
 
@@ -29,9 +29,9 @@ The TM mode shows a clear band gap between bands 1 and 2.
 
 ### Square Lattice Rods (TE/TM comparison)
 
-Source: `examples/12_square_rods.jl`
+Source: `examples/103_square_rods.jl`
 
-![Square lattice structure](assets/05_structure_sq_rods.png)
+![Square lattice structure](assets/801_structure_sq_rods.png)
 
 ```julia
 lat = square_lattice(1.0)
@@ -41,7 +41,7 @@ solver_te = Solver(TEWave(), geo, (64, 64); cutoff=7)
 solver_tm = Solver(TMWave(), geo, (64, 64); cutoff=7)
 ```
 
-![Square lattice TE/TM bands](assets/12_square_bands_combined.png)
+![Square lattice TE/TM bands](assets/103_square_bands_combined.png)
 
 This example also demonstrates iterative solvers:
 
@@ -59,7 +59,7 @@ solver = Solver(TMWave(), geo, (64, 64), LOBPCGMethod())
 
 ### Steel/Epoxy (SH and P-SV modes)
 
-Source: `examples/31_phononic_steel_epoxy.jl`
+Source: `examples/201_phononic_steel_epoxy.jl`
 
 Steel cylinders in epoxy matrix.
 
@@ -74,7 +74,7 @@ solver_sh = Solver(SHWave(), geo, (64, 64); cutoff=7)
 solver_psv = Solver(PSVWave(), geo, (64, 64); cutoff=7)
 ```
 
-![Phononic bands (SH and P-SV)](assets/31_phononic_bands_combined.png)
+![Phononic bands (SH and P-SV)](assets/201_phononic_bands_combined.png)
 
 This example also compares Dense, KrylovKit, and LOBPCG methods for phononic problems.
 
@@ -84,11 +84,11 @@ This example also compares Dense, KrylovKit, and LOBPCG methods for phononic pro
 
 ### Bragg Reflector
 
-Source: `examples/41_bragg_reflector.jl`
+Source: `examples/301_bragg_reflector.jl`
 
 Quarter-wave stack of two dielectric materials.
 
-![Bragg structure](assets/41_bragg_structure.png)
+![Bragg structure](assets/301_bragg_structure.png)
 
 ```julia
 lat = lattice_1d(1.0)
@@ -106,7 +106,7 @@ solver = Solver(Photonic1D(), geo, 128, KrylovKitMethod(); cutoff=20)
 solver = Solver(Photonic1D(), geo, 128, LOBPCGMethod(); cutoff=20)
 ```
 
-![Bragg band structure](assets/41_bragg_bands.png)
+![Bragg band structure](assets/301_bragg_bands.png)
 
 ---
 
@@ -114,7 +114,7 @@ solver = Solver(Photonic1D(), geo, 128, LOBPCGMethod(); cutoff=20)
 
 ### FCC Lattice with Spheres
 
-Source: `examples/51_fcc_spheres.jl`
+Source: `examples/401_fcc_spheres.jl`
 
 Dielectric spheres (ε=12) in air on an FCC lattice.
 
@@ -140,7 +140,7 @@ which can cause anomalous values in band structure plots.
 
 ### Simple Cubic Lattice with Spheres
 
-Source: `examples/52_sc_spheres.jl`
+Source: `examples/402_sc_spheres.jl`
 
 ```julia
 lat = cubic_lattice(1.0)
@@ -160,11 +160,10 @@ See the `examples/` directory in the repository for additional examples:
 
 | Category | File | Description |
 |----------|------|-------------|
-| 2D Photonic | `13_honeycomb_rods.jl` | Honeycomb lattice |
-| 2D Photonic | `21_triangular_holes.jl` | Air holes in dielectric |
-| 2D Photonic | `22_subpixel_comparison.jl` | Convergence with subpixel averaging |
-| 1D Elastic | `42_elastic_superlattice.jl` | Elastic wave superlattice |
-| 3D Photonic | `51_fcc_spheres.jl` | FCC lattice with spheres |
-| 3D Photonic | `52_sc_spheres.jl` | Simple cubic with spheres |
-| Advanced | `91_defect_mode.jl` | Defect states and LDOS |
-
+| 2D Photonic | `104_honeycomb_rods.jl` | Honeycomb lattice |
+| 2D Photonic | `111_triangular_holes.jl` | Air holes in dielectric |
+| 2D Photonic | `121_subpixel_comparison.jl` | Convergence with subpixel averaging |
+| 1D Elastic | `302_elastic_superlattice.jl` | Elastic wave superlattice |
+| 3D Phononic | `403_sc_phononic.jl` | Simple cubic phononic |
+| Defect | `501_defect_mode.jl` | Defect states and LDOS |
+| TMM | `601_tmm_bragg_mirror.jl` | Transfer matrix method |
