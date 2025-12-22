@@ -230,6 +230,9 @@ for large problems by reusing eigenvectors from previous k-points.
 - Block method: computes multiple eigenvalues simultaneously
 - When shift > 0, uses shift-and-invert to skip eigenvalues near zero
   (useful for 3D H-field formulation where spurious modes exist at λ ≈ 0)
+- **Note**: With shift > 0, the method falls back to dense `eigen` solver internally
+  because the shifted matrix (A - σB) is not positive definite as required by LOBPCG.
+  This means the memory efficiency advantage of LOBPCG is lost in shifted mode.
 
 # Example
 ```julia

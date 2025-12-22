@@ -599,9 +599,9 @@ For normalized eigenvectors from `solve_at_k_with_vectors`, we have:
 | TM | ε (permittivity) |
 | SH | ρ (density) |
 | PSV | diag(ρ, ρ) |
-| FullVectorEM | diag(ε, ε, ε) |
+| FullVectorEM | diag(μ, μ, μ) |
 | FullElastic | diag(ρ, ρ, ρ) |
-| Photonic1D | ε |
+| Photonic1D | μ |
 | Longitudinal1D | ρ |
 
 # Returns
@@ -1503,18 +1503,24 @@ end
 """
     _solve_lobpcg_shifted(solver, k, method; bands)
 
-Shift-and-invert LOBPCG solver.
+Shift-and-invert solver for LOBPCGMethod with shift > 0.
 
 Uses spectral transformation to find eigenvalues above shift σ:
 - Original problem: `A x = λ B x`
 - Transformed: `(A - σB)⁻¹ B x = μ x` where `μ = 1/(λ - σ)`
 
-For λ > σ: μ > 0 (positive, LOBPCG finds largest)
+For λ > σ: μ > 0 (positive, largest μ corresponds to smallest λ > σ)
 For λ < σ: μ < 0 (negative, filtered out)
 For λ ≈ σ: |μ| → ∞ (very large, avoided by appropriate σ choice)
 
 This is particularly useful for 3D H-field formulation where spurious
 longitudinal modes exist at λ ≈ 0. Setting σ = 0.01 skips these modes.
+
+**Note**: Despite the function name, this does NOT use LOBPCG internally.
+The shifted matrix (A - σB) is not positive definite, which violates LOBPCG's
+requirements. Instead, this function builds the dense transformed operator
+T = (A - σB)⁻¹ B and uses standard `eigen(T)`. This loses LOBPCG's memory
+efficiency but provides correct results.
 """
 function _solve_lobpcg_shifted(solver::Solver, k, method::LOBPCGMethod; bands=1:10)
     σ = method.shift
