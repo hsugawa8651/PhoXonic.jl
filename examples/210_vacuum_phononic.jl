@@ -28,7 +28,7 @@ c_L = 8950.0    # m/s (longitudinal velocity)
 μ_si = ρ_si * c_T^2
 λ_si = ρ_si * (c_L^2 - 2 * c_T^2)
 
-si = IsotropicElastic(ρ=ρ_si, λ=λ_si, μ=μ_si)
+si = IsotropicElastic(; ρ=ρ_si, λ=λ_si, μ=μ_si)
 
 # Vacuum: ElasticVoid uses Tanaka limit (ρ/C → 0)
 # Default ρ_ratio=1e-7 pushes spurious flat bands to high frequency
@@ -36,7 +36,9 @@ void = ElasticVoid()
 
 println("\nMaterials:")
 println("  Si: ρ=$(ρ_si) kg/m³, c_T=$(c_T) m/s, c_L=$(c_L) m/s")
-println("  Void: ρ=$(PhoXonic.density(void)), v_T=$(round(transverse_velocity(void), digits=1))")
+println(
+    "  Void: ρ=$(PhoXonic.density(void)), v_T=$(round(transverse_velocity(void), digits=1))"
+)
 
 # =============================================================================
 # Geometry: Triangular lattice, r/a = 0.46
@@ -90,7 +92,9 @@ for gap in find_all_gaps(bands_sh)
     lower = gap.max_lower * norm
     upper = gap.min_upper * norm
     if lower < 2.0
-        println("  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3))")
+        println(
+            "  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3))"
+        )
     end
 end
 
@@ -99,7 +103,9 @@ for gap in find_all_gaps(bands_psv)
     lower = gap.max_lower * norm
     upper = gap.min_upper * norm
     if lower < 2.0
-        println("  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3))")
+        println(
+            "  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3))"
+        )
     end
 end
 
@@ -115,38 +121,32 @@ label_pos = [dists[i] for (i, _) in labels]
 label_names = [l for (_, l) in labels]
 
 # SH subplot
-p1 = plot(
-    ylabel="ωa/2πcT",
-    title="SH Bands",
-    legend=:topright,
-    grid=true,
-    ylims=(0, 1.5)
-)
+p1 = plot(; ylabel="ωa/2πcT", title="SH Bands", legend=:topright, grid=true, ylims=(0, 1.5))
 for b in 1:size(freqs_sh, 2)
-    plot!(p1, dists, freqs_sh[:, b], lw=2, color=:green, label="")
+    plot!(p1, dists, freqs_sh[:, b]; lw=2, color=:green, label="")
 end
-hspan!(p1, [0.830, 0.963], alpha=0.2, color=:blue, label="Paper (complete)")
-vline!(p1, label_pos, color=:gray, ls=:dash, alpha=0.5, label="")
+hspan!(p1, [0.830, 0.963]; alpha=0.2, color=:blue, label="Paper (complete)")
+vline!(p1, label_pos; color=:gray, ls=:dash, alpha=0.5, label="")
 xticks!(p1, label_pos, label_names)
 
 # PSV subplot
-p2 = plot(
-    title="PSV Bands",
-    legend=:topright,
-    grid=true,
-    ylims=(0, 1.5)
-)
+p2 = plot(; title="PSV Bands", legend=:topright, grid=true, ylims=(0, 1.5))
 for b in 1:size(freqs_psv, 2)
-    plot!(p2, dists, freqs_psv[:, b], lw=2, color=:orange, label="")
+    plot!(p2, dists, freqs_psv[:, b]; lw=2, color=:orange, label="")
 end
-hspan!(p2, [0.830, 0.963], alpha=0.2, color=:blue, label="Paper (complete)")
-vline!(p2, label_pos, color=:gray, ls=:dash, alpha=0.5, label="")
+hspan!(p2, [0.830, 0.963]; alpha=0.2, color=:blue, label="Paper (complete)")
+vline!(p2, label_pos; color=:gray, ls=:dash, alpha=0.5, label="")
 xticks!(p2, label_pos, label_names)
 
 # Combined
-p = plot(p1, p2, layout=(1, 2), size=(1100, 450),
-         plot_title="Maldovan 2006: Vacuum/Si (r/a=0.46)",
-         left_margin=10Plots.mm)
+p = plot(
+    p1,
+    p2;
+    layout=(1, 2),
+    size=(1100, 450),
+    plot_title="Maldovan 2006: Vacuum/Si (r/a=0.46)",
+    left_margin=10Plots.mm,
+)
 
 savefig(p, joinpath(@__DIR__, "210_vacuum_phononic.png"))
 println("\nSaved: 210_vacuum_phononic.png")

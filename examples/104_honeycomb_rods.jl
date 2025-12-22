@@ -37,13 +37,12 @@ println("  Rod 2: ", pos2)
 air = Dielectric(1.0)
 rod = Dielectric(12.0)
 
-geo = Geometry(lat, air, [
-    (Circle(collect(pos1), 0.14), rod),
-    (Circle(collect(pos2), 0.14), rod)
-])
+geo = Geometry(
+    lat, air, [(Circle(collect(pos1), 0.14), rod), (Circle(collect(pos2), 0.14), rod)]
+)
 
 # Create k-path: Γ → M → K → Γ
-kpath = simple_kpath_hexagonal(a=a, npoints=50)
+kpath = simple_kpath_hexagonal(; a=a, npoints=50)
 
 # ============================================================================
 # TM polarization
@@ -58,8 +57,13 @@ if isempty(gaps_tm)
     println("  No significant band gaps found.")
 else
     for g in gaps_tm
-        println("  Gap between bands ", g.bands, ": ",
-                round(g.gap_ratio*100, digits=1), "% gap-to-midgap")
+        println(
+            "  Gap between bands ",
+            g.bands,
+            ": ",
+            round(g.gap_ratio*100; digits=1),
+            "% gap-to-midgap",
+        )
     end
 end
 
@@ -76,8 +80,13 @@ if isempty(gaps_te)
     println("  No significant band gaps found.")
 else
     for g in gaps_te
-        println("  Gap between bands ", g.bands, ": ",
-                round(g.gap_ratio*100, digits=1), "% gap-to-midgap")
+        println(
+            "  Gap between bands ",
+            g.bands,
+            ": ",
+            round(g.gap_ratio*100; digits=1),
+            "% gap-to-midgap",
+        )
     end
 end
 
@@ -103,9 +112,15 @@ for n in 1:13
             midgap = (overlap_min + overlap_max) / 2
             gap_ratio = (overlap_max - overlap_min) / midgap * 100
             println("Complete gap between bands $n and $(n+1):")
-            println("  TM: $(round(tm_gap.max_lower, digits=3)) - $(round(tm_gap.min_upper, digits=3))")
-            println("  TE: $(round(te_gap.max_lower, digits=3)) - $(round(te_gap.min_upper, digits=3))")
-            println("  Overlap: $(round(overlap_min, digits=3)) - $(round(overlap_max, digits=3))")
+            println(
+                "  TM: $(round(tm_gap.max_lower, digits=3)) - $(round(tm_gap.min_upper, digits=3))",
+            )
+            println(
+                "  TE: $(round(te_gap.max_lower, digits=3)) - $(round(te_gap.min_upper, digits=3))",
+            )
+            println(
+                "  Overlap: $(round(overlap_min, digits=3)) - $(round(overlap_max, digits=3))",
+            )
             println("  Complete gap ratio: $(round(gap_ratio, digits=1))%")
         end
     end
@@ -119,27 +134,27 @@ label_positions = [dists[i] for (i, _) in bands_tm.labels]
 label_names = [l for (_, l) in bands_tm.labels]
 
 # Combined plot
-p = plot(
+p = plot(;
     xlabel="Wave vector",
     ylabel="Frequency (ωa/2πc)",
     title="Honeycomb Lattice: TM (blue) and TE (red)",
     legend=false,
     grid=true,
     size=(800, 500),
-    ylim=(0, 12)
+    ylim=(0, 12),
 )
 
 # Plot TM bands (blue solid)
 for b in 1:size(bands_tm.frequencies, 2)
-    plot!(p, dists, bands_tm.frequencies[:, b], linewidth=2, color=:blue)
+    plot!(p, dists, bands_tm.frequencies[:, b]; linewidth=2, color=:blue)
 end
 
 # Plot TE bands (red dashed)
 for b in 1:size(bands_te.frequencies, 2)
-    plot!(p, dists, bands_te.frequencies[:, b], linewidth=2, color=:red, linestyle=:dash)
+    plot!(p, dists, bands_te.frequencies[:, b]; linewidth=2, color=:red, linestyle=:dash)
 end
 
-vline!(p, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
+vline!(p, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
 xticks!(p, label_positions, label_names)
 
 # Save plot

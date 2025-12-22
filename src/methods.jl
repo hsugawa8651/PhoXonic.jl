@@ -175,8 +175,9 @@ solver = Solver(TEWave(), geo, (64, 64), KrylovKitMethod(); cutoff=10)
 solver = Solver(FullVectorEM(), geo, (16, 16, 16), KrylovKitMethod(shift=0.01); cutoff=3)
 ```
 """
-function KrylovKitMethod(; tol::Real=1e-8, maxiter::Int=300, krylovdim::Int=30,
-                          verbosity::Int=0, shift::Real=0.0)
+function KrylovKitMethod(;
+    tol::Real=1e-8, maxiter::Int=300, krylovdim::Int=30, verbosity::Int=0, shift::Real=0.0
+)
     KrylovKitMethod(Float64(tol), maxiter, krylovdim, verbosity, Float64(shift))
 end
 
@@ -269,10 +270,24 @@ method = LOBPCGMethod(warm_start=false, scale=false, first_dense=false, tol=1e-8
 solver = Solver(FullVectorEM(), geo, (16, 16, 16), LOBPCGMethod(shift=0.01); cutoff=3)
 ```
 """
-function LOBPCGMethod(; tol::Real=1e-4, maxiter::Int=200, shift::Real=0.0,
-                       warm_start::Bool=true, scale::Bool=true, first_dense::Bool=true,
-                       preconditioner=:diagonal)
-    LOBPCGMethod(Float64(tol), maxiter, Float64(shift), warm_start, scale, first_dense, preconditioner)
+function LOBPCGMethod(;
+    tol::Real=1e-4,
+    maxiter::Int=200,
+    shift::Real=0.0,
+    warm_start::Bool=true,
+    scale::Bool=true,
+    first_dense::Bool=true,
+    preconditioner=:diagonal,
+)
+    LOBPCGMethod(
+        Float64(tol),
+        maxiter,
+        Float64(shift),
+        warm_start,
+        scale,
+        first_dense,
+        preconditioner,
+    )
 end
 
 # Future extensions:

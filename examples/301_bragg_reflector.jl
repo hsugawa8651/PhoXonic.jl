@@ -46,7 +46,7 @@ println("Number of plane waves: ", solver.basis.num_pw)
 
 # K-path: 0 to π/a (first Brillouin zone)
 nk = 50
-k_points = range(0, π/a, length=nk)
+k_points = range(0, π/a; length=nk)
 
 # Compute bands
 println("\nComputing bands...")
@@ -78,7 +78,7 @@ println("  max |Dense - KrylovKit| = ", @sprintf("%.2e", max_diff_krylov))
 
 # LOBPCGMethod (requires shift for 1D to ensure positive-definite B matrix)
 println("\nComputing with LOBPCGMethod (shift=0.01)...")
-solver_lobpcg = Solver(Photonic1D(), geo, 128, LOBPCGMethod(shift=0.01); cutoff=15)
+solver_lobpcg = Solver(Photonic1D(), geo, 128, LOBPCGMethod(; shift=0.01); cutoff=15)
 frequencies_lobpcg = zeros(nk, nbands)
 for (ik, k) in enumerate(k_points)
     freqs, _ = solve(solver_lobpcg, k; bands=1:nbands)
@@ -99,16 +99,16 @@ n_eff = (n_hi + n_lo) / 2
 gap_ratio_theory = 4/π * asin((n_hi - n_lo)/(n_hi + n_lo))
 
 println("\n=== Theoretical Values ===")
-println("Center frequency (ωa/2πc): ", round(ω_center / (2π), digits=3))
-println("Gap-to-midgap ratio: ", round(gap_ratio_theory * 100, digits=1), "%")
+println("Center frequency (ωa/2πc): ", round(ω_center / (2π); digits=3))
+println("Gap-to-midgap ratio: ", round(gap_ratio_theory * 100; digits=1), "%")
 
 # ============================================================================
 # Find band gaps from computed data
 # ============================================================================
 println("\n=== Computed Band Gaps ===")
-for b in 1:(nbands-1)
+for b in 1:(nbands - 1)
     max_lower = maximum(frequencies[:, b])
-    min_upper = minimum(frequencies[:, b+1])
+    min_upper = minimum(frequencies[:, b + 1])
     if min_upper > max_lower
         gap = min_upper - max_lower
         midgap = (max_lower + min_upper) / 2
@@ -122,30 +122,30 @@ end
 # ============================================================================
 # Plot
 # ============================================================================
-p = plot(
+p = plot(;
     xlabel="Wave vector (ka/π)",
     ylabel="Frequency (ωa/2πc)",
     title="1D Bragg Reflector (n=1/3 quarter-wave stack)",
     legend=false,
     grid=true,
-    size=(600, 450)
+    size=(600, 450),
 )
 
 k_norm = k_points ./ (π/a)  # Normalize to [0, 1]
 
 for b in 1:nbands
-    plot!(p, k_norm, frequencies[:, b], linewidth=2, color=:blue)
+    plot!(p, k_norm, frequencies[:, b]; linewidth=2, color=:blue)
 end
 
 # Add light line for comparison
 # plot!(p, k_norm, k_points, linewidth=1, color=:gray, linestyle=:dash)
 
 # Highlight band gaps
-for b in 1:(nbands-1)
+for b in 1:(nbands - 1)
     max_lower = maximum(frequencies[:, b])
-    min_upper = minimum(frequencies[:, b+1])
+    min_upper = minimum(frequencies[:, b + 1])
     if min_upper > max_lower
-        hspan!(p, [max_lower, min_upper], alpha=0.2, color=:yellow, label="")
+        hspan!(p, [max_lower, min_upper]; alpha=0.2, color=:yellow, label="")
     end
 end
 
@@ -155,20 +155,21 @@ println("\nSaved: 301_bragg_bands.png")
 # ============================================================================
 # Plot structure
 # ============================================================================
-x_plot = range(0, 2a, length=200)
+x_plot = range(0, 2a; length=200)
 ε_plot = [x < d_hi || (a <= x < a + d_hi) ? ε_hi : ε_lo for x in x_plot]
 
 p_struct = plot(
-    x_plot ./ a, ε_plot,
+    x_plot ./ a,
+    ε_plot;
     xlabel="Position (x/a)",
     ylabel="Dielectric constant ε",
     title="Bragg Reflector Structure",
     legend=false,
     linewidth=2,
     fill=(0, 0.3, :blue),
-    size=(600, 250)
+    size=(600, 250),
 )
-vline!(p_struct, [1.0], color=:gray, linestyle=:dash)
+vline!(p_struct, [1.0]; color=:gray, linestyle=:dash)
 
 savefig(p_struct, joinpath(@__DIR__, "301_bragg_structure.png"))
 println("Saved: 301_bragg_structure.png")

@@ -249,9 +249,11 @@ using LinearAlgebra
 
             theoretical_fill = π * r^2 / cell_area(lat)
 
-            for (label, center) in [("center (0.5, 0.5)", [0.5, 0.5]),
-                                     ("corner (0.0, 0.0)", [0.0, 0.0]),
-                                     ("edge (0.5, 0.0)", [0.5, 0.0])]
+            for (label, center) in [
+                ("center (0.5, 0.5)", [0.5, 0.5]),
+                ("corner (0.0, 0.0)", [0.0, 0.0]),
+                ("edge (0.5, 0.0)", [0.5, 0.0]),
+            ]
                 geo = Geometry(lat, air, [(Circle(center, r), rod)])
                 ε = PhoXonic.discretize(geo, (64, 64), :ε)
                 rod_pixels = sum(ε .> 2.0)
@@ -269,8 +271,10 @@ using LinearAlgebra
 
             theoretical_fill = π * r^2 / cell_area(lat)
 
-            for (label, center) in [("center", [0.5, 0.289]),  # center of unit cell
-                                     ("corner (0.0, 0.0)", [0.0, 0.0])]
+            for (label, center) in [
+                ("center", [0.5, 0.289]),  # center of unit cell
+                ("corner (0.0, 0.0)", [0.0, 0.0]),
+            ]
                 geo = Geometry(lat, air, [(Circle(center, r), rod)])
                 ε = PhoXonic.discretize(geo, (64, 64), :ε)
                 rod_pixels = sum(ε .> 2.0)
@@ -291,9 +295,11 @@ using LinearAlgebra
             rect_size = [0.4, 0.3]
             theoretical_fill = rect_size[1] * rect_size[2] / cell_area(lat)
 
-            for (label, center) in [("center (0.5, 0.5)", [0.5, 0.5]),
-                                     ("corner (0.0, 0.0)", [0.0, 0.0]),
-                                     ("edge (0.5, 0.0)", [0.5, 0.0])]
+            for (label, center) in [
+                ("center (0.5, 0.5)", [0.5, 0.5]),
+                ("corner (0.0, 0.0)", [0.0, 0.0]),
+                ("edge (0.5, 0.0)", [0.5, 0.0]),
+            ]
                 geo = Geometry(lat, air, [(Rectangle(center, rect_size), rod)])
                 ε = PhoXonic.discretize(geo, (64, 64), :ε)
                 rod_pixels = sum(ε .> 2.0)
@@ -311,8 +317,8 @@ using LinearAlgebra
             rect_size = [0.3, 0.2]
             theoretical_fill = rect_size[1] * rect_size[2] / cell_area(lat)
 
-            for (label, center) in [("center", [0.5, 0.289]),
-                                     ("corner (0.0, 0.0)", [0.0, 0.0])]
+            for (label, center) in
+                [("center", [0.5, 0.289]), ("corner (0.0, 0.0)", [0.0, 0.0])]
                 geo = Geometry(lat, air, [(Rectangle(center, rect_size), rod)])
                 ε = PhoXonic.discretize(geo, (64, 64), :ε)
                 rod_pixels = sum(ε .> 2.0)
@@ -337,14 +343,14 @@ using LinearAlgebra
             theoretical_fill = triangle_area / cell_area(lat)
 
             # Triangle vertices (centered at different positions)
-            for (label, center) in [("center (0.5, 0.5)", [0.5, 0.5]),
-                                     ("corner (0.0, 0.0)", [0.0, 0.0])]
+            for (label, center) in
+                [("center (0.5, 0.5)", [0.5, 0.5]), ("corner (0.0, 0.0)", [0.0, 0.0])]
                 # Equilateral triangle vertices centered at `center`
                 h = s * sqrt(3) / 2  # height
                 vertices = [
                     [center[1], center[2] + h * 2/3],           # top
                     [center[1] - s/2, center[2] - h * 1/3],     # bottom-left
-                    [center[1] + s/2, center[2] - h * 1/3]      # bottom-right
+                    [center[1] + s/2, center[2] - h * 1/3],      # bottom-right
                 ]
                 geo = Geometry(lat, air, [(Polygon(vertices), rod)])
                 ε = PhoXonic.discretize(geo, (128, 128), :ε)
@@ -365,13 +371,13 @@ using LinearAlgebra
             triangle_area = (sqrt(3) / 4) * s^2
             theoretical_fill = triangle_area / cell_area(lat)
 
-            for (label, center) in [("center", [0.5, 0.289]),
-                                     ("corner (0.0, 0.0)", [0.0, 0.0])]
+            for (label, center) in
+                [("center", [0.5, 0.289]), ("corner (0.0, 0.0)", [0.0, 0.0])]
                 h = s * sqrt(3) / 2
                 vertices = [
                     [center[1], center[2] + h * 2/3],
                     [center[1] - s/2, center[2] - h * 1/3],
-                    [center[1] + s/2, center[2] - h * 1/3]
+                    [center[1] + s/2, center[2] - h * 1/3],
                 ]
                 geo = Geometry(lat, air, [(Polygon(vertices), rod)])
                 ε = PhoXonic.discretize(geo, (128, 128), :ε)
@@ -395,10 +401,11 @@ using LinearAlgebra
             segment_length = 0.3
 
             for (label, seg_start, seg_stop) in [
-                    ("center [0.35, 0.65]", 0.35, 0.65),           # Center of unit cell
-                    ("edge [0.0, 0.3]", 0.0, segment_length),       # At edge (start = 0)
-                    ("corner [-0.15, 0.15]", -0.15, 0.15),         # Wrapping around origin
-                    ("end [0.85, 1.15]", 0.85, 1.15)]              # Wrapping around end
+                ("center [0.35, 0.65]", 0.35, 0.65),           # Center of unit cell
+                ("edge [0.0, 0.3]", 0.0, segment_length),       # At edge (start = 0)
+                ("corner [-0.15, 0.15]", -0.15, 0.15),         # Wrapping around origin
+                ("end [0.85, 1.15]", 0.85, 1.15),
+            ]              # Wrapping around end
                 geo = Geometry(lat, mat1, [(Segment(seg_start, seg_stop), mat2)])
                 ε = PhoXonic.discretize(geo, 128, :ε)
                 mat2_pixels = sum(ε .> 2.0)
@@ -421,8 +428,10 @@ using LinearAlgebra
             # Theoretical fill fraction = (4/3)πr³ / a³
             theoretical_fill = (4/3) * π * r^3 / a^3
 
-            for (label, center) in [("center (0.5, 0.5, 0.5)", [0.5, 0.5, 0.5]),
-                                     ("corner (0.0, 0.0, 0.0)", [0.0, 0.0, 0.0])]
+            for (label, center) in [
+                ("center (0.5, 0.5, 0.5)", [0.5, 0.5, 0.5]),
+                ("corner (0.0, 0.0, 0.0)", [0.0, 0.0, 0.0]),
+            ]
                 geo = Geometry(lat, air, [(Sphere(center, r), rod)])
                 ε = PhoXonic.discretize(geo, (32, 32, 32), :ε)
                 rod_pixels = sum(ε .> 2.0)
@@ -445,8 +454,10 @@ using LinearAlgebra
             # Theoretical fill fraction = πr²h / a³ = πr² / a² (when h = a)
             theoretical_fill = π * r^2 / a^2
 
-            for (label, center) in [("center (0.5, 0.5, 0.5)", [0.5, 0.5, 0.5]),
-                                     ("corner (0.0, 0.0, 0.5)", [0.0, 0.0, 0.5])]
+            for (label, center) in [
+                ("center (0.5, 0.5, 0.5)", [0.5, 0.5, 0.5]),
+                ("corner (0.0, 0.0, 0.5)", [0.0, 0.0, 0.5]),
+            ]
                 geo = Geometry(lat, air, [(Cylinder(center, r, h), rod)])
                 ε = PhoXonic.discretize(geo, (32, 32, 32), :ε)
                 rod_pixels = sum(ε .> 2.0)
@@ -620,7 +631,7 @@ using LinearAlgebra
             N = solver.basis.num_pw
             # For H-field formulation, there are N longitudinal modes with ω≈0
             # and 2N transverse modes with physical frequencies
-            ω, _ = solve(solver, k; bands=1:(N+5))
+            ω, _ = solve(solver, k; bands=1:(N + 5))
 
             # Expected: ω = |k| for the lowest transverse mode (doubly degenerate)
             expected = norm(k)
@@ -641,7 +652,7 @@ using LinearAlgebra
             k = [0.1, 0.1, 0.1]
 
             N = solver.basis.num_pw
-            ω, modes = solve(solver, k; bands=1:(N+5))
+            ω, modes = solve(solver, k; bands=1:(N + 5))
 
             # Just check it runs and returns reasonable values
             @test length(ω) == N + 5
@@ -703,7 +714,9 @@ using LinearAlgebra
             geo = Geometry(lat, air)
 
             # Use shift to skip longitudinal modes
-            solver = Solver(FullVectorEM(), geo, (8, 8, 8), KrylovKitMethod(shift=0.01); cutoff=2)
+            solver = Solver(
+                FullVectorEM(), geo, (8, 8, 8), KrylovKitMethod(shift=0.01); cutoff=2
+            )
             k = [0.5, 0.3, 0.2]
 
             ω, _ = solve(solver, k; bands=1:5)
@@ -786,7 +799,9 @@ using LinearAlgebra
             geo = Geometry(lat, mat1, [(Segment(0.0, 0.25), mat2)])
 
             solver_dense = Solver(Photonic1D(), geo, 64; cutoff=10)
-            solver_lobpcg = Solver(Photonic1D(), geo, 64, LOBPCGMethod(shift=0.01); cutoff=10)
+            solver_lobpcg = Solver(
+                Photonic1D(), geo, 64, LOBPCGMethod(shift=0.01); cutoff=10
+            )
 
             k = 0.3
             nbands = 4
@@ -810,7 +825,9 @@ using LinearAlgebra
 
             solver_dense = Solver(Longitudinal1D(), geo, 64; cutoff=10)
             # For phononic, shift needs to be scaled (ω² ~ 10^8)
-            solver_lobpcg = Solver(Longitudinal1D(), geo, 64, LOBPCGMethod(shift=1e6); cutoff=10)
+            solver_lobpcg = Solver(
+                Longitudinal1D(), geo, 64, LOBPCGMethod(shift=1e6); cutoff=10
+            )
 
             k = 100.0
             nbands = 4
@@ -991,7 +1008,7 @@ using LinearAlgebra
             PhoXonic.fourier_to_grid!(grid, coeffs, basis, res)
 
             # All grid points should have the same value (uniform)
-            @test all(x -> isapprox(x, grid[1,1,1], rtol=1e-10), grid)
+            @test all(x -> isapprox(x, grid[1, 1, 1], rtol=1e-10), grid)
         end
 
         @testset "grid_to_fourier! Dim3 roundtrip" begin
@@ -1327,7 +1344,9 @@ using LinearAlgebra
             source = randn(ComplexF64, N)
 
             # Direct
-            G_direct = compute_greens_function(solver, k, ω_values, source, DirectGF(); η=0.05)
+            G_direct = compute_greens_function(
+                solver, k, ω_values, source, DirectGF(); η=0.05
+            )
 
             @test length(G_direct) == length(ω_values)
             @test all(length.(G_direct) .== N)
@@ -1394,7 +1413,9 @@ using LinearAlgebra
             lat_3d_phon = cubic_lattice(1.0)
             steel_3d = IsotropicElastic(7800.0, 280e9, 130e9, 75e9)
             aluminum = IsotropicElastic(2700.0, 107e9, 55e9, 26e9)
-            geo_3d_phon = Geometry(lat_3d_phon, steel_3d, [(Sphere([0.0, 0.0, 0.0], 0.3), aluminum)])
+            geo_3d_phon = Geometry(
+                lat_3d_phon, steel_3d, [(Sphere([0.0, 0.0, 0.0], 0.3), aluminum)]
+            )
             solver_elastic = Solver(FullElastic(), geo_3d_phon, (8, 8, 8); cutoff=2)
             @test matrix_dimension(solver_elastic) == 3 * solver_elastic.basis.num_pw
         end
@@ -1418,10 +1439,14 @@ using LinearAlgebra
             freqs_dense = solve_at_k(solver, k, DenseMethod(); bands=1:5)
 
             # LOBPCG without scaling (may have convergence issues)
-            freqs_no_scale = solve_at_k(solver, k, LOBPCGMethod(scale=false, preconditioner=:none); bands=1:5)
+            freqs_no_scale = solve_at_k(
+                solver, k, LOBPCGMethod(scale=false, preconditioner=:none); bands=1:5
+            )
 
             # LOBPCG with scaling (should converge better)
-            freqs_scale = solve_at_k(solver, k, LOBPCGMethod(scale=true, preconditioner=:diagonal); bands=1:5)
+            freqs_scale = solve_at_k(
+                solver, k, LOBPCGMethod(scale=true, preconditioner=:diagonal); bands=1:5
+            )
 
             # Both should return valid frequencies
             @test length(freqs_no_scale) == 5
@@ -1442,8 +1467,13 @@ using LinearAlgebra
             geo = Geometry(lat, epoxy, [(Circle([0.0, 0.0], 0.2), steel)])
 
             # Create solvers
-            solver_ws = Solver(PSVWave(), geo, (32, 32),
-                              LOBPCGMethod(warm_start=true, first_dense=true); cutoff=5)
+            solver_ws = Solver(
+                PSVWave(),
+                geo,
+                (32, 32),
+                LOBPCGMethod(warm_start=true, first_dense=true);
+                cutoff=5,
+            )
             solver_dense = Solver(PSVWave(), geo, (32, 32); cutoff=5)
 
             # Simple k-path with few points
@@ -1464,11 +1494,21 @@ using LinearAlgebra
             geo = Geometry(lat, epoxy, [(Circle([0.0, 0.0], 0.2), steel)])
 
             # With first_dense=true
-            solver_fd = Solver(PSVWave(), geo, (32, 32),
-                              LOBPCGMethod(warm_start=true, first_dense=true); cutoff=5)
+            solver_fd = Solver(
+                PSVWave(),
+                geo,
+                (32, 32),
+                LOBPCGMethod(warm_start=true, first_dense=true);
+                cutoff=5,
+            )
             # Without first_dense
-            solver_no_fd = Solver(PSVWave(), geo, (32, 32),
-                                 LOBPCGMethod(warm_start=true, first_dense=false); cutoff=5)
+            solver_no_fd = Solver(
+                PSVWave(),
+                geo,
+                (32, 32),
+                LOBPCGMethod(warm_start=true, first_dense=false);
+                cutoff=5,
+            )
 
             kpath = simple_kpath_square(a=1.0, npoints=3)
 
@@ -1491,8 +1531,9 @@ using LinearAlgebra
             @test all(freqs .>= 0)
 
             # With eigenvectors
-            freqs2, vecs = solve_at_k(solver, k, DenseMethod();
-                                      bands=1:5, return_eigenvectors=true)
+            freqs2, vecs = solve_at_k(
+                solver, k, DenseMethod(); bands=1:5, return_eigenvectors=true
+            )
             @test freqs ≈ freqs2
             @test size(vecs) == (matrix_dimension(solver), 5)
         end
@@ -1503,19 +1544,22 @@ using LinearAlgebra
             k1, k2 = [0.1, 0.2], [0.15, 0.25]
 
             # First k-point with Dense
-            freqs1, vecs1 = solve_at_k(solver, k1, DenseMethod();
-                                       bands=1:5, return_eigenvectors=true)
+            freqs1, vecs1 = solve_at_k(
+                solver, k1, DenseMethod(); bands=1:5, return_eigenvectors=true
+            )
 
             # Second k-point with LOBPCG using warm start
-            freqs2, vecs2 = solve_at_k(solver, k2, LOBPCGMethod();
-                                       bands=1:5, X0=vecs1, return_eigenvectors=true)
+            freqs2, vecs2 = solve_at_k(
+                solver, k2, LOBPCGMethod(); bands=1:5, X0=vecs1, return_eigenvectors=true
+            )
 
             @test length(freqs2) == 5
             @test size(vecs2) == (dim, 5)
 
             # Compare with Dense reference
-            freqs_ref, _ = solve_at_k(solver, k2, DenseMethod();
-                                      bands=1:5, return_eigenvectors=true)
+            freqs_ref, _ = solve_at_k(
+                solver, k2, DenseMethod(); bands=1:5, return_eigenvectors=true
+            )
             @test maximum(abs.(freqs2 - freqs_ref)) < 1000  # Allow some tolerance
         end
 
@@ -1527,7 +1571,9 @@ using LinearAlgebra
             freqs1 = solve_at_k(solver, k, LOBPCGMethod(preconditioner=:none); bands=1:5)
 
             # :diagonal preconditioner
-            freqs2 = solve_at_k(solver, k, LOBPCGMethod(preconditioner=:diagonal); bands=1:5)
+            freqs2 = solve_at_k(
+                solver, k, LOBPCGMethod(preconditioner=:diagonal); bands=1:5
+            )
 
             # Custom Diagonal preconditioner
             LHS, _ = PhoXonic.build_matrices(solver, k)
@@ -1559,9 +1605,15 @@ using LinearAlgebra
         end
 
         @testset "Custom values" begin
-            m = LOBPCGMethod(tol=1e-6, maxiter=500, shift=0.01,
-                            warm_start=false, scale=false, first_dense=false,
-                            preconditioner=:none)
+            m = LOBPCGMethod(
+                tol=1e-6,
+                maxiter=500,
+                shift=0.01,
+                warm_start=false,
+                scale=false,
+                first_dense=false,
+                preconditioner=:none,
+            )
             @test m.tol == 1e-6
             @test m.maxiter == 500
             @test m.shift == 0.01
@@ -1608,8 +1660,13 @@ using LinearAlgebra
             # LOBPCG becomes faster for large problems (cutoff > 12)
             # This test verifies LOBPCG works correctly, not that it's faster
             cutoff_val = 8
-            solver_lobpcg = Solver(TEWave(), geo_phot, (32, 32),
-                                   LOBPCGMethod(warm_start=true, scale=true); cutoff=cutoff_val)
+            solver_lobpcg = Solver(
+                TEWave(),
+                geo_phot,
+                (32, 32),
+                LOBPCGMethod(warm_start=true, scale=true);
+                cutoff=cutoff_val,
+            )
             solver_dense = Solver(TEWave(), geo_phot, (32, 32); cutoff=cutoff_val)
 
             kpath = simple_kpath_square(a=1.0, npoints=10)
@@ -1628,9 +1685,13 @@ using LinearAlgebra
         @testset "LOBPCG accuracy vs Dense (photonic)" begin
             # Photonic problems (TE/TM) work well with warm start
             cutoff_val = 8
-            solver_lobpcg = Solver(TEWave(), geo_phot, (32, 32),
-                                   LOBPCGMethod(warm_start=true, scale=true,
-                                               first_dense=true, tol=1e-4); cutoff=cutoff_val)
+            solver_lobpcg = Solver(
+                TEWave(),
+                geo_phot,
+                (32, 32),
+                LOBPCGMethod(warm_start=true, scale=true, first_dense=true, tol=1e-4);
+                cutoff=cutoff_val,
+            )
             solver_dense = Solver(TEWave(), geo_phot, (32, 32); cutoff=cutoff_val)
 
             kpath = simple_kpath_square(a=1.0, npoints=10)
@@ -1639,7 +1700,9 @@ using LinearAlgebra
             bands_dense = compute_bands(solver_dense, kpath; bands=1:8)
 
             # Compute relative error for each band
-            max_abs_error = maximum(abs.(bands_lobpcg.frequencies - bands_dense.frequencies))
+            max_abs_error = maximum(
+                abs.(bands_lobpcg.frequencies - bands_dense.frequencies)
+            )
             ref_scale = maximum(abs.(bands_dense.frequencies))
             relative_error = max_abs_error / ref_scale
 
@@ -1651,8 +1714,13 @@ using LinearAlgebra
         @testset "LOBPCG warm start convergence" begin
             # Test that warm start produces valid results
             cutoff_val = 6
-            solver = Solver(TEWave(), geo_phot, (32, 32),
-                           LOBPCGMethod(warm_start=true, first_dense=true, maxiter=50); cutoff=cutoff_val)
+            solver = Solver(
+                TEWave(),
+                geo_phot,
+                (32, 32),
+                LOBPCGMethod(warm_start=true, first_dense=true, maxiter=50);
+                cutoff=cutoff_val,
+            )
 
             kpath = simple_kpath_square(a=1.0, npoints=5)
 
@@ -1695,7 +1763,9 @@ using LinearAlgebra
             y = zeros(ComplexF64, 30)
             H = nothing  # Dummy, won't be used
             x = zeros(ComplexF64, 30)
-            @test_throws ArgumentError PhoXonic._apply_rhs_inv_3d_impl!(trait, method, y, H, x)
+            @test_throws ArgumentError PhoXonic._apply_rhs_inv_3d_impl!(
+                trait, method, y, H, x
+            )
         end
 
         @testset "_convert_rhs_inv_method unsupported type" begin
@@ -1799,5 +1869,4 @@ using LinearAlgebra
 
     # TMM (Transfer Matrix Method) tests
     include("tmm/runtests.jl")
-
 end

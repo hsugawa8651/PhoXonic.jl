@@ -29,7 +29,7 @@ c_L_al = 6420.0  # m/s (longitudinal)
 μ_al = ρ_al * c_T_al^2
 λ_al = ρ_al * (c_L_al^2 - 2 * c_T_al^2)
 
-al = IsotropicElastic(ρ=ρ_al, λ=λ_al, μ=μ_al)
+al = IsotropicElastic(; ρ=ρ_al, λ=λ_al, μ=μ_al)
 void = ElasticVoid()
 
 println("\nMaterials:")
@@ -91,7 +91,9 @@ for gap in find_all_gaps(bands_sh)
     lower = gap.max_lower * norm
     upper = gap.min_upper * norm
     if lower < 6.0
-        println("  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3)), ratio=$(round(gap.gap_ratio*100, digits=1))%")
+        println(
+            "  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3)), ratio=$(round(gap.gap_ratio*100, digits=1))%",
+        )
     end
 end
 
@@ -100,7 +102,9 @@ for gap in find_all_gaps(bands_psv)
     lower = gap.max_lower * norm
     upper = gap.min_upper * norm
     if lower < 6.0
-        println("  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3)), ratio=$(round(gap.gap_ratio*100, digits=1))%")
+        println(
+            "  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3)), ratio=$(round(gap.gap_ratio*100, digits=1))%",
+        )
     end
 end
 
@@ -114,36 +118,30 @@ label_pos = [dists[i] for (i, _) in labels]
 label_names = [l for (_, l) in labels]
 
 # SH subplot
-p1 = plot(
-    ylabel="ωa/vT",
-    title="SH Bands",
-    legend=false,
-    grid=true,
-    ylims=(0, 6)
-)
+p1 = plot(; ylabel="ωa/vT", title="SH Bands", legend=false, grid=true, ylims=(0, 6))
 for b in 1:size(freqs_sh, 2)
-    plot!(p1, dists, freqs_sh[:, b], lw=2, color=:green)
+    plot!(p1, dists, freqs_sh[:, b]; lw=2, color=:green)
 end
-vline!(p1, label_pos, color=:gray, ls=:dash, alpha=0.5)
+vline!(p1, label_pos; color=:gray, ls=:dash, alpha=0.5)
 xticks!(p1, label_pos, label_names)
 
 # PSV subplot
-p2 = plot(
-    title="PSV Bands",
-    legend=false,
-    grid=true,
-    ylims=(0, 6)
-)
+p2 = plot(; title="PSV Bands", legend=false, grid=true, ylims=(0, 6))
 for b in 1:size(freqs_psv, 2)
-    plot!(p2, dists, freqs_psv[:, b], lw=2, color=:orange)
+    plot!(p2, dists, freqs_psv[:, b]; lw=2, color=:orange)
 end
-vline!(p2, label_pos, color=:gray, ls=:dash, alpha=0.5)
+vline!(p2, label_pos; color=:gray, ls=:dash, alpha=0.5)
 xticks!(p2, label_pos, label_names)
 
 # Combined
-p = plot(p1, p2, layout=(1, 2), size=(1100, 450),
-         plot_title="Tanaka 2000 Fig.4: Vacuum/Al (f=0.55)",
-         left_margin=10Plots.mm)
+p = plot(
+    p1,
+    p2;
+    layout=(1, 2),
+    size=(1100, 450),
+    plot_title="Tanaka 2000 Fig.4: Vacuum/Al (f=0.55)",
+    left_margin=10Plots.mm,
+)
 
 savefig(p, joinpath(@__DIR__, "211_tanaka2000_vacuum_al.png"))
 println("\nSaved: 211_tanaka2000_vacuum_al.png")

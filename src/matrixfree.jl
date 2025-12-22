@@ -66,8 +66,8 @@ since `fftw_execute` is thread-safe. Create once and reuse.
 - `fft_plan`: Pre-computed forward FFT plan
 - `ifft_plan`: Pre-computed inverse FFT plan
 """
-struct FFTContext{N, T<:Complex, F, I}
-    resolution::NTuple{N, Int}
+struct FFTContext{N,T<:Complex,F,I}
+    resolution::NTuple{N,Int}
     fft_plan::F
     ifft_plan::I
 end
@@ -77,11 +77,11 @@ end
 
 Create an FFT context for the given resolution. Call from a single thread.
 """
-function FFTContext(resolution::NTuple{N, Int}, ::Type{T}=ComplexF64) where {N, T<:Complex}
+function FFTContext(resolution::NTuple{N,Int}, (::Type{T})=ComplexF64) where {N,T<:Complex}
     work = zeros(T, resolution)
     fft_plan = plan_fft!(work)
     ifft_plan = plan_ifft!(work)
-    FFTContext{N, T, typeof(fft_plan), typeof(ifft_plan)}(resolution, fft_plan, ifft_plan)
+    FFTContext{N,T,typeof(fft_plan),typeof(ifft_plan)}(resolution, fft_plan, ifft_plan)
 end
 
 """
@@ -101,9 +101,9 @@ Each thread should have its own workspace instance.
 - `work_real`: Workspace array in real space
 - `work_fourier`: Workspace array in Fourier space
 """
-struct MatrixFreeWorkspace{N, T<:Complex}
-    work_real::Array{T, N}
-    work_fourier::Array{T, N}
+struct MatrixFreeWorkspace{N,T<:Complex}
+    work_real::Array{T,N}
+    work_fourier::Array{T,N}
 end
 
 """
@@ -111,8 +111,10 @@ end
 
 Create workspace arrays for the given resolution.
 """
-function MatrixFreeWorkspace(resolution::NTuple{N, Int}, ::Type{T}=ComplexF64) where {N, T<:Complex}
-    MatrixFreeWorkspace{N, T}(zeros(T, resolution), zeros(T, resolution))
+function MatrixFreeWorkspace(
+    resolution::NTuple{N,Int}, (::Type{T})=ComplexF64
+) where {N,T<:Complex}
+    MatrixFreeWorkspace{N,T}(zeros(T, resolution), zeros(T, resolution))
 end
 
 """
@@ -120,8 +122,9 @@ end
 
 Create workspace arrays matching the FFT context.
 """
-MatrixFreeWorkspace(ctx::FFTContext{N, T, F, I}) where {N, T, F, I} =
+function MatrixFreeWorkspace(ctx::FFTContext{N,T,F,I}) where {N,T,F,I}
     MatrixFreeWorkspace(ctx.resolution, T)
+end
 
 # ============================================================================
 # MatrixFreeOperator
@@ -164,11 +167,11 @@ dimension (e.g., 16×16 for 2D, 16×16×16 for 3D).
 If the resolution is too small, plane wave coefficients outside the grid range
 will be silently dropped during FFT operations, leading to incorrect results.
 """
-struct MatrixFreeOperator{D<:Dimension, W<:WaveType, T<:Complex, N, F, I}
-    solver::Solver{D, W}
+struct MatrixFreeOperator{D<:Dimension,W<:WaveType,T<:Complex,N,F,I}
+    solver::Solver{D,W}
     k::Vector{Float64}
-    ctx::FFTContext{N, T, F, I}
-    workspace::MatrixFreeWorkspace{N, T}
+    ctx::FFTContext{N,T,F,I}
+    workspace::MatrixFreeWorkspace{N,T}
 end
 
 # Convenience accessors for backward compatibility
@@ -183,14 +186,22 @@ work_fourier(op::MatrixFreeOperator) = op.workspace.work_fourier
 
 Create a matrix-free operator with explicit context and workspace (recommended for parallel use).
 """
-function MatrixFreeOperator(solver::Solver{D, W}, k::Vector{Float64},
-                            ctx::FFTContext{N, T, F, I}, workspace::MatrixFreeWorkspace{N, T}) where {D<:Dimension, W<:WaveType, N, T, F, I}
-    MatrixFreeOperator{D, W, T, N, F, I}(solver, k, ctx, workspace)
+function MatrixFreeOperator(
+    solver::Solver{D,W},
+    k::Vector{Float64},
+    ctx::FFTContext{N,T,F,I},
+    workspace::MatrixFreeWorkspace{N,T},
+) where {D<:Dimension,W<:WaveType,N,T,F,I}
+    MatrixFreeOperator{D,W,T,N,F,I}(solver, k, ctx, workspace)
 end
 
-function MatrixFreeOperator(solver::Solver{Dim1, W}, k::Real,
-                            ctx::FFTContext{1, T, F, I}, workspace::MatrixFreeWorkspace{1, T}) where {W<:WaveType, T, F, I}
-    MatrixFreeOperator{Dim1, W, T, 1, F, I}(solver, [Float64(k)], ctx, workspace)
+function MatrixFreeOperator(
+    solver::Solver{Dim1,W},
+    k::Real,
+    ctx::FFTContext{1,T,F,I},
+    workspace::MatrixFreeWorkspace{1,T},
+) where {W<:WaveType,T,F,I}
+    MatrixFreeOperator{Dim1,W,T,1,F,I}(solver, [Float64(k)], ctx, workspace)
 end
 
 """
@@ -199,24 +210,24 @@ end
 Create a matrix-free operator (convenience method, creates new context and workspace).
 For better performance in loops, create `FFTContext` once and reuse.
 """
-function MatrixFreeOperator(solver::Solver{Dim2, W}, k::Vector{Float64}) where W<:WaveType
+function MatrixFreeOperator(solver::Solver{Dim2,W}, k::Vector{Float64}) where {W<:WaveType}
     ctx = FFTContext(solver.resolution, ComplexF64)
     workspace = MatrixFreeWorkspace(ctx)
     MatrixFreeOperator(solver, k, ctx, workspace)
 end
 
-function MatrixFreeOperator(solver::Solver{Dim1, W}, k::Real) where W<:WaveType
+function MatrixFreeOperator(solver::Solver{Dim1,W}, k::Real) where {W<:WaveType}
     ctx = FFTContext(solver.resolution, ComplexF64)
     workspace = MatrixFreeWorkspace(ctx)
     MatrixFreeOperator(solver, Float64(k), ctx, workspace)
 end
 
 # 1D convenience constructor accepting Vector{Float64} (for compatibility with solve interface)
-function MatrixFreeOperator(solver::Solver{Dim1, W}, k::Vector{Float64}) where W<:WaveType
+function MatrixFreeOperator(solver::Solver{Dim1,W}, k::Vector{Float64}) where {W<:WaveType}
     MatrixFreeOperator(solver, k[1])
 end
 
-function MatrixFreeOperator(solver::Solver{Dim3, W}, k::Vector{Float64}) where W<:WaveType
+function MatrixFreeOperator(solver::Solver{Dim3,W}, k::Vector{Float64}) where {W<:WaveType}
     ctx = FFTContext(solver.resolution, ComplexF64)
     workspace = MatrixFreeWorkspace(ctx)
     MatrixFreeOperator(solver, k, ctx, workspace)
@@ -235,8 +246,12 @@ end
 Convert Fourier coefficients to real space grid.
 Uses same convention as convolution_matrix.
 """
-function fourier_to_grid!(grid::AbstractArray{T}, coeffs::AbstractVector{T},
-                          basis::PlaneWaveBasis{Dim2}, resolution::NTuple{2,Int}) where T
+function fourier_to_grid!(
+    grid::AbstractArray{T},
+    coeffs::AbstractVector{T},
+    basis::PlaneWaveBasis{Dim2},
+    resolution::NTuple{2,Int},
+) where {T}
     fill!(grid, zero(T))
     Nx, Ny = resolution
     cx = (Nx + 1) ÷ 2 + 1
@@ -257,8 +272,12 @@ function fourier_to_grid!(grid::AbstractArray{T}, coeffs::AbstractVector{T},
     return grid
 end
 
-function fourier_to_grid!(grid::AbstractVector{T}, coeffs::AbstractVector{T},
-                          basis::PlaneWaveBasis{Dim1}, resolution::NTuple{1,Int}) where T
+function fourier_to_grid!(
+    grid::AbstractVector{T},
+    coeffs::AbstractVector{T},
+    basis::PlaneWaveBasis{Dim1},
+    resolution::NTuple{1,Int},
+) where {T}
     fill!(grid, zero(T))
     N = resolution[1]
     cx = (N + 1) ÷ 2 + 1
@@ -274,8 +293,12 @@ function fourier_to_grid!(grid::AbstractVector{T}, coeffs::AbstractVector{T},
     return grid
 end
 
-function fourier_to_grid!(grid::AbstractArray{T,3}, coeffs::AbstractVector{T},
-                          basis::PlaneWaveBasis{Dim3}, resolution::NTuple{3,Int}) where T
+function fourier_to_grid!(
+    grid::AbstractArray{T,3},
+    coeffs::AbstractVector{T},
+    basis::PlaneWaveBasis{Dim3},
+    resolution::NTuple{3,Int},
+) where {T}
     fill!(grid, zero(T))
     Nx, Ny, Nz = resolution
     cx = (Nx + 1) ÷ 2 + 1
@@ -301,8 +324,12 @@ end
 Convert real space grid to Fourier coefficients.
 Uses same convention as convolution_matrix.
 """
-function grid_to_fourier!(coeffs::AbstractVector{T}, grid::AbstractArray{T},
-                          basis::PlaneWaveBasis{Dim2}, resolution::NTuple{2,Int}) where T
+function grid_to_fourier!(
+    coeffs::AbstractVector{T},
+    grid::AbstractArray{T},
+    basis::PlaneWaveBasis{Dim2},
+    resolution::NTuple{2,Int},
+) where {T}
     Nx, Ny = resolution
     cx = (Nx + 1) ÷ 2 + 1
     cy = (Ny + 1) ÷ 2 + 1
@@ -323,8 +350,12 @@ function grid_to_fourier!(coeffs::AbstractVector{T}, grid::AbstractArray{T},
     return coeffs
 end
 
-function grid_to_fourier!(coeffs::AbstractVector{T}, grid::AbstractVector{T},
-                          basis::PlaneWaveBasis{Dim1}, resolution::NTuple{1,Int}) where T
+function grid_to_fourier!(
+    coeffs::AbstractVector{T},
+    grid::AbstractVector{T},
+    basis::PlaneWaveBasis{Dim1},
+    resolution::NTuple{1,Int},
+) where {T}
     N = resolution[1]
     cx = (N + 1) ÷ 2 + 1
 
@@ -342,8 +373,12 @@ function grid_to_fourier!(coeffs::AbstractVector{T}, grid::AbstractVector{T},
     return coeffs
 end
 
-function grid_to_fourier!(coeffs::AbstractVector{T}, grid::AbstractArray{T,3},
-                          basis::PlaneWaveBasis{Dim3}, resolution::NTuple{3,Int}) where T
+function grid_to_fourier!(
+    coeffs::AbstractVector{T},
+    grid::AbstractArray{T,3},
+    basis::PlaneWaveBasis{Dim3},
+    resolution::NTuple{3,Int},
+) where {T}
     Nx, Ny, Nz = resolution
     cx = (Nx + 1) ÷ 2 + 1
     cy = (Ny + 1) ÷ 2 + 1
@@ -375,8 +410,9 @@ end
 Apply LHS operator: y = LHS * x
 For TE: LHS = Kx * ε⁻¹ * Kx + Ky * ε⁻¹ * Ky
 """
-function apply_lhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, TEWave, T},
-                    x::AbstractVector{T}) where T
+function apply_lhs!(
+    y::AbstractVector{T}, op::MatrixFreeOperator{Dim2,TEWave,T}, x::AbstractVector{T}
+) where {T}
     solver = op.solver
     basis = solver.basis
     k = op.k
@@ -424,8 +460,9 @@ end
 
 Apply LHS operator for 1D: y = K * ε⁻¹ * K * x
 """
-function apply_lhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim1, Photonic1D, T},
-                    x::AbstractVector{T}) where T
+function apply_lhs!(
+    y::AbstractVector{T}, op::MatrixFreeOperator{Dim1,Photonic1D,T}, x::AbstractVector{T}
+) where {T}
     solver = op.solver
     basis = solver.basis
     k = op.k[1]
@@ -463,8 +500,9 @@ function apply_lhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim1, Photonic1
 end
 
 # TM wave (photonic) - LHS = Kx * μ⁻¹ * Kx + Ky * μ⁻¹ * Ky
-function apply_lhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, TMWave, T},
-                    x::AbstractVector{T}) where T
+function apply_lhs!(
+    y::AbstractVector{T}, op::MatrixFreeOperator{Dim2,TMWave,T}, x::AbstractVector{T}
+) where {T}
     solver = op.solver
     basis = solver.basis
     k = op.k
@@ -506,8 +544,9 @@ function apply_lhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, TMWave, T
 end
 
 # SH wave (phononic)
-function apply_lhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, SHWave, T},
-                    x::AbstractVector{T}) where T
+function apply_lhs!(
+    y::AbstractVector{T}, op::MatrixFreeOperator{Dim2,SHWave,T}, x::AbstractVector{T}
+) where {T}
     solver = op.solver
     basis = solver.basis
     k = op.k
@@ -542,8 +581,11 @@ function apply_lhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, SHWave, T
 end
 
 # Longitudinal 1D (phononic)
-function apply_lhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim1, Longitudinal1D, T},
-                    x::AbstractVector{T}) where T
+function apply_lhs!(
+    y::AbstractVector{T},
+    op::MatrixFreeOperator{Dim1,Longitudinal1D,T},
+    x::AbstractVector{T},
+) where {T}
     solver = op.solver
     basis = solver.basis
     k = op.k[1]
@@ -579,8 +621,9 @@ end
 # K_yy = Kx * C44 * Kx + Ky * C11 * Ky
 # K_xy = Kx * C12 * Ky + Ky * C44 * Kx
 # K_yx = Kx * C44 * Ky + Ky * C12 * Kx
-function apply_lhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, PSVWave, T},
-                    x::AbstractVector{T}) where T
+function apply_lhs!(
+    y::AbstractVector{T}, op::MatrixFreeOperator{Dim2,PSVWave,T}, x::AbstractVector{T}
+) where {T}
     solver = op.solver
     basis = solver.basis
     k = op.k
@@ -591,9 +634,9 @@ function apply_lhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, PSVWave, 
 
     N = basis.num_pw
     x_x = @view x[1:N]      # u_x component
-    x_y = @view x[N+1:2N]   # u_y component
+    x_y = @view x[(N + 1):2N]   # u_y component
     y_x = @view y[1:N]
-    y_y = @view y[N+1:2N]
+    y_y = @view y[(N + 1):2N]
 
     fill!(y, zero(T))
 
@@ -744,8 +787,9 @@ end
 
 Apply RHS operator: y = RHS * x
 """
-function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, TEWave, T},
-                    x::AbstractVector{T}) where T
+function apply_rhs!(
+    y::AbstractVector{T}, op::MatrixFreeOperator{Dim2,TEWave,T}, x::AbstractVector{T}
+) where {T}
     solver = op.solver
     basis = solver.basis
     res = resolution(op)
@@ -762,8 +806,9 @@ function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, TEWave, T
 end
 
 # TM wave (photonic) - RHS = ε
-function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, TMWave, T},
-                    x::AbstractVector{T}) where T
+function apply_rhs!(
+    y::AbstractVector{T}, op::MatrixFreeOperator{Dim2,TMWave,T}, x::AbstractVector{T}
+) where {T}
     solver = op.solver
     basis = solver.basis
     res = resolution(op)
@@ -778,8 +823,9 @@ function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, TMWave, T
     return y
 end
 
-function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, SHWave, T},
-                    x::AbstractVector{T}) where T
+function apply_rhs!(
+    y::AbstractVector{T}, op::MatrixFreeOperator{Dim2,SHWave,T}, x::AbstractVector{T}
+) where {T}
     solver = op.solver
     basis = solver.basis
     res = resolution(op)
@@ -795,8 +841,9 @@ function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, SHWave, T
 end
 
 # PSV wave (phononic) - RHS = [ρ 0; 0 ρ] (block diagonal)
-function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, PSVWave, T},
-                    x::AbstractVector{T}) where T
+function apply_rhs!(
+    y::AbstractVector{T}, op::MatrixFreeOperator{Dim2,PSVWave,T}, x::AbstractVector{T}
+) where {T}
     solver = op.solver
     basis = solver.basis
     res = resolution(op)
@@ -804,9 +851,9 @@ function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, PSVWave, 
 
     N = basis.num_pw
     x_x = @view x[1:N]
-    x_y = @view x[N+1:2N]
+    x_y = @view x[(N + 1):2N]
     y_x = @view y[1:N]
-    y_y = @view y[N+1:2N]
+    y_y = @view y[(N + 1):2N]
 
     temp_grid = zeros(T, res)
 
@@ -823,8 +870,9 @@ function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim2, PSVWave, 
     return y
 end
 
-function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim1, Photonic1D, T},
-                    x::AbstractVector{T}) where T
+function apply_rhs!(
+    y::AbstractVector{T}, op::MatrixFreeOperator{Dim1,Photonic1D,T}, x::AbstractVector{T}
+) where {T}
     solver = op.solver
     basis = solver.basis
     res = resolution(op)
@@ -839,8 +887,11 @@ function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim1, Photonic1
     return y
 end
 
-function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim1, Longitudinal1D, T},
-                    x::AbstractVector{T}) where T
+function apply_rhs!(
+    y::AbstractVector{T},
+    op::MatrixFreeOperator{Dim1,Longitudinal1D,T},
+    x::AbstractVector{T},
+) where {T}
     solver = op.solver
     basis = solver.basis
     res = resolution(op)
@@ -863,8 +914,9 @@ end
 # L_xy = -Ky * ε⁻¹ * Kx,  L_xz = -Kz * ε⁻¹ * Kx
 # L_yx = -Kx * ε⁻¹ * Ky,  L_yz = -Kz * ε⁻¹ * Ky
 # L_zx = -Kx * ε⁻¹ * Kz,  L_zy = -Ky * ε⁻¹ * Kz
-function apply_lhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim3, FullVectorEM, T},
-                    x::AbstractVector{T}) where T
+function apply_lhs!(
+    y::AbstractVector{T}, op::MatrixFreeOperator{Dim3,FullVectorEM,T}, x::AbstractVector{T}
+) where {T}
     solver = op.solver
     basis = solver.basis
     k = op.k
@@ -873,11 +925,11 @@ function apply_lhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim3, FullVecto
 
     N = basis.num_pw
     x_x = @view x[1:N]
-    x_y = @view x[N+1:2N]
-    x_z = @view x[2N+1:3N]
+    x_y = @view x[(N + 1):2N]
+    x_z = @view x[(2N + 1):3N]
     y_x = @view y[1:N]
-    y_y = @view y[N+1:2N]
-    y_z = @view y[2N+1:3N]
+    y_y = @view y[(N + 1):2N]
+    y_z = @view y[(2N + 1):3N]
 
     fill!(y, zero(T))
 
@@ -938,8 +990,9 @@ end
 
 # FullVectorEM (3D photonic) - RHS = diag(μ, μ, μ) (block diagonal)
 # H-field formulation: RHS multiplies each component by μ independently
-function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim3, FullVectorEM, T},
-                    x::AbstractVector{T}) where T
+function apply_rhs!(
+    y::AbstractVector{T}, op::MatrixFreeOperator{Dim3,FullVectorEM,T}, x::AbstractVector{T}
+) where {T}
     solver = op.solver
     basis = solver.basis
     res = resolution(op)
@@ -947,11 +1000,11 @@ function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim3, FullVecto
 
     N = basis.num_pw
     x_x = @view x[1:N]
-    x_y = @view x[N+1:2N]
-    x_z = @view x[2N+1:3N]
+    x_y = @view x[(N + 1):2N]
+    x_z = @view x[(2N + 1):3N]
     y_x = @view y[1:N]
-    y_y = @view y[N+1:2N]
-    y_z = @view y[2N+1:3N]
+    y_y = @view y[(N + 1):2N]
+    y_z = @view y[(2N + 1):3N]
 
     temp_grid = zeros(T, res)
 
@@ -983,15 +1036,17 @@ end
 Convert MatrixFreeOperator to a LinearMap for use with iterative solvers.
 Returns LHS as a LinearMap.
 """
-function to_linear_map_lhs(op::MatrixFreeOperator{D, W}) where {D, W}
+function to_linear_map_lhs(op::MatrixFreeOperator{D,W}) where {D,W}
     N = op.solver.basis.num_pw
     nc = ncomponents(op.solver.wave)
     dim = N * nc
-    LinearMap{ComplexF64}(x -> begin
-        y = zeros(ComplexF64, dim)
-        apply_lhs!(y, op, x)
-        y
-    end, dim; ismutating=false, ishermitian=true)
+    LinearMap{ComplexF64}(
+        x -> begin
+            y = zeros(ComplexF64, dim)
+            apply_lhs!(y, op, x)
+            y
+        end, dim; ismutating=false, ishermitian=true
+    )
 end
 
 """
@@ -999,15 +1054,17 @@ end
 
 Convert RHS to a LinearMap.
 """
-function to_linear_map_rhs(op::MatrixFreeOperator{D, W}) where {D, W}
+function to_linear_map_rhs(op::MatrixFreeOperator{D,W}) where {D,W}
     N = op.solver.basis.num_pw
     nc = ncomponents(op.solver.wave)
     dim = N * nc
-    LinearMap{ComplexF64}(x -> begin
-        y = zeros(ComplexF64, dim)
-        apply_rhs!(y, op, x)
-        y
-    end, dim; ismutating=false, ishermitian=true)
+    LinearMap{ComplexF64}(
+        x -> begin
+            y = zeros(ComplexF64, dim)
+            apply_rhs!(y, op, x)
+            y
+        end, dim; ismutating=false, ishermitian=true
+    )
 end
 
 # ============================================================================
@@ -1031,8 +1088,9 @@ end
 # RHS: block diagonal ρ (3 FFT pairs)
 
 # FullElastic (3D phononic) - RHS = diag(ρ, ρ, ρ)
-function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim3, FullElastic, T},
-                    x::AbstractVector{T}) where T
+function apply_rhs!(
+    y::AbstractVector{T}, op::MatrixFreeOperator{Dim3,FullElastic,T}, x::AbstractVector{T}
+) where {T}
     solver = op.solver
     basis = solver.basis
     res = resolution(op)
@@ -1040,11 +1098,11 @@ function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim3, FullElast
 
     N = basis.num_pw
     x_x = @view x[1:N]
-    x_y = @view x[N+1:2N]
-    x_z = @view x[2N+1:3N]
+    x_y = @view x[(N + 1):2N]
+    x_z = @view x[(2N + 1):3N]
     y_x = @view y[1:N]
-    y_y = @view y[N+1:2N]
-    y_z = @view y[2N+1:3N]
+    y_y = @view y[(N + 1):2N]
+    y_z = @view y[(2N + 1):3N]
 
     temp_grid = zeros(T, res)
 
@@ -1067,8 +1125,9 @@ function apply_rhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim3, FullElast
 end
 
 # FullElastic (3D phononic) - LHS = K (stiffness matrix)
-function apply_lhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim3, FullElastic, T},
-                    x::AbstractVector{T}) where T
+function apply_lhs!(
+    y::AbstractVector{T}, op::MatrixFreeOperator{Dim3,FullElastic,T}, x::AbstractVector{T}
+) where {T}
     solver = op.solver
     basis = solver.basis
     k = op.k
@@ -1079,11 +1138,11 @@ function apply_lhs!(y::AbstractVector{T}, op::MatrixFreeOperator{Dim3, FullElast
 
     N = basis.num_pw
     x_x = @view x[1:N]      # u_x component
-    x_y = @view x[N+1:2N]   # u_y component
-    x_z = @view x[2N+1:3N]  # u_z component
+    x_y = @view x[(N + 1):2N]   # u_y component
+    x_z = @view x[(2N + 1):3N]  # u_z component
     y_x = @view y[1:N]
-    y_y = @view y[N+1:2N]
-    y_z = @view y[2N+1:3N]
+    y_y = @view y[(N + 1):2N]
+    y_z = @view y[(2N + 1):3N]
 
     fill!(y, zero(T))
 

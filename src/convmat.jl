@@ -92,7 +92,7 @@ end
 
 Compute the convolution matrix for a 3D function f(r).
 """
-function convolution_matrix(f::AbstractArray{T,3}, basis::PlaneWaveBasis{Dim3}) where T
+function convolution_matrix(f::AbstractArray{T,3}, basis::PlaneWaveBasis{Dim3}) where {T}
     Nx, Ny, Nz = size(f)
     N = basis.num_pw
 

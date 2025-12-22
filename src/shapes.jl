@@ -59,8 +59,9 @@ struct Rectangle <: Shape{Dim2}
     size::Vec2  # (width, height)
 end
 
-Rectangle(center::AbstractVector, size::AbstractVector) =
+function Rectangle(center::AbstractVector, size::AbstractVector)
     Rectangle(Vec2(center...), Vec2(size...))
+end
 
 """
     in(point, rect::Rectangle)
@@ -86,8 +87,7 @@ struct Polygon <: Shape{Dim2}
     vertices::Vector{Vec2}
 end
 
-Polygon(vertices::Vector{<:AbstractVector}) =
-    Polygon([Vec2(v...) for v in vertices])
+Polygon(vertices::Vector{<:AbstractVector}) = Polygon([Vec2(v...) for v in vertices])
 
 """
     in(point, poly::Polygon)
@@ -102,7 +102,7 @@ function Base.in(point::Vec2, poly::Polygon)
         vi = poly.vertices[i]
         vj = poly.vertices[j]
         if ((vi[2] > point[2]) != (vj[2] > point[2])) &&
-           (point[1] < (vj[1] - vi[1]) * (point[2] - vi[2]) / (vj[2] - vi[2]) + vi[1])
+            (point[1] < (vj[1] - vi[1]) * (point[2] - vi[2]) / (vj[2] - vi[2]) + vi[1])
             inside = !inside
         end
         j = i
@@ -156,8 +156,9 @@ function Cylinder(center::Vec3, radius::Real, height::Real, axis::Vec3=Vec3(0, 0
     Cylinder(center, Float64(radius), Float64(height), normalize(axis))
 end
 
-function Cylinder(center::AbstractVector, radius::Real, height::Real,
-                  axis::AbstractVector=Vec3(0, 0, 1))
+function Cylinder(
+    center::AbstractVector, radius::Real, height::Real, axis::AbstractVector=Vec3(0, 0, 1)
+)
     Cylinder(Vec3(center...), Float64(radius), Float64(height), normalize(Vec3(axis...)))
 end
 
@@ -287,7 +288,9 @@ translate(p::Polygon, offset::AbstractVector) = translate(p, Vec2(offset...))
 translate(s::Sphere, offset::Vec3) = Sphere(s.center + offset, s.radius)
 translate(s::Sphere, offset::AbstractVector) = translate(s, Vec3(offset...))
 
-translate(c::Cylinder, offset::Vec3) = Cylinder(c.center + offset, c.radius, c.height, c.axis)
+function translate(c::Cylinder, offset::Vec3)
+    Cylinder(c.center + offset, c.radius, c.height, c.axis)
+end
 translate(c::Cylinder, offset::AbstractVector) = translate(c, Vec3(offset...))
 
 # Slab: xy-infinite, only z-translation is meaningful

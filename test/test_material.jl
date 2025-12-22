@@ -64,11 +64,7 @@ end
         glass = Dielectric(2.25)
         metal = LossyDielectric(-10.0 + 1.0im)
 
-        layers = [
-            Layer(glass, 100.0),
-            Layer(metal, 20.0),
-            Layer(glass, 100.0)
-        ]
+        layers = [Layer(glass, 100.0), Layer(metal, 20.0), Layer(glass, 100.0)]
         ml = Multilayer(layers, air, air)
 
         # All materials should be promoted to LossyDielectric
@@ -84,7 +80,7 @@ end
         lossy = LossyDielectric(2.25 + 0.1im)
 
         # Creating Geometry with LossyDielectric should fail for PWE
-        @test_throws Union{ArgumentError, MethodError} begin
+        @test_throws Union{ArgumentError,MethodError} begin
             geo = Geometry(lat, lossy)
             Solver(TEWave(), geo, (32, 32); cutoff=3)
         end

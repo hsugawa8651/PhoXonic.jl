@@ -84,7 +84,7 @@ println()
 # ============================================================================
 
 npoints = 30
-kpath = simple_kpath_hexagonal(a=a, npoints=npoints)
+kpath = simple_kpath_hexagonal(; a=a, npoints=npoints)
 
 println("Computing band structure...")
 println("  TM modes (E_z polarization)...")
@@ -120,8 +120,16 @@ if !isempty(gaps_tm)
         upper = gap.min_upper / (2π)
         width = upper - lower
         pct = 100 * width / ((lower + upper) / 2)
-        @printf("  Gap %d (bands %d-%d): [%.4f, %.4f], width=%.4f (%.1f%%)\n",
-                i, gap.bands[1], gap.bands[2], lower, upper, width, pct)
+        @printf(
+            "  Gap %d (bands %d-%d): [%.4f, %.4f], width=%.4f (%.1f%%)\n",
+            i,
+            gap.bands[1],
+            gap.bands[2],
+            lower,
+            upper,
+            width,
+            pct
+        )
         if i == 1
             global tm_gap_lower = lower
             global tm_gap_upper = upper
@@ -142,8 +150,16 @@ if !isempty(gaps_te)
         upper = gap.min_upper / (2π)
         width = upper - lower
         pct = 100 * width / ((lower + upper) / 2)
-        @printf("  Gap %d (bands %d-%d): [%.4f, %.4f], width=%.4f (%.1f%%)\n",
-                i, gap.bands[1], gap.bands[2], lower, upper, width, pct)
+        @printf(
+            "  Gap %d (bands %d-%d): [%.4f, %.4f], width=%.4f (%.1f%%)\n",
+            i,
+            gap.bands[1],
+            gap.bands[2],
+            lower,
+            upper,
+            width,
+            pct
+        )
         if i == 1
             global te_gap_lower = lower
             global te_gap_upper = upper
@@ -160,8 +176,13 @@ complete_upper = min(tm_gap_upper, te_gap_upper)
 if complete_upper > complete_lower
     width = complete_upper - complete_lower
     pct = 100 * width / ((complete_lower + complete_upper) / 2)
-    @printf("  Complete gap: [%.4f, %.4f], width=%.4f (%.1f%%)\n",
-            complete_lower, complete_upper, width, pct)
+    @printf(
+        "  Complete gap: [%.4f, %.4f], width=%.4f (%.1f%%)\n",
+        complete_lower,
+        complete_upper,
+        width,
+        pct
+    )
 else
     println("  No complete gap (TM and TE gaps do not overlap)")
 end
@@ -184,26 +205,33 @@ println("-" ^ 70)
 distances = bands_tm.distances
 
 # Create plot
-p = plot(size=(700, 500), legend=:topright,
-         xlabel="Wave vector", ylabel="Frequency ωa/2πc",
-         title="Joannopoulos Ch.5 Fig.10 - Triangular Lattice Air Holes (ε=13)")
+p = plot(;
+    size=(700, 500),
+    legend=:topright,
+    xlabel="Wave vector",
+    ylabel="Frequency ωa/2πc",
+    title="Joannopoulos Ch.5 Fig.10 - Triangular Lattice Air Holes (ε=13)",
+)
 
 # Plot TM bands (blue)
 for band in 1:nbands
-    plot!(p, distances, freqs_tm[:, band], color=:blue, lw=1.5,
-          label=(band == 1 ? "TM" : ""))
+    plot!(
+        p, distances, freqs_tm[:, band]; color=:blue, lw=1.5, label=(band == 1 ? "TM" : "")
+    )
 end
 
 # Plot TE bands (red)
 for band in 1:nbands
-    plot!(p, distances, freqs_te[:, band], color=:red, lw=1.5,
-          label=(band == 1 ? "TE" : ""))
+    plot!(
+        p, distances, freqs_te[:, band]; color=:red, lw=1.5, label=(band == 1 ? "TE" : "")
+    )
 end
 
 # Add complete gap shading if exists
 if complete_upper > complete_lower
-    hspan!(p, [complete_lower, complete_upper], alpha=0.3, color=:yellow,
-           label="Complete gap")
+    hspan!(
+        p, [complete_lower, complete_upper]; alpha=0.3, color=:yellow, label="Complete gap"
+    )
 end
 
 # Set axis limits
@@ -217,7 +245,7 @@ xticks!(p, xticks_pos, xticks_labels)
 
 # Add vertical lines at high-symmetry points
 for (idx, _) in labels
-    vline!(p, [distances[idx]], color=:gray, lw=0.5, label="")
+    vline!(p, [distances[idx]]; color=:gray, lw=0.5, label="")
 end
 
 savefig(p, "examples/912_joannopoulos_ch5_fig10.png")

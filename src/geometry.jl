@@ -42,8 +42,9 @@ end
 
 Create a geometry with inclusions.
 """
-function Geometry(lattice::Lattice{D}, background::M,
-                  inclusions::Vector{<:Tuple{<:Shape{D},M2}}) where {D,M<:Material,M2<:Material}
+function Geometry(
+    lattice::Lattice{D}, background::M, inclusions::Vector{<:Tuple{<:Shape{D},M2}}
+) where {D,M<:Material,M2<:Material}
     # Ensure all materials have compatible types
     MT = promote_type(M, M2)
     incl = Vector{Tuple{Shape{D},MT}}([(s, convert(MT, m)) for (s, m) in inclusions])
@@ -51,7 +52,7 @@ function Geometry(lattice::Lattice{D}, background::M,
 end
 
 # Helper to extract dimension type from Shape
-_shape_dim(::Shape{D}) where D = D
+_shape_dim(::Shape{D}) where {D} = D
 _dim_name(::Type{Dim1}) = "1D"
 _dim_name(::Type{Dim2}) = "2D"
 _dim_name(::Type{Dim3}) = "3D"
@@ -61,18 +62,21 @@ _dim_name(::Type{Dim3}) = "3D"
 
 Provides a helpful error message when shape dimensions don't match lattice dimension.
 """
-function Geometry(lattice::Lattice{D}, background::M,
-                  inclusions::Vector{<:Tuple{<:Shape,M2}}) where {D<:Dimension,M<:Material,M2<:Material}
+function Geometry(
+    lattice::Lattice{D}, background::M, inclusions::Vector{<:Tuple{<:Shape,M2}}
+) where {D<:Dimension,M<:Material,M2<:Material}
     lat_dim = _dim_name(D)
     for (i, (shape, _)) in enumerate(inclusions)
         shape_dim_type = _shape_dim(shape)
         if shape_dim_type !== D
             shape_dim = _dim_name(shape_dim_type)
             shape_name = nameof(typeof(shape))
-            throw(ArgumentError(
-                "Dimension mismatch: cannot add $shape_dim shape ($shape_name) " *
-                "to $lat_dim geometry."
-            ))
+            throw(
+                ArgumentError(
+                    "Dimension mismatch: cannot add $shape_dim shape ($shape_name) " *
+                    "to $lat_dim geometry.",
+                ),
+            )
         end
     end
     # If dimensions all match, use promote_type for mixed materials
@@ -90,7 +94,7 @@ Checks inclusions in order; first match wins.
 Uses periodic wrapping to ensure points are correctly assigned to shapes
 even when shapes are centered at lattice corners (e.g., center = (0,0)).
 """
-function get_material(geo::Geometry{D}, point) where D
+function get_material(geo::Geometry{D}, point) where {D}
     for (shape, material) in geo.inclusions
         if point_in_shape_periodic(point, shape, geo.lattice)
             return material
@@ -161,7 +165,9 @@ function point_in_shape_periodic(point::Vec2, rect::Rectangle, lattice::Lattice{
     return false
 end
 
-function point_in_shape_periodic(point::AbstractVector, r::Rectangle, lattice::Lattice{Dim2})
+function point_in_shape_periodic(
+    point::AbstractVector, r::Rectangle, lattice::Lattice{Dim2}
+)
     point_in_shape_periodic(Vec2(point...), r, lattice)
 end
 
@@ -182,7 +188,9 @@ function point_in_shape_periodic(point::Vec2, poly::Polygon, lattice::Lattice{Di
     return false
 end
 
-function point_in_shape_periodic(point::AbstractVector, poly::Polygon, lattice::Lattice{Dim2})
+function point_in_shape_periodic(
+    point::AbstractVector, poly::Polygon, lattice::Lattice{Dim2}
+)
     point_in_shape_periodic(Vec2(point...), poly, lattice)
 end
 
@@ -231,7 +239,9 @@ function point_in_shape_periodic(point::Vec3, cyl::Cylinder, lattice::Lattice{Di
     return false
 end
 
-function point_in_shape_periodic(point::AbstractVector, cyl::Cylinder, lattice::Lattice{Dim3})
+function point_in_shape_periodic(
+    point::AbstractVector, cyl::Cylinder, lattice::Lattice{Dim3}
+)
     point_in_shape_periodic(Vec3(point...), cyl, lattice)
 end
 
@@ -299,13 +309,18 @@ Discretize a 2D geometry onto a grid.
 # Returns
 A matrix of property values on the grid.
 """
-function discretize(geo::Geometry{Dim2}, resolution::Tuple{Int,Int},
-                    property::Symbol, method::DiscretizationMethod=SimpleGrid())
+function discretize(
+    geo::Geometry{Dim2},
+    resolution::Tuple{Int,Int},
+    property::Symbol,
+    method::DiscretizationMethod=SimpleGrid(),
+)
     discretize_impl(geo, resolution, property, method)
 end
 
-function discretize_impl(geo::Geometry{Dim2}, resolution::Tuple{Int,Int},
-                         property::Symbol, ::SimpleGrid)
+function discretize_impl(
+    geo::Geometry{Dim2}, resolution::Tuple{Int,Int}, property::Symbol, ::SimpleGrid
+)
     Nx, Ny = resolution
     a1, a2 = geo.lattice.vectors
 
@@ -326,8 +341,12 @@ function discretize_impl(geo::Geometry{Dim2}, resolution::Tuple{Int,Int},
     return result
 end
 
-function discretize_impl(geo::Geometry{Dim2}, resolution::Tuple{Int,Int},
-                         property::Symbol, method::SubpixelAverage)
+function discretize_impl(
+    geo::Geometry{Dim2},
+    resolution::Tuple{Int,Int},
+    property::Symbol,
+    method::SubpixelAverage,
+)
     Nx, Ny = resolution
     a1, a2 = geo.lattice.vectors
     ns = method.samples_per_dim
@@ -356,8 +375,9 @@ end
 Extract a specific property from a material.
 """
 # Error fallback for unsupported material types
-get_property(mat, property::Symbol) =
+function get_property(mat, property::Symbol)
     throw(ArgumentError("Unsupported material type: $(typeof(mat))"))
+end
 
 function get_property(mat::Dielectric, property::Symbol)
     if property == :ε
@@ -410,19 +430,28 @@ end
 
 Discretize a 1D geometry onto a grid.
 """
-function discretize(geo::Geometry{Dim1}, resolution::Tuple{Int},
-                    property::Symbol, method::DiscretizationMethod=SimpleGrid())
+function discretize(
+    geo::Geometry{Dim1},
+    resolution::Tuple{Int},
+    property::Symbol,
+    method::DiscretizationMethod=SimpleGrid(),
+)
     discretize_impl(geo, resolution, property, method)
 end
 
 # Also accept Int directly for 1D
-function discretize(geo::Geometry{Dim1}, resolution::Int,
-                    property::Symbol, method::DiscretizationMethod=SimpleGrid())
+function discretize(
+    geo::Geometry{Dim1},
+    resolution::Int,
+    property::Symbol,
+    method::DiscretizationMethod=SimpleGrid(),
+)
     discretize_impl(geo, (resolution,), property, method)
 end
 
-function discretize_impl(geo::Geometry{Dim1}, resolution::Tuple{Int},
-                         property::Symbol, ::SimpleGrid)
+function discretize_impl(
+    geo::Geometry{Dim1}, resolution::Tuple{Int}, property::Symbol, ::SimpleGrid
+)
     Nx = resolution[1]
     a = geo.lattice.vectors[1][1]  # Lattice constant
 
@@ -442,8 +471,9 @@ function discretize_impl(geo::Geometry{Dim1}, resolution::Tuple{Int},
     return result
 end
 
-function discretize_impl(geo::Geometry{Dim1}, resolution::Tuple{Int},
-                         property::Symbol, method::SubpixelAverage)
+function discretize_impl(
+    geo::Geometry{Dim1}, resolution::Tuple{Int}, property::Symbol, method::SubpixelAverage
+)
     Nx = resolution[1]
     a = geo.lattice.vectors[1][1]
     ns = method.samples_per_dim
@@ -517,13 +547,18 @@ Discretize a 3D geometry onto a grid.
 # Returns
 A 3D array of property values on the grid.
 """
-function discretize(geo::Geometry{Dim3}, resolution::Tuple{Int,Int,Int},
-                    property::Symbol, method::DiscretizationMethod=SimpleGrid())
+function discretize(
+    geo::Geometry{Dim3},
+    resolution::Tuple{Int,Int,Int},
+    property::Symbol,
+    method::DiscretizationMethod=SimpleGrid(),
+)
     discretize_impl(geo, resolution, property, method)
 end
 
-function discretize_impl(geo::Geometry{Dim3}, resolution::Tuple{Int,Int,Int},
-                         property::Symbol, ::SimpleGrid)
+function discretize_impl(
+    geo::Geometry{Dim3}, resolution::Tuple{Int,Int,Int}, property::Symbol, ::SimpleGrid
+)
     Nx, Ny, Nz = resolution
     a1, a2, a3 = geo.lattice.vectors
 
@@ -545,8 +580,12 @@ function discretize_impl(geo::Geometry{Dim3}, resolution::Tuple{Int,Int,Int},
     return result
 end
 
-function discretize_impl(geo::Geometry{Dim3}, resolution::Tuple{Int,Int,Int},
-                         property::Symbol, method::SubpixelAverage)
+function discretize_impl(
+    geo::Geometry{Dim3},
+    resolution::Tuple{Int,Int,Int},
+    property::Symbol,
+    method::SubpixelAverage,
+)
     Nx, Ny, Nz = resolution
     a1, a2, a3 = geo.lattice.vectors
     ns = method.samples_per_dim
@@ -580,8 +619,9 @@ end
 Discretize ε and μ for photonic calculations.
 Returns (ε, μ) arrays.
 """
-function discretize_dielectric(geo::Geometry{Dim2}, resolution;
-                               method::DiscretizationMethod=SimpleGrid())
+function discretize_dielectric(
+    geo::Geometry{Dim2}, resolution; method::DiscretizationMethod=SimpleGrid()
+)
     ε = discretize(geo, resolution, :ε, method)
     μ = discretize(geo, resolution, :μ, method)
     return ε, μ
@@ -593,8 +633,9 @@ end
 Discretize elastic properties for phononic calculations.
 Returns (ρ, C11, C12, C44) arrays.
 """
-function discretize_elastic(geo::Geometry{Dim2}, resolution;
-                            method::DiscretizationMethod=SimpleGrid())
+function discretize_elastic(
+    geo::Geometry{Dim2}, resolution; method::DiscretizationMethod=SimpleGrid()
+)
     ρ = discretize(geo, resolution, :ρ, method)
     C11 = discretize(geo, resolution, :C11, method)
     C12 = discretize(geo, resolution, :C12, method)
@@ -614,6 +655,8 @@ Discretize geometry on a grid.
 See concrete method signatures for detailed documentation and keyword arguments.
 """
 function discretize(geometry::Any, args...; kwargs...)
-    error("discretize: expected geometry::Geometry as first argument, " *
-          "got $(typeof(geometry))")
+    error(
+        "discretize: expected geometry::Geometry as first argument, " *
+        "got $(typeof(geometry))",
+    )
 end

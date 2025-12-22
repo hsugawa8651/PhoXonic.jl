@@ -31,8 +31,9 @@ using ReducedShiftedKrylov  # This triggers the extension loading
         ldos_mf = compute_ldos(solver, pos, ω_values, k_points, MatrixFreeGF(); η=0.05)
 
         # MatrixFreeGF with CGRHSInv
-        ldos_mf_cg = compute_ldos(solver, pos, ω_values, k_points,
-                                   MatrixFreeGF(rhs_inv_method=CGRHSInv()); η=0.05)
+        ldos_mf_cg = compute_ldos(
+            solver, pos, ω_values, k_points, MatrixFreeGF(rhs_inv_method=CGRHSInv()); η=0.05
+        )
 
         # All should find similar peak positions (even if absolute values differ)
         @test argmax(ldos_direct) == argmax(ldos_mf)
@@ -114,5 +115,4 @@ using ReducedShiftedKrylov  # This triggers the extension loading
 
         @test length(dos_rsk) == length(ω_values)
     end
-
 end

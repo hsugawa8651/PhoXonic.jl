@@ -31,8 +31,8 @@ println()
 λ_epoxy = 4.43e9      # Pa
 μ_epoxy = 1.59e9      # Pa
 
-steel = IsotropicElastic(ρ=ρ_steel, λ=λ_steel, μ=μ_steel)
-epoxy = IsotropicElastic(ρ=ρ_epoxy, λ=λ_epoxy, μ=μ_epoxy)
+steel = IsotropicElastic(; ρ=ρ_steel, λ=λ_steel, μ=μ_steel)
+epoxy = IsotropicElastic(; ρ=ρ_epoxy, λ=λ_epoxy, μ=μ_epoxy)
 
 println("Materials:")
 println("  Steel: ρ = $ρ_steel kg/m³, C44 = $(steel.C44/1e9) GPa")
@@ -56,7 +56,7 @@ println("  Filling fraction f = $(round(π*r^2, digits=2))")
 # K-path: Γ → X → M → Γ
 # ============================================================================
 npoints = 40
-kpath = simple_kpath_square(a=a, npoints=npoints)
+kpath = simple_kpath_square(; a=a, npoints=npoints)
 println("\nK-path: $(length(kpath.points)) points")
 
 # ============================================================================
@@ -82,20 +82,27 @@ println("=" ^ 60)
 solver_sh_dense = Solver(SHWave(), geo, (64, 64); cutoff=cutoff)
 println("Matrix size: $(matrix_dimension(solver_sh_dense))")
 
-t_sh_dense = @elapsed bands_sh_dense = compute_bands(solver_sh_dense, kpath; bands=nbands_sh)
+t_sh_dense = @elapsed bands_sh_dense = compute_bands(
+    solver_sh_dense, kpath; bands=nbands_sh
+)
 println("Dense: $(round(t_sh_dense, digits=2)) s")
 
 # LOBPCG with warm start
-solver_sh_lobpcg = Solver(SHWave(), geo, (64, 64),
-                          LOBPCGMethod(warm_start=true); cutoff=cutoff)
+solver_sh_lobpcg = Solver(
+    SHWave(), geo, (64, 64), LOBPCGMethod(; warm_start=true); cutoff=cutoff
+)
 
-t_sh_lobpcg = @elapsed bands_sh_lobpcg = compute_bands(solver_sh_lobpcg, kpath; bands=nbands_sh)
+t_sh_lobpcg = @elapsed bands_sh_lobpcg = compute_bands(
+    solver_sh_lobpcg, kpath; bands=nbands_sh
+)
 println("LOBPCG (warm start): $(round(t_sh_lobpcg, digits=2)) s")
 
 # Error check
 max_error_sh = maximum(abs.(bands_sh_dense.frequencies - bands_sh_lobpcg.frequencies))
 rel_error_sh = max_error_sh / maximum(bands_sh_dense.frequencies)
-println("Max error: $(@sprintf("%.2e", max_error_sh)) rad/s (rel: $(@sprintf("%.2e", rel_error_sh)))")
+println(
+    "Max error: $(@sprintf("%.2e", max_error_sh)) rad/s (rel: $(@sprintf("%.2e", rel_error_sh)))",
+)
 
 # ============================================================================
 # P-SV Wave (vector, in-plane)
@@ -108,20 +115,27 @@ println("=" ^ 60)
 solver_psv_dense = Solver(PSVWave(), geo, (64, 64); cutoff=cutoff)
 println("Matrix size: $(matrix_dimension(solver_psv_dense))")
 
-t_psv_dense = @elapsed bands_psv_dense = compute_bands(solver_psv_dense, kpath; bands=nbands_psv)
+t_psv_dense = @elapsed bands_psv_dense = compute_bands(
+    solver_psv_dense, kpath; bands=nbands_psv
+)
 println("Dense: $(round(t_psv_dense, digits=2)) s")
 
 # LOBPCG with warm start
-solver_psv_lobpcg = Solver(PSVWave(), geo, (64, 64),
-                           LOBPCGMethod(warm_start=true); cutoff=cutoff)
+solver_psv_lobpcg = Solver(
+    PSVWave(), geo, (64, 64), LOBPCGMethod(; warm_start=true); cutoff=cutoff
+)
 
-t_psv_lobpcg = @elapsed bands_psv_lobpcg = compute_bands(solver_psv_lobpcg, kpath; bands=nbands_psv)
+t_psv_lobpcg = @elapsed bands_psv_lobpcg = compute_bands(
+    solver_psv_lobpcg, kpath; bands=nbands_psv
+)
 println("LOBPCG (warm start): $(round(t_psv_lobpcg, digits=2)) s")
 
 # Error check
 max_error_psv = maximum(abs.(bands_psv_dense.frequencies - bands_psv_lobpcg.frequencies))
 rel_error_psv = max_error_psv / maximum(bands_psv_dense.frequencies)
-println("Max error: $(@sprintf("%.2e", max_error_psv)) rad/s (rel: $(@sprintf("%.2e", rel_error_psv)))")
+println(
+    "Max error: $(@sprintf("%.2e", max_error_psv)) rad/s (rel: $(@sprintf("%.2e", rel_error_psv)))",
+)
 
 # ============================================================================
 # Summary
@@ -133,9 +147,13 @@ println()
 println("| Wave | Method | Time (s) | Speedup | Max Error |")
 println("|------|--------|----------|---------|-----------|")
 println("| SH   | Dense  | $(@sprintf("%8.2f", t_sh_dense)) | 1.0x    | (ref)     |")
-println("| SH   | LOBPCG | $(@sprintf("%8.2f", t_sh_lobpcg)) | $(@sprintf("%.1f", t_sh_dense/t_sh_lobpcg))x    | $(@sprintf("%.1e", max_error_sh)) |")
+println(
+    "| SH   | LOBPCG | $(@sprintf("%8.2f", t_sh_lobpcg)) | $(@sprintf("%.1f", t_sh_dense/t_sh_lobpcg))x    | $(@sprintf("%.1e", max_error_sh)) |",
+)
 println("| PSV  | Dense  | $(@sprintf("%8.2f", t_psv_dense)) | 1.0x    | (ref)     |")
-println("| PSV  | LOBPCG | $(@sprintf("%8.2f", t_psv_lobpcg)) | $(@sprintf("%.1f", t_psv_dense/t_psv_lobpcg))x    | $(@sprintf("%.1e", max_error_psv)) |")
+println(
+    "| PSV  | LOBPCG | $(@sprintf("%8.2f", t_psv_lobpcg)) | $(@sprintf("%.1f", t_psv_dense/t_psv_lobpcg))x    | $(@sprintf("%.1e", max_error_psv)) |",
+)
 println()
 
 # ============================================================================
@@ -155,23 +173,23 @@ label_positions = [dists[i] for (i, _) in bands_sh_dense.labels]
 label_names = [l for (_, l) in bands_sh_dense.labels]
 
 # Combined plot
-p = plot(
-    xlabel = "Wave vector",
-    ylabel = "Normalized frequency (ωa/2πvₜ)",
-    title = "Kushwaha 1993: Steel/Epoxy\nSH (blue) and P-SV (red)",
-    legend = false,
-    grid = true,
-    size = (700, 500)
+p = plot(;
+    xlabel="Wave vector",
+    ylabel="Normalized frequency (ωa/2πvₜ)",
+    title="Kushwaha 1993: Steel/Epoxy\nSH (blue) and P-SV (red)",
+    legend=false,
+    grid=true,
+    size=(700, 500),
 )
 
 for b in 1:size(freqs_sh_norm, 2)
-    plot!(p, dists, freqs_sh_norm[:, b], linewidth=2, color=:blue)
+    plot!(p, dists, freqs_sh_norm[:, b]; linewidth=2, color=:blue)
 end
 for b in 1:size(freqs_psv_norm, 2)
-    plot!(p, dists, freqs_psv_norm[:, b], linewidth=2, color=:red, linestyle=:dash)
+    plot!(p, dists, freqs_psv_norm[:, b]; linewidth=2, color=:red, linestyle=:dash)
 end
 
-vline!(p, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
+vline!(p, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
 xticks!(p, label_positions, label_names)
 
 savefig(p, joinpath(@__DIR__, "205_kushwaha1993_bands.png"))

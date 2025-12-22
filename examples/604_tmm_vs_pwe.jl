@@ -57,7 +57,7 @@ k_points = 21
 bands_tmm = tmm_bandstructure(solver_tmm; k_points=k_points, bands=1:n_bands)
 
 # PWE: compute at same k-points
-k_values = range(0, π/a, length=k_points)
+k_values = range(0, π/a; length=k_points)
 ω_pwe = zeros(k_points, n_bands)
 
 for (ik, k) in enumerate(k_values)
@@ -76,7 +76,9 @@ for i in 1:n_bands
     ω_tmm_edge = bands_tmm.frequencies[end, i]
     ω_pwe_edge = ω_pwe[end, i]
     diff_pct = 100 * abs(ω_tmm_edge - ω_pwe_edge) / ω_pwe_edge
-    println("  $i    $(round(ω_tmm_edge, digits=4))    $(round(ω_pwe_edge, digits=4))    $(round(diff_pct, digits=2))%")
+    println(
+        "  $i    $(round(ω_tmm_edge, digits=4))    $(round(ω_pwe_edge, digits=4))    $(round(diff_pct, digits=2))%",
+    )
 end
 
 # ----------------------------------------
@@ -94,8 +96,12 @@ gap1_max_pwe = maximum(ω_pwe[:, 1])
 gap2_min_pwe = minimum(ω_pwe[:, 2])
 gap_pwe = gap2_min_pwe - gap1_max_pwe
 
-println("  TMM: gap = $(round(gap_tmm, digits=4)) ($(round(gap1_max_tmm, digits=4)) to $(round(gap2_min_tmm, digits=4)))")
-println("  PWE: gap = $(round(gap_pwe, digits=4)) ($(round(gap1_max_pwe, digits=4)) to $(round(gap2_min_pwe, digits=4)))")
+println(
+    "  TMM: gap = $(round(gap_tmm, digits=4)) ($(round(gap1_max_tmm, digits=4)) to $(round(gap2_min_tmm, digits=4)))",
+)
+println(
+    "  PWE: gap = $(round(gap_pwe, digits=4)) ($(round(gap1_max_pwe, digits=4)) to $(round(gap2_min_pwe, digits=4)))",
+)
 
 # ============================================================================
 # Phononic Crystal: Steel/Epoxy
@@ -105,8 +111,8 @@ println("\n" * "=" ^ 60)
 println("=== Phononic Crystal: PWE vs TMM ===\n")
 
 # Materials
-steel = IsotropicElastic(ρ=7800.0, λ=115e9, μ=82e9)
-epoxy = IsotropicElastic(ρ=1180.0, λ=4.43e9, μ=1.59e9)
+steel = IsotropicElastic(; ρ=7800.0, λ=115e9, μ=82e9)
+epoxy = IsotropicElastic(; ρ=1180.0, λ=4.43e9, μ=1.59e9)
 
 # Period
 a_phon = 0.01  # 10 mm
@@ -141,7 +147,7 @@ n_bands_phon = 4
 bands_tmm_phon = tmm_bandstructure(solver_tmm_phon; k_points=k_points, bands=1:n_bands_phon)
 
 # PWE: compute at same k-points
-k_values_phon = range(0, π/a_phon, length=k_points)
+k_values_phon = range(0, π/a_phon; length=k_points)
 ω_pwe_phon = zeros(k_points, n_bands_phon)
 
 for (ik, k) in enumerate(k_values_phon)
@@ -160,7 +166,9 @@ for i in 1:n_bands_phon
     ω_tmm_edge = bands_tmm_phon.frequencies[end, i]
     ω_pwe_edge = ω_pwe_phon[end, i]
     diff_pct = 100 * abs(ω_tmm_edge - ω_pwe_edge) / ω_pwe_edge
-    println("  $i    $(round(ω_tmm_edge, sigdigits=5))    $(round(ω_pwe_edge, sigdigits=5))    $(round(diff_pct, digits=1))%")
+    println(
+        "  $i    $(round(ω_tmm_edge, sigdigits=5))    $(round(ω_pwe_edge, sigdigits=5))    $(round(diff_pct, digits=1))%",
+    )
 end
 
 # ----------------------------------------
@@ -221,13 +229,13 @@ println("  - Handles arbitrary geometries")
 
 println("\nGenerating plots...")
 
-p1 = plot(
+p1 = plot(;
     xlabel="Wave vector ka/π",
     ylabel="Frequency ωa/2πc",
     title="Photonic Crystal: PWE vs TMM",
     legend=:topleft,
     grid=true,
-    size=(800, 500)
+    size=(800, 500),
 )
 
 # Normalize k-values to [0, 1] (ka/π)
@@ -235,19 +243,32 @@ k_norm = collect(k_values) .* a ./ π
 
 # Plot TMM bands
 for b in 1:n_bands
-    plot!(p1, k_norm, bands_tmm.frequencies[:, b],
-          linewidth=2, color=:blue, label=(b==1 ? "TMM" : ""))
+    plot!(
+        p1,
+        k_norm,
+        bands_tmm.frequencies[:, b];
+        linewidth=2,
+        color=:blue,
+        label=(b==1 ? "TMM" : ""),
+    )
 end
 
 # Plot PWE bands
 for b in 1:n_bands
-    plot!(p1, k_norm, ω_pwe[:, b],
-          linewidth=2, linestyle=:dash, color=:red, label=(b==1 ? "PWE" : ""))
+    plot!(
+        p1,
+        k_norm,
+        ω_pwe[:, b];
+        linewidth=2,
+        linestyle=:dash,
+        color=:red,
+        label=(b==1 ? "PWE" : ""),
+    )
 end
 
 # Highlight first bandgap
 if gap_tmm > 0
-    hspan!(p1, [gap1_max_tmm, gap2_min_tmm], alpha=0.15, color=:yellow, label="Gap")
+    hspan!(p1, [gap1_max_tmm, gap2_min_tmm]; alpha=0.15, color=:yellow, label="Gap")
 end
 
 # Add zone labels
@@ -260,13 +281,13 @@ println("Saved: 604_photonic_comparison.png")
 # Plot 2: Phononic Band Structure Comparison
 # ============================================================================
 
-p2 = plot(
+p2 = plot(;
     xlabel="Wave vector ka/π",
     ylabel="Frequency ω (rad/s)",
     title="Phononic Crystal: PWE vs TMM",
     legend=:topleft,
     grid=true,
-    size=(800, 500)
+    size=(800, 500),
 )
 
 # Normalize k-values
@@ -274,19 +295,38 @@ k_norm_phon = collect(k_values_phon) .* a_phon ./ π
 
 # Plot TMM bands
 for b in 1:n_bands_phon
-    plot!(p2, k_norm_phon, bands_tmm_phon.frequencies[:, b],
-          linewidth=2, color=:blue, label=(b==1 ? "TMM" : ""))
+    plot!(
+        p2,
+        k_norm_phon,
+        bands_tmm_phon.frequencies[:, b];
+        linewidth=2,
+        color=:blue,
+        label=(b==1 ? "TMM" : ""),
+    )
 end
 
 # Plot PWE bands
 for b in 1:n_bands_phon
-    plot!(p2, k_norm_phon, ω_pwe_phon[:, b],
-          linewidth=2, linestyle=:dash, color=:red, label=(b==1 ? "PWE" : ""))
+    plot!(
+        p2,
+        k_norm_phon,
+        ω_pwe_phon[:, b];
+        linewidth=2,
+        linestyle=:dash,
+        color=:red,
+        label=(b==1 ? "PWE" : ""),
+    )
 end
 
 # Highlight first bandgap (TMM)
 if gap_tmm_phon > 0
-    hspan!(p2, [gap1_max_tmm_phon, gap2_min_tmm_phon], alpha=0.15, color=:yellow, label="Gap (TMM)")
+    hspan!(
+        p2,
+        [gap1_max_tmm_phon, gap2_min_tmm_phon];
+        alpha=0.15,
+        color=:yellow,
+        label="Gap (TMM)",
+    )
 end
 
 # Add zone labels
@@ -299,13 +339,13 @@ println("Saved: 604_phononic_comparison.png")
 # Plot 3: Error Analysis (Photonic)
 # ============================================================================
 
-p3 = plot(
+p3 = plot(;
     xlabel="Band number",
     ylabel="Relative difference (%)",
     title="PWE vs TMM: Relative Error at Zone Boundary",
     legend=:topleft,
     grid=true,
-    size=(800, 500)
+    size=(800, 500),
 )
 
 # Photonic errors
@@ -324,8 +364,16 @@ for i in 1:n_bands_phon
     push!(errors_phononic, 100 * abs(ω_tmm_edge - ω_pwe_edge) / ω_pwe_edge)
 end
 
-bar!(p3, 1:n_bands, errors_photonic, label="Photonic", alpha=0.7, color=:blue)
-bar!(p3, (1:n_bands_phon) .+ 0.3, errors_phononic, label="Phononic", alpha=0.7, color=:red, bar_width=0.3)
+bar!(p3, 1:n_bands, errors_photonic; label="Photonic", alpha=0.7, color=:blue)
+bar!(
+    p3,
+    (1:n_bands_phon) .+ 0.3,
+    errors_phononic;
+    label="Phononic",
+    alpha=0.7,
+    color=:red,
+    bar_width=0.3,
+)
 
 savefig(p3, joinpath(@__DIR__, "604_error_analysis.png"))
 println("Saved: 604_error_analysis.png")

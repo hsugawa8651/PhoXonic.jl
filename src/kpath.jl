@@ -70,11 +70,7 @@ Uses Brillouin.jl with appropriate space group.
 """
 function kpath_hexagonal(; a::Real=1.0, N::Int=100)
     # Hexagonal lattice vectors
-    Rs_3d = [
-        [a, 0.0, 0.0],
-        [a / 2, a * sqrt(3) / 2, 0.0],
-        [0.0, 0.0, 1.0]
-    ]
+    Rs_3d = [[a, 0.0, 0.0], [a / 2, a * sqrt(3) / 2, 0.0], [0.0, 0.0, 1.0]]
     kp = irrfbz_path(1, Rs_3d)
     kpi = interpolate(kp, N)
     return cartesianize(kpi)
@@ -101,8 +97,9 @@ end
 
 Create a simple k-path through specified waypoints.
 """
-function SimpleKPath(waypoints::Vector{<:AbstractVector}, labels::Vector{String};
-                     npoints::Int=50)
+function SimpleKPath(
+    waypoints::Vector{<:AbstractVector}, labels::Vector{String}; npoints::Int=50
+)
     D = length(waypoints[1])
 
     all_points = SVector{D,Float64}[]
@@ -117,7 +114,7 @@ function SimpleKPath(waypoints::Vector{<:AbstractVector}, labels::Vector{String}
             push!(all_labels, (1, labels[1]))
             push!(all_distances, 0.0)
         else
-            k_start = SVector{D}(waypoints[i-1]...)
+            k_start = SVector{D}(waypoints[i - 1]...)
             k_end = SVector{D}(waypoints[i]...)
             segment_length = norm(k_end - k_start)
 
@@ -242,11 +239,7 @@ Reference: Setyawan & Curtarolo, Comp. Mat. Sci. 49, 299 (2010). DOI:10.1016/j.c
 """
 function kpath_fcc(; a::Real=1.0, N::Int=100)
     # FCC primitive vectors
-    Rs = [
-        [0.0, a/2, a/2],
-        [a/2, 0.0, a/2],
-        [a/2, a/2, 0.0]
-    ]
+    Rs = [[0.0, a/2, a/2], [a/2, 0.0, a/2], [a/2, a/2, 0.0]]
     kp = irrfbz_path(225, Rs)  # Fm-3m
     kpi = interpolate(kp, N)
     return cartesianize(kpi)
@@ -278,11 +271,7 @@ Reference: Setyawan & Curtarolo, Comp. Mat. Sci. 49, 299 (2010). DOI:10.1016/j.c
 """
 function kpath_bcc(; a::Real=1.0, N::Int=100)
     # BCC primitive vectors
-    Rs = [
-        [-a/2, a/2, a/2],
-        [a/2, -a/2, a/2],
-        [a/2, a/2, -a/2]
-    ]
+    Rs = [[-a/2, a/2, a/2], [a/2, -a/2, a/2], [a/2, a/2, -a/2]]
     kp = irrfbz_path(229, Rs)  # Im-3m
     kpi = interpolate(kp, N)
     return cartesianize(kpi)

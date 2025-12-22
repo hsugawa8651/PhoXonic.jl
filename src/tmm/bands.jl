@@ -60,10 +60,12 @@ solver = TMMSolver(Photonic1D(), ml)
 bands = tmm_bandstructure(solver; k_points=51, bands=1:5)
 ```
 """
-function tmm_bandstructure(solver::TMMSolver{Photonic1D};
-                           k_points::Int=51,
-                           bands::Union{Int,UnitRange{Int}}=1:5,
-                           ω_max::Union{Nothing,Real}=nothing)
+function tmm_bandstructure(
+    solver::TMMSolver{Photonic1D};
+    k_points::Int=51,
+    bands::Union{Int,UnitRange{Int}}=1:5,
+    ω_max::Union{Nothing,Real}=nothing,
+)
     ml = solver.structure
 
     # Period = total thickness of unit cell
@@ -74,7 +76,7 @@ function tmm_bandstructure(solver::TMMSolver{Photonic1D};
     nbands = length(band_range)
 
     # k-points from 0 to π/a (first Brillouin zone)
-    k_values = range(0.0, π/a, length=k_points)
+    k_values = range(0.0, π/a; length=k_points)
 
     # Estimate ω_max if not provided
     # For photonic crystal, ω ~ c*k/n_eff, use n_min for upper bound
@@ -120,11 +122,12 @@ Find frequencies where Tr(M(ω)) = target.
 Sweeps frequency from 0 to ω_max and detects crossings and touch points.
 For zone boundaries (target = ±2), also detects where trace touches target.
 """
-function find_band_frequencies(ml::Multilayer, target::Real,
-                               nbands::Int, ω_max::Real, a::Real)
+function find_band_frequencies(
+    ml::Multilayer, target::Real, nbands::Int, ω_max::Real, a::Real
+)
     # Number of points to sweep (higher = more accurate)
     nω = 2000
-    ω_values = range(1e-6, ω_max, length=nω)
+    ω_values = range(1e-6, ω_max; length=nω)
 
     # Compute Tr(M) for each ω
     # Note: ω = 2πc/λ, for normalized units (c=1), λ = 2π/ω
@@ -144,18 +147,18 @@ function find_band_frequencies(ml::Multilayer, target::Real,
         push!(frequencies, 0.0)
     end
 
-    for i in 1:(nω-1)
-        t1, t2 = trace_values[i], trace_values[i+1]
+    for i in 1:(nω - 1)
+        t1, t2 = trace_values[i], trace_values[i + 1]
 
         # Check if target is crossed
         if (t1 - target) * (t2 - target) < 0
             # Linear interpolation to find crossing point
-            ω1, ω2 = ω_values[i], ω_values[i+1]
+            ω1, ω2 = ω_values[i], ω_values[i + 1]
             ω_cross = ω1 + (target - t1) / (t2 - t1) * (ω2 - ω1)
             push!(frequencies, ω_cross)
-        # Check for touch points at zone boundaries (target ≈ ±2)
+            # Check for touch points at zone boundaries (target ≈ ±2)
         elseif abs(target) >= 2.0 - tol && i > 1 && i < nω - 1
-            t0 = trace_values[i-1]
+            t0 = trace_values[i - 1]
             # Detect local extremum near target
             # At zone boundary, trace touches ±2 from inside propagating region
             if target > 0  # target ≈ +2 (Γ point)
@@ -225,10 +228,12 @@ solver = TMMSolver(Longitudinal1D(), ml)
 bands = tmm_bandstructure(solver; k_points=51, bands=1:5)
 ```
 """
-function tmm_bandstructure(solver::TMMSolver{Longitudinal1D};
-                           k_points::Int=51,
-                           bands::Union{Int,UnitRange{Int}}=1:5,
-                           ω_max::Union{Nothing,Real}=nothing)
+function tmm_bandstructure(
+    solver::TMMSolver{Longitudinal1D};
+    k_points::Int=51,
+    bands::Union{Int,UnitRange{Int}}=1:5,
+    ω_max::Union{Nothing,Real}=nothing,
+)
     ml = solver.structure
 
     # Period = total thickness of unit cell
@@ -239,7 +244,7 @@ function tmm_bandstructure(solver::TMMSolver{Longitudinal1D};
     nbands = length(band_range)
 
     # k-points from 0 to π/a (first Brillouin zone)
-    k_values = range(0.0, π/a, length=k_points)
+    k_values = range(0.0, π/a; length=k_points)
 
     # Estimate ω_max if not provided
     # For phononic crystal, ω ~ c*k, use c_max for upper bound
@@ -280,17 +285,20 @@ end
 
 Find frequencies where Tr(M_acoustic(ω)) = target for phononic crystals.
 """
-function find_band_frequencies_acoustic(ml::Multilayer{<:ElasticMaterial}, target::Real,
-                                        nbands::Int, ω_max::Real, a::Real)
+function find_band_frequencies_acoustic(
+    ml::Multilayer{<:ElasticMaterial}, target::Real, nbands::Int, ω_max::Real, a::Real
+)
     # Number of points to sweep
     nω = 2000
-    ω_values = range(1e-6, ω_max, length=nω)
+    ω_values = range(1e-6, ω_max; length=nω)
 
     # Compute Tr(M) for each ω
     # Note: for phononic, ω = 2π*c/λ, so λ = 2π*c/ω
     # We need average velocity for wavelength conversion
-    c_avg = sum(longitudinal_velocity(layer.material) * thickness(layer)
-                for layer in ml.layers) / a
+    c_avg =
+        sum(
+            longitudinal_velocity(layer.material) * thickness(layer) for layer in ml.layers
+        ) / a
 
     trace_values = zeros(nω)
     for (i, ω) in enumerate(ω_values)
@@ -308,16 +316,16 @@ function find_band_frequencies_acoustic(ml::Multilayer{<:ElasticMaterial}, targe
         push!(frequencies, 0.0)
     end
 
-    for i in 1:(nω-1)
-        t1, t2 = trace_values[i], trace_values[i+1]
+    for i in 1:(nω - 1)
+        t1, t2 = trace_values[i], trace_values[i + 1]
 
         # Check if target is crossed
         if (t1 - target) * (t2 - target) < 0
-            ω1, ω2 = ω_values[i], ω_values[i+1]
+            ω1, ω2 = ω_values[i], ω_values[i + 1]
             ω_cross = ω1 + (target - t1) / (t2 - t1) * (ω2 - ω1)
             push!(frequencies, ω_cross)
         elseif abs(target) >= 2.0 - tol && i > 1 && i < nω - 1
-            t0 = trace_values[i-1]
+            t0 = trace_values[i - 1]
             if target > 0
                 if t1 > t0 && t1 > t2 && abs(t1 - target) < tol
                     push!(frequencies, ω_values[i])

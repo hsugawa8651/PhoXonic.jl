@@ -14,8 +14,8 @@ Represents a periodic lattice in D dimensions.
 - `reciprocal`: Reciprocal lattice vectors (computed automatically)
 """
 struct Lattice{D<:Dimension}
-    vectors::NTuple{N,SVector{N,Float64}} where N
-    reciprocal::NTuple{N,SVector{N,Float64}} where N
+    vectors::NTuple{N,SVector{N,Float64}} where {N}
+    reciprocal::NTuple{N,SVector{N,Float64}} where {N}
 end
 
 # ============================================================================
@@ -124,11 +124,7 @@ end
 Create a 3D face-centered cubic lattice with conventional lattice constant `a`.
 """
 function fcc_lattice(a::Real=1.0)
-    Lattice(
-        Vec3(0, a/2, a/2),
-        Vec3(a/2, 0, a/2),
-        Vec3(a/2, a/2, 0)
-    )
+    Lattice(Vec3(0, a/2, a/2), Vec3(a/2, 0, a/2), Vec3(a/2, a/2, 0))
 end
 
 # ============================================================================

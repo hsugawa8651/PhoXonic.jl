@@ -74,7 +74,7 @@ println("Computing band structure...")
 println()
 
 # k-path: Γ → X → M → Γ
-kpath = simple_kpath_square(a=a, npoints=30)
+kpath = simple_kpath_square(; a=a, npoints=30)
 
 # Compute bands
 bands_tm = compute_bands(solver_tm, kpath; bands=1:8)
@@ -112,8 +112,9 @@ println()
 println("  Band |    Γ     |    X     |    M    ")
 println("  -----|----------|----------|----------")
 for i in 1:min(6, length(freq_tm_gamma))
-    @printf("   %d   | %8.5f | %8.5f | %8.5f\n",
-            i, freq_tm_gamma[i], freq_tm_X[i], freq_tm_M[i])
+    @printf(
+        "   %d   | %8.5f | %8.5f | %8.5f\n", i, freq_tm_gamma[i], freq_tm_X[i], freq_tm_M[i]
+    )
 end
 println()
 
@@ -190,8 +191,12 @@ if !isempty(gaps_te)
     # Convert to MPB units
     lower_mpb = gap_te.max_lower / (2π)
     upper_mpb = gap_te.min_upper / (2π)
-    @printf("TE gap found: [%.4f, %.4f] (%.2f%%) in MPB units\n",
-            lower_mpb, upper_mpb, gap_percent_te)
+    @printf(
+        "TE gap found: [%.4f, %.4f] (%.2f%%) in MPB units\n",
+        lower_mpb,
+        upper_mpb,
+        gap_percent_te
+    )
 else
     println("No TE bandgap found (expected for rods in air)")
 end

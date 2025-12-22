@@ -23,7 +23,7 @@ air = Dielectric(1.0)
 geo = Geometry(lat, dielectric, [(Circle([0.0, 0.0], 0.45), air)])
 
 # Create k-path: Γ → M → K → Γ
-kpath = simple_kpath_hexagonal(a=a, npoints=50)
+kpath = simple_kpath_hexagonal(; a=a, npoints=50)
 
 # ============================================================================
 # TM polarization
@@ -38,8 +38,13 @@ if isempty(gaps_tm)
     println("  No significant band gaps found.")
 else
     for g in gaps_tm
-        println("  Gap between bands ", g.bands, ": ",
-                round(g.gap_ratio*100, digits=1), "% gap-to-midgap")
+        println(
+            "  Gap between bands ",
+            g.bands,
+            ": ",
+            round(g.gap_ratio*100; digits=1),
+            "% gap-to-midgap",
+        )
     end
 end
 
@@ -56,8 +61,13 @@ if isempty(gaps_te)
     println("  No significant band gaps found.")
 else
     for g in gaps_te
-        println("  Gap between bands ", g.bands, ": ",
-                round(g.gap_ratio*100, digits=1), "% gap-to-midgap")
+        println(
+            "  Gap between bands ",
+            g.bands,
+            ": ",
+            round(g.gap_ratio*100; digits=1),
+            "% gap-to-midgap",
+        )
     end
 end
 
@@ -80,9 +90,15 @@ for n in 1:7
             midgap = (overlap_min + overlap_max) / 2
             gap_ratio = (overlap_max - overlap_min) / midgap * 100
             println("Complete gap between bands $n and $(n+1):")
-            println("  TM: $(round(tm_gap.max_lower, digits=4)) - $(round(tm_gap.min_upper, digits=4))")
-            println("  TE: $(round(te_gap.max_lower, digits=4)) - $(round(te_gap.min_upper, digits=4))")
-            println("  Overlap: $(round(overlap_min, digits=4)) - $(round(overlap_max, digits=4))")
+            println(
+                "  TM: $(round(tm_gap.max_lower, digits=4)) - $(round(tm_gap.min_upper, digits=4))",
+            )
+            println(
+                "  TE: $(round(te_gap.max_lower, digits=4)) - $(round(te_gap.min_upper, digits=4))",
+            )
+            println(
+                "  Overlap: $(round(overlap_min, digits=4)) - $(round(overlap_max, digits=4))",
+            )
             println("  Complete gap ratio: $(round(gap_ratio, digits=1))%")
         end
     end
@@ -105,47 +121,53 @@ ymax = max(maximum(bands_tm.frequencies), maximum(bands_te.frequencies)) * 1.05
 ylims_common = (0, ymax)
 
 # TM plot
-p_tm = plot(
+p_tm = plot(;
     xlabel="Wave vector",
     ylabel="Frequency (ωa/2πc)",
     title="TM Bands (r=0.45a)",
     legend=false,
     grid=true,
     size=(700, 450),
-    ylims=ylims_common
+    ylims=ylims_common,
 )
 for b in 1:size(bands_tm.frequencies, 2)
-    plot!(p_tm, dists, bands_tm.frequencies[:, b], linewidth=2, color=:blue)
+    plot!(p_tm, dists, bands_tm.frequencies[:, b]; linewidth=2, color=:blue)
 end
-vline!(p_tm, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
+vline!(p_tm, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
 xticks!(p_tm, label_positions, label_names)
 
 # TE plot
-p_te = plot(
+p_te = plot(;
     xlabel="Wave vector",
     ylabel="Frequency (ωa/2πc)",
     title="TE Bands (r=0.45a)",
     legend=false,
     grid=true,
     size=(700, 450),
-    ylims=ylims_common
+    ylims=ylims_common,
 )
 for b in 1:size(bands_te.frequencies, 2)
-    plot!(p_te, dists, bands_te.frequencies[:, b], linewidth=2, color=:red)
+    plot!(p_te, dists, bands_te.frequencies[:, b]; linewidth=2, color=:red)
 end
-vline!(p_te, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
+vline!(p_te, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
 xticks!(p_te, label_positions, label_names)
 
 # Highlight TE band gap if exists
 te_gap_1_2 = find_bandgap(bands_te, 1, 2)
 if te_gap_1_2.gap > 0
-    hspan!(p_te, [te_gap_1_2.max_lower, te_gap_1_2.min_upper],
-           alpha=0.2, color=:red, label="")
+    hspan!(
+        p_te, [te_gap_1_2.max_lower, te_gap_1_2.min_upper]; alpha=0.2, color=:red, label=""
+    )
 end
 
 # Combined plot (side by side)
-p_combined = plot(p_tm, p_te, layout=(1, 2), size=(1200, 450),
-    plot_title="Triangular Lattice Air Holes in ε=12")
+p_combined = plot(
+    p_tm,
+    p_te;
+    layout=(1, 2),
+    size=(1200, 450),
+    plot_title="Triangular Lattice Air Holes in ε=12",
+)
 
 # Save plots
 savefig(p_tm, joinpath(@__DIR__, "111_triholes_tm_bands.png"))

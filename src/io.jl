@@ -55,14 +55,21 @@ The file contains:
 - `labels`: High-symmetry point labels and indices
 - `metadata`: Additional information (version, date, etc.)
 """
-function save_bands(filename::AbstractString, bands::BandStructure;
-                    compress::Bool=false, metadata::Dict=Dict{String,Any}())
+function save_bands(
+    filename::AbstractString,
+    bands::BandStructure;
+    compress::Bool=false,
+    metadata::Dict=Dict{String,Any}(),
+)
     # Prepare metadata
-    meta = merge(Dict{String,Any}(
-        "created" => string(now()),
-        "nkpoints" => length(bands.distances),
-        "nbands" => size(bands.frequencies, 2)
-    ), metadata)
+    meta = merge(
+        Dict{String,Any}(
+            "created" => string(now()),
+            "nkpoints" => length(bands.distances),
+            "nbands" => size(bands.frequencies, 2),
+        ),
+        metadata,
+    )
 
     # Save using JLD2
     jldopen(filename, "w"; compress=compress) do file
@@ -145,14 +152,18 @@ using PhoXonic
 save_modes("modes_at_k.jld2", modes; k=k, frequencies=ω)
 ```
 """
-function save_modes(filename::AbstractString, modes::AbstractMatrix;
-                    k=nothing, frequencies=nothing,
-                    compress::Bool=false, metadata::Dict=Dict{String,Any}())
+function save_modes(
+    filename::AbstractString,
+    modes::AbstractMatrix;
+    k=nothing,
+    frequencies=nothing,
+    compress::Bool=false,
+    metadata::Dict=Dict{String,Any}(),
+)
     # Prepare metadata
-    meta = merge(Dict{String,Any}(
-        "created" => string(now()),
-        "size" => size(modes)
-    ), metadata)
+    meta = merge(
+        Dict{String,Any}("created" => string(now()), "size" => size(modes)), metadata
+    )
 
     # Save using JLD2
     jldopen(filename, "w"; compress=compress) do file
@@ -187,10 +198,10 @@ function load_modes(filename::AbstractString)
     file_data = load(filename)
 
     result = (
-        modes = file_data["modes"],
-        k = get(file_data, "k", nothing),
-        frequencies = get(file_data, "frequencies", nothing),
-        metadata = get(file_data, "metadata", Dict())
+        modes=file_data["modes"],
+        k=get(file_data, "k", nothing),
+        frequencies=get(file_data, "frequencies", nothing),
+        metadata=get(file_data, "metadata", Dict()),
     )
 
     return result
@@ -204,8 +215,9 @@ end
 # Uses abstract type fallback + concrete type override for 3D
 
 # Error fallback for unsupported wave types
-_save_material_arrays!(file, wave, mats) =
+function _save_material_arrays!(file, wave, mats)
     throw(ArgumentError("Unsupported wave type for save_epsilon: $(typeof(wave))"))
+end
 
 # Fallback for all PhotonicWave (TEWave, TMWave, Photonic1D)
 function _save_material_arrays!(file, ::PhotonicWave, mats)
@@ -267,16 +279,20 @@ solver_ph = Solver(FullElastic(), geo_phononic, (16, 16, 16))
 save_epsilon("elastic_constants.jld2", solver_ph)
 ```
 """
-function save_epsilon(filename::AbstractString, solver::Solver;
-                      compress::Bool=false, metadata::Dict=Dict{String,Any}())
+function save_epsilon(
+    filename::AbstractString,
+    solver::Solver;
+    compress::Bool=false,
+    metadata::Dict=Dict{String,Any}(),
+)
     mats = solver.material_arrays
     wave = solver.wave
 
     # Prepare metadata
-    meta = merge(Dict{String,Any}(
-        "created" => string(now()),
-        "wave_type" => string(typeof(wave))
-    ), metadata)
+    meta = merge(
+        Dict{String,Any}("created" => string(now()), "wave_type" => string(typeof(wave))),
+        metadata,
+    )
 
     # Save using JLD2
     jldopen(filename, "w"; compress=compress) do file
@@ -311,16 +327,15 @@ function load_epsilon(filename::AbstractString)
     result = Dict{Symbol,Any}()
 
     # Photonic fields
-    for (file_key, julia_key) in [("epsilon", :ε), ("epsilon_inv", :ε_inv),
-                                   ("mu", :μ), ("mu_inv", :μ_inv)]
+    for (file_key, julia_key) in
+        [("epsilon", :ε), ("epsilon_inv", :ε_inv), ("mu", :μ), ("mu_inv", :μ_inv)]
         if haskey(file_data, file_key)
             result[julia_key] = file_data[file_key]
         end
     end
 
     # Phononic fields
-    for (file_key, julia_key) in [("C11", :C11), ("C12", :C12), ("C44", :C44),
-                                   ("rho", :ρ)]
+    for (file_key, julia_key) in [("C11", :C11), ("C12", :C12), ("C44", :C44), ("rho", :ρ)]
         if haskey(file_data, file_key)
             result[julia_key] = file_data[file_key]
         end

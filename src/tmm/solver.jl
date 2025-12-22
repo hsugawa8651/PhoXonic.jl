@@ -20,7 +20,7 @@ solver = TMMSolver(Photonic1D(), ml)
 result = tmm_spectrum(solver, 600.0)
 ```
 """
-struct TMMSolver{W<:WaveType, M<:Material}
+struct TMMSolver{W<:WaveType,M<:Material}
     wavetype::W
     structure::Multilayer{M}
 end
@@ -68,8 +68,9 @@ result = tmm_spectrum(solver, 600.0)
 result = tmm_spectrum(solver, 600.0; angle=π/4, polarization=:TM)
 ```
 """
-function tmm_spectrum(solver::TMMSolver{Photonic1D}, λ::Real;
-                      angle::Real=0.0, polarization::Symbol=:TE)
+function tmm_spectrum(
+    solver::TMMSolver{Photonic1D}, λ::Real; angle::Real=0.0, polarization::Symbol=:TE
+)
     ml = solver.structure
 
     # Get refractive indices
@@ -88,8 +89,8 @@ function tmm_spectrum(solver::TMMSolver{Photonic1D}, λ::Real;
     # [E_inc^+; E_inc^-] = M * [E_sub^+; 0]
     # So: 1 = M[1,1]*t, r = M[2,1]*t
     # Therefore: t = 1/M[1,1], r = M[2,1]/M[1,1]
-    t = 1 / M[1,1]
-    r = M[2,1] / M[1,1]
+    t = 1 / M[1, 1]
+    r = M[2, 1] / M[1, 1]
 
     # Power coefficients
     R = abs2(r)
@@ -140,8 +141,9 @@ R, T = tmm_spectrum(solver, λ_values)
 R_te, T_te = tmm_spectrum(solver, λ_values; angle=π/6, polarization=:TE)
 ```
 """
-function tmm_spectrum(solver::TMMSolver, λ_values::AbstractVector;
-                      angle::Real=0.0, polarization::Symbol=:TE)
+function tmm_spectrum(
+    solver::TMMSolver, λ_values::AbstractVector; angle::Real=0.0, polarization::Symbol=:TE
+)
     n = length(λ_values)
     R = Vector{Float64}(undef, n)
     T = Vector{Float64}(undef, n)
@@ -194,8 +196,8 @@ function tmm_spectrum(solver::TMMSolver{Longitudinal1D}, λ::Real)
 
     # Extract transmission and reflection coefficients
     # Same formalism as photonic: t = 1/M[1,1], r = M[2,1]/M[1,1]
-    t = 1 / M[1,1]
-    r = M[2,1] / M[1,1]
+    t = 1 / M[1, 1]
+    r = M[2, 1] / M[1, 1]
 
     # Power coefficients
     R = abs2(r)
