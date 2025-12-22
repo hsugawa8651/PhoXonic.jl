@@ -36,7 +36,7 @@ c_L = 8950.0    # m/s (longitudinal velocity)
 
 # Create materials
 si_photonic = Dielectric(ε_si)
-si_phononic = IsotropicElastic(ρ=ρ_si, λ=λ_si, μ=μ_si)
+si_phononic = IsotropicElastic(; ρ=ρ_si, λ=λ_si, μ=μ_si)
 
 air_photonic = Dielectric(1.0)
 void_phononic = ElasticVoid()
@@ -54,8 +54,12 @@ a = 1.0
 r_over_a = 0.46
 
 lat = hexagonal_lattice(a)
-geo_photonic = Geometry(lat, si_photonic, [(Circle([0.0, 0.0], r_over_a * a), air_photonic)])
-geo_phononic = Geometry(lat, si_phononic, [(Circle([0.0, 0.0], r_over_a * a), void_phononic)])
+geo_photonic = Geometry(
+    lat, si_photonic, [(Circle([0.0, 0.0], r_over_a * a), air_photonic)]
+)
+geo_phononic = Geometry(
+    lat, si_phononic, [(Circle([0.0, 0.0], r_over_a * a), void_phononic)]
+)
 
 println("\nGeometry:")
 println("  Lattice: Triangular (hexagonal)")
@@ -125,7 +129,9 @@ for gap in te_gaps
     lower = gap.max_lower / (2π)
     upper = gap.min_upper / (2π)
     if lower < 1.0
-        println("  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3))")
+        println(
+            "  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3))"
+        )
     end
 end
 
@@ -134,18 +140,27 @@ for gap in tm_gaps
     lower = gap.max_lower / (2π)
     upper = gap.min_upper / (2π)
     if lower < 1.0
-        println("  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3))")
+        println(
+            "  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3))"
+        )
     end
 end
 
 # Find complete photonic gap (TE ∩ TM overlap)
-te_gap_1 = isempty(te_gaps) ? nothing : (te_gaps[1].max_lower / (2π), te_gaps[1].min_upper / (2π))
-tm_gap_2 = length(tm_gaps) >= 2 ? (tm_gaps[2].max_lower / (2π), tm_gaps[2].min_upper / (2π)) : nothing
+te_gap_1 =
+    isempty(te_gaps) ? nothing : (te_gaps[1].max_lower / (2π), te_gaps[1].min_upper / (2π))
+tm_gap_2 = if length(tm_gaps) >= 2
+    (tm_gaps[2].max_lower / (2π), tm_gaps[2].min_upper / (2π))
+else
+    nothing
+end
 if te_gap_1 !== nothing && tm_gap_2 !== nothing
     overlap_lower = max(te_gap_1[1], tm_gap_2[1])
     overlap_upper = min(te_gap_1[2], tm_gap_2[2])
     if overlap_lower < overlap_upper
-        println("\nComplete photonic gap (TE∩TM): $(round(overlap_lower, digits=3)) - $(round(overlap_upper, digits=3))")
+        println(
+            "\nComplete photonic gap (TE∩TM): $(round(overlap_lower, digits=3)) - $(round(overlap_upper, digits=3))",
+        )
     end
 end
 
@@ -161,7 +176,9 @@ for gap in sh_gaps
     lower = gap.max_lower * norm_phononic
     upper = gap.min_upper * norm_phononic
     if lower < 2.0
-        println("  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3))")
+        println(
+            "  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3))"
+        )
     end
 end
 
@@ -170,7 +187,9 @@ for gap in psv_gaps
     lower = gap.max_lower * norm_phononic
     upper = gap.min_upper * norm_phononic
     if lower < 2.0
-        println("  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3))")
+        println(
+            "  Band $(gap.bands): $(round(lower, digits=3)) - $(round(upper, digits=3))"
+        )
     end
 end
 
@@ -180,11 +199,20 @@ println("\nExpected (Maldovan 2006 Fig.3b): Complete phononic gap = 0.830 - 0.96
 # Helper function to draw structure
 # =============================================================================
 function draw_circle!(p, cx, cy, r; color=:blue, fillalpha=1.0, n=100)
-    θ = range(0, 2π, length=n)
+    θ = range(0, 2π; length=n)
     xs = cx .+ r .* cos.(θ)
     ys = cy .+ r .* sin.(θ)
-    plot!(p, xs, ys, seriestype=:shape, fillcolor=color, fillalpha=fillalpha,
-          linecolor=color, linewidth=0.5, label="")
+    plot!(
+        p,
+        xs,
+        ys;
+        seriestype=:shape,
+        fillcolor=color,
+        fillalpha=fillalpha,
+        linecolor=color,
+        linewidth=0.5,
+        label="",
+    )
 end
 
 # =============================================================================
@@ -204,7 +232,7 @@ phononic_gap = (0.830, 0.963)  # Complete phononic gap
 a1 = lat.vectors[1]
 a2 = lat.vectors[2]
 
-p_struct = plot(
+p_struct = plot(;
     aspect_ratio=:equal,
     xlabel="x/a",
     ylabel="y/a",
@@ -213,7 +241,7 @@ p_struct = plot(
     ylim=(-0.6, 1.2),
     legend=false,
     grid=false,
-    background_color_inside=:steelblue  # Si background
+    background_color_inside=:steelblue,  # Si background
 )
 
 # Draw air holes at visible unit cells
@@ -228,77 +256,73 @@ end
 
 # Draw unit cell boundary
 corners = [[0.0, 0.0], collect(a1), collect(a1 + a2), collect(a2), [0.0, 0.0]]
-plot!(p_struct, [c[1] for c in corners], [c[2] for c in corners],
-      color=:black, linewidth=2, linestyle=:dash, label="")
+plot!(
+    p_struct,
+    [c[1] for c in corners],
+    [c[2] for c in corners];
+    color=:black,
+    linewidth=2,
+    linestyle=:dash,
+    label="",
+)
 
 # Add material labels
 annotate!(p_struct, 0.8, 0.9, text("Si", :white, 12))
 annotate!(p_struct, 0.0, 0.0, text("Air", :gray, 10))
 
 # --- TE subplot ---
-p1 = plot(
-    ylabel="ωa/2πc",
-    title="TE (photonic)",
-    legend=false,
-    grid=true,
-    ylims=(0, 0.8)
-)
+p1 = plot(; ylabel="ωa/2πc", title="TE (photonic)", legend=false, grid=true, ylims=(0, 0.8))
 for b in 1:size(freqs_te, 2)
-    plot!(p1, dists, freqs_te[:, b], lw=2, color=:blue, label="")
+    plot!(p1, dists, freqs_te[:, b]; lw=2, color=:blue, label="")
 end
-hspan!(p1, [photonic_gap...], alpha=0.3, color=:green, label="")
-vline!(p1, label_pos, color=:gray, ls=:dash, alpha=0.5, label="")
+hspan!(p1, [photonic_gap...]; alpha=0.3, color=:green, label="")
+vline!(p1, label_pos; color=:gray, ls=:dash, alpha=0.5, label="")
 xticks!(p1, label_pos, label_names)
 
 # --- TM subplot ---
-p2 = plot(
-    title="TM (photonic)",
-    legend=false,
-    grid=true,
-    ylims=(0, 0.8)
-)
+p2 = plot(; title="TM (photonic)", legend=false, grid=true, ylims=(0, 0.8))
 for b in 1:size(freqs_tm, 2)
-    plot!(p2, dists, freqs_tm[:, b], lw=2, color=:red, label="")
+    plot!(p2, dists, freqs_tm[:, b]; lw=2, color=:red, label="")
 end
-hspan!(p2, [photonic_gap...], alpha=0.3, color=:green, label="")
-vline!(p2, label_pos, color=:gray, ls=:dash, alpha=0.5, label="")
+hspan!(p2, [photonic_gap...]; alpha=0.3, color=:green, label="")
+vline!(p2, label_pos; color=:gray, ls=:dash, alpha=0.5, label="")
 xticks!(p2, label_pos, label_names)
 
 # --- SH subplot ---
-p3 = plot(
-    ylabel="ωa/2πcT",
-    title="SH (phononic)",
-    legend=false,
-    grid=true,
-    ylims=(0, 1.5)
+p3 = plot(;
+    ylabel="ωa/2πcT", title="SH (phononic)", legend=false, grid=true, ylims=(0, 1.5)
 )
 for b in 1:size(freqs_sh, 2)
-    plot!(p3, dists, freqs_sh[:, b], lw=2, color=:forestgreen, label="")
+    plot!(p3, dists, freqs_sh[:, b]; lw=2, color=:forestgreen, label="")
 end
-hspan!(p3, [phononic_gap...], alpha=0.3, color=:orange, label="")
-vline!(p3, label_pos, color=:gray, ls=:dash, alpha=0.5, label="")
+hspan!(p3, [phononic_gap...]; alpha=0.3, color=:orange, label="")
+vline!(p3, label_pos; color=:gray, ls=:dash, alpha=0.5, label="")
 xticks!(p3, label_pos, label_names)
 
 # --- PSV subplot ---
-p4 = plot(
-    title="PSV (phononic)",
-    legend=false,
-    grid=true,
-    ylims=(0, 1.5)
-)
+p4 = plot(; title="PSV (phononic)", legend=false, grid=true, ylims=(0, 1.5))
 for b in 1:size(freqs_psv, 2)
-    plot!(p4, dists, freqs_psv[:, b], lw=2, color=:darkorange, label="")
+    plot!(p4, dists, freqs_psv[:, b]; lw=2, color=:darkorange, label="")
 end
-hspan!(p4, [phononic_gap...], alpha=0.3, color=:orange, label="")
-vline!(p4, label_pos, color=:gray, ls=:dash, alpha=0.5, label="")
+hspan!(p4, [phononic_gap...]; alpha=0.3, color=:orange, label="")
+vline!(p4, label_pos; color=:gray, ls=:dash, alpha=0.5, label="")
 xticks!(p4, label_pos, label_names)
 
 # --- Combined layout: structure on left, 2x2 bands on right ---
 # Use @layout macro for custom layout
 lay = @layout [a{0.35w} grid(2, 2)]
-p = plot(p_struct, p1, p2, p3, p4, layout=lay, size=(1400, 700),
-         plot_title="Maldovan 2006: PhoXonic Crystal - Si with Air Holes (r/a=0.46)",
-         left_margin=5Plots.mm, bottom_margin=5Plots.mm)
+p = plot(
+    p_struct,
+    p1,
+    p2,
+    p3,
+    p4;
+    layout=lay,
+    size=(1400, 700),
+    plot_title="Maldovan 2006: PhoXonic Crystal - Si with Air Holes (r/a=0.46)",
+    left_margin=5Plots.mm,
+    bottom_margin=5Plots.mm,
+)
 
 savefig(p, joinpath(@__DIR__, "212_maldovan2006_phoxonic.png"))
 println("\nSaved: 212_maldovan2006_phoxonic.png")

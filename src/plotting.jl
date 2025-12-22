@@ -86,6 +86,10 @@ function band_plot_data(bs::BandStructure; normalize::Real=1.0)
         push!(label_names, name)
     end
 
-    (distances=dists, frequencies=freqs,
-     label_positions=label_positions, label_names=label_names)
+    (
+        distances=dists,
+        frequencies=freqs,
+        label_positions=label_positions,
+        label_names=label_names,
+    )
 end

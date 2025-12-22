@@ -30,8 +30,8 @@ println()
 μ_epoxy = 0.148e10    # Pa
 λ_epoxy = 0.754e10 - 2*μ_epoxy  # Pa
 
-steel = IsotropicElastic(ρ=ρ_steel, λ=λ_steel, μ=μ_steel)
-epoxy = IsotropicElastic(ρ=ρ_epoxy, λ=λ_epoxy, μ=μ_epoxy)
+steel = IsotropicElastic(; ρ=ρ_steel, λ=λ_steel, μ=μ_steel)
+epoxy = IsotropicElastic(; ρ=ρ_epoxy, λ=λ_epoxy, μ=μ_epoxy)
 
 println("Materials:")
 println("  Steel: ρ = $ρ_steel kg/m³, μ = $(μ_steel/1e9) GPa")
@@ -58,7 +58,7 @@ println("  Filling fraction f = $(round(π*r^2 / (a^2 * sqrt(3)/2), digits=2))")
 # K-path: Γ → M → K → Γ
 # ============================================================================
 npoints = 30
-kpath = simple_kpath_hexagonal(a=a, npoints=npoints)
+kpath = simple_kpath_hexagonal(; a=a, npoints=npoints)
 println("\nK-path: $(length(kpath.points)) points")
 
 # ============================================================================
@@ -79,7 +79,9 @@ println("1. Dense Solver (reference)")
 println("=" ^ 60)
 
 solver_dense = Solver(PSVWave(), geo, (64, 64); cutoff=cutoff)
-println("Matrix size: $(matrix_dimension(solver_dense)) × $(matrix_dimension(solver_dense))")
+println(
+    "Matrix size: $(matrix_dimension(solver_dense)) × $(matrix_dimension(solver_dense))"
+)
 
 t_dense = @elapsed bands_dense = compute_bands(solver_dense, kpath; bands=nbands)
 println("Time: $(round(t_dense, digits=2)) s")
@@ -92,9 +94,13 @@ println("2. LOBPCG with Warm Start")
 println("   (warm_start=true, scale=true, first_dense=true)")
 println("=" ^ 60)
 
-solver_lobpcg = Solver(PSVWave(), geo, (64, 64),
-                       LOBPCGMethod(warm_start=true, scale=true, first_dense=true);
-                       cutoff=cutoff)
+solver_lobpcg = Solver(
+    PSVWave(),
+    geo,
+    (64, 64),
+    LOBPCGMethod(; warm_start=true, scale=true, first_dense=true);
+    cutoff=cutoff,
+)
 
 t_lobpcg = @elapsed bands_lobpcg = compute_bands(solver_lobpcg, kpath; bands=nbands)
 println("Time: $(round(t_lobpcg, digits=2)) s")
@@ -107,11 +113,17 @@ println("3. LOBPCG without Warm Start")
 println("   (warm_start=false, scale=false, first_dense=false)")
 println("=" ^ 60)
 
-solver_lobpcg_no_ws = Solver(PSVWave(), geo, (64, 64),
-                              LOBPCGMethod(warm_start=false, scale=false, first_dense=false);
-                              cutoff=cutoff)
+solver_lobpcg_no_ws = Solver(
+    PSVWave(),
+    geo,
+    (64, 64),
+    LOBPCGMethod(; warm_start=false, scale=false, first_dense=false);
+    cutoff=cutoff,
+)
 
-t_lobpcg_no_ws = @elapsed bands_lobpcg_no_ws = compute_bands(solver_lobpcg_no_ws, kpath; bands=nbands)
+t_lobpcg_no_ws = @elapsed bands_lobpcg_no_ws = compute_bands(
+    solver_lobpcg_no_ws, kpath; bands=nbands
+)
 println("Time: $(round(t_lobpcg_no_ws, digits=2)) s")
 
 # ============================================================================
@@ -147,8 +159,12 @@ println()
 println("| Method                  | Time (s) | Speedup |")
 println("|-------------------------|----------|---------|")
 println("| Dense (reference)       | $(@sprintf("%8.2f", t_dense)) | 1.0x    |")
-println("| LOBPCG (warm start)     | $(@sprintf("%8.2f", t_lobpcg)) | $(@sprintf("%.1f", t_dense/t_lobpcg))x    |")
-println("| LOBPCG (no warm start)  | $(@sprintf("%8.2f", t_lobpcg_no_ws)) | $(@sprintf("%.1f", t_dense/t_lobpcg_no_ws))x    |")
+println(
+    "| LOBPCG (warm start)     | $(@sprintf("%8.2f", t_lobpcg)) | $(@sprintf("%.1f", t_dense/t_lobpcg))x    |",
+)
+println(
+    "| LOBPCG (no warm start)  | $(@sprintf("%8.2f", t_lobpcg_no_ws)) | $(@sprintf("%.1f", t_dense/t_lobpcg_no_ws))x    |",
+)
 println()
 
 if t_lobpcg < t_dense
@@ -218,58 +234,63 @@ ymax = max(maximum(freqs_psv_norm), maximum(freqs_sh_norm)) * 1.05
 ylims_common = (0, ymax)
 
 # P-SV bands plot
-p_psv = plot(
-    xlabel = "Wave vector",
-    ylabel = "Normalized frequency (ωa/2πvₜ)",
-    title = "Vasseur 2001: Steel/Epoxy (P-SV)",
-    legend = false,
-    grid = true,
-    size = (700, 500),
-    ylims = ylims_common
+p_psv = plot(;
+    xlabel="Wave vector",
+    ylabel="Normalized frequency (ωa/2πvₜ)",
+    title="Vasseur 2001: Steel/Epoxy (P-SV)",
+    legend=false,
+    grid=true,
+    size=(700, 500),
+    ylims=ylims_common,
 )
 
 for b in 1:size(freqs_psv_norm, 2)
-    plot!(p_psv, dists, freqs_psv_norm[:, b], linewidth=2, color=:red)
+    plot!(p_psv, dists, freqs_psv_norm[:, b]; linewidth=2, color=:red)
 end
 
 # Add P-SV gap shading (normalized)
 for g in gaps_psv
     gmin = g.max_lower * norm_factor
     gmax = g.min_upper * norm_factor
-    hspan!(p_psv, [gmin, gmax], alpha=0.2, color=:red, label="")
+    hspan!(p_psv, [gmin, gmax]; alpha=0.2, color=:red, label="")
 end
 
-vline!(p_psv, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
+vline!(p_psv, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
 xticks!(p_psv, label_positions, label_names)
 
 # SH bands plot
-p_sh = plot(
-    xlabel = "Wave vector",
-    ylabel = "Normalized frequency (ωa/2πvₜ)",
-    title = "Vasseur 2001: Steel/Epoxy (SH)",
-    legend = false,
-    grid = true,
-    size = (700, 500),
-    ylims = ylims_common
+p_sh = plot(;
+    xlabel="Wave vector",
+    ylabel="Normalized frequency (ωa/2πvₜ)",
+    title="Vasseur 2001: Steel/Epoxy (SH)",
+    legend=false,
+    grid=true,
+    size=(700, 500),
+    ylims=ylims_common,
 )
 
 for b in 1:size(freqs_sh_norm, 2)
-    plot!(p_sh, dists, freqs_sh_norm[:, b], linewidth=2, color=:blue)
+    plot!(p_sh, dists, freqs_sh_norm[:, b]; linewidth=2, color=:blue)
 end
 
 # Add SH gap shading (normalized)
 for g in gaps_sh
     gmin = g.max_lower * norm_factor
     gmax = g.min_upper * norm_factor
-    hspan!(p_sh, [gmin, gmax], alpha=0.2, color=:blue, label="")
+    hspan!(p_sh, [gmin, gmax]; alpha=0.2, color=:blue, label="")
 end
 
-vline!(p_sh, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
+vline!(p_sh, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
 xticks!(p_sh, label_positions, label_names)
 
 # Combined plot (side by side)
-p_combined = plot(p_sh, p_psv, layout=(1, 2), size=(1200, 500),
-    plot_title="Vasseur 2001: Steel/Epoxy Phononic Crystal")
+p_combined = plot(
+    p_sh,
+    p_psv;
+    layout=(1, 2),
+    size=(1200, 500),
+    plot_title="Vasseur 2001: Steel/Epoxy Phononic Crystal",
+)
 
 # Save plots
 savefig(p_psv, joinpath(@__DIR__, "203_vasseur2001_psv_bands.png"))

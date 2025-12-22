@@ -117,8 +117,9 @@ Return the complex refractive index n = √(εμ).
 refractive_index(m::LossyDielectric) = sqrt(m.ε * m.μ)
 
 # Type conversion: Dielectric → LossyDielectric
-Base.convert(::Type{LossyDielectric}, d::Dielectric) =
+function Base.convert(::Type{LossyDielectric}, d::Dielectric)
     LossyDielectric(ComplexF64(d.ε), ComplexF64(d.μ))
+end
 
 # Type promotion rules
 Base.promote_rule(::Type{Dielectric}, ::Type{LossyDielectric}) = LossyDielectric
@@ -173,7 +174,7 @@ Create isotropic elastic material from Young's modulus `E` and Poisson's ratio `
 function from_E_ν(ρ::Real, E::Real, ν::Real)
     λ = E * ν / ((1 + ν) * (1 - 2ν))
     μ = E / (2 * (1 + ν))
-    IsotropicElastic(ρ=ρ, λ=λ, μ=μ)
+    IsotropicElastic(; ρ=ρ, λ=λ, μ=μ)
 end
 
 """

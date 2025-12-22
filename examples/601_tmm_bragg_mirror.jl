@@ -40,7 +40,7 @@ unit_cell = [Layer(mat_hi, d_hi), Layer(mat_lo, d_lo)]
 
 # Create Bragg mirrors with different number of pairs
 n_pairs_list = [5, 10, 20]
-solvers = Dict{Int, TMMSolver}()
+solvers = Dict{Int,TMMSolver}()
 
 for n_pairs in n_pairs_list
     ml = periodic_multilayer(unit_cell, n_pairs)
@@ -53,11 +53,11 @@ end
 
 # Wavelength range
 λ_min, λ_max = 0.8 * λ0, 1.2 * λ0
-λ_values = range(λ_min, λ_max, length=201)
+λ_values = range(λ_min, λ_max; length=201)
 
 println("\nComputing transmission spectra...")
 
-results = Dict{Int, Tuple{Vector{Float64}, Vector{Float64}}}()
+results = Dict{Int,Tuple{Vector{Float64},Vector{Float64}}}()
 for n_pairs in n_pairs_list
     R, T = tmm_spectrum(solvers[n_pairs], collect(λ_values))
     results[n_pairs] = (R, T)
@@ -89,7 +89,9 @@ for n_pairs in n_pairs_list
         λ_start = λ_values[first_idx]
         λ_stop = λ_values[last_idx]
         Δλ = λ_stop - λ_start
-        println("  $n_pairs pairs: stopband $(round(λ_start, digits=3)) - $(round(λ_stop, digits=3)), Δλ/λ₀ = $(round(100*Δλ/λ0, digits=1))%")
+        println(
+            "  $n_pairs pairs: stopband $(round(λ_start, digits=3)) - $(round(λ_stop, digits=3)), Δλ/λ₀ = $(round(100*Δλ/λ0, digits=1))%",
+        )
     else
         println("  $n_pairs pairs: no R > 99% region")
     end
@@ -109,7 +111,9 @@ for θ_deg in angles
     result_te = tmm_spectrum(solver_20, λ0; angle=θ, polarization=:TE)
     result_tm = tmm_spectrum(solver_20, λ0; angle=θ, polarization=:TM)
 
-    println("  θ = $(θ_deg)°: R_TE = $(round(100*result_te.R, digits=1))%, R_TM = $(round(100*result_tm.R, digits=1))%")
+    println(
+        "  θ = $(θ_deg)°: R_TE = $(round(100*result_te.R, digits=1))%, R_TM = $(round(100*result_tm.R, digits=1))%",
+    )
 end
 
 # ============================================================================
@@ -118,25 +122,31 @@ end
 
 println("\nGenerating plots...")
 
-p1 = plot(
+p1 = plot(;
     xlabel="Wavelength λ/λ₀",
     ylabel="Transmittance T",
     title="Bragg Mirror: Transmittance vs Number of Pairs",
     legend=:topright,
     grid=true,
     size=(800, 500),
-    ylim=(0, 1.05)
+    ylim=(0, 1.05),
 )
 
 colors = [:blue, :red, :green]
 for (i, n_pairs) in enumerate(n_pairs_list)
     R, T = results[n_pairs]
-    plot!(p1, collect(λ_values) ./ λ0, T,
-          label="$(n_pairs) pairs", linewidth=2, color=colors[i])
+    plot!(
+        p1,
+        collect(λ_values) ./ λ0,
+        T;
+        label="$(n_pairs) pairs",
+        linewidth=2,
+        color=colors[i],
+    )
 end
 
 # Mark design wavelength
-vline!(p1, [1.0], color=:gray, linestyle=:dash, label="λ₀", alpha=0.7)
+vline!(p1, [1.0]; color=:gray, linestyle=:dash, label="λ₀", alpha=0.7)
 
 savefig(p1, joinpath(@__DIR__, "601_bragg_transmittance.png"))
 println("Saved: 601_bragg_transmittance.png")
@@ -147,18 +157,18 @@ println("Saved: 601_bragg_transmittance.png")
 
 R_20, T_20 = results[20]
 
-p2 = plot(
+p2 = plot(;
     xlabel="Wavelength λ/λ₀",
     ylabel="Reflectance / Transmittance",
     title="Bragg Mirror (20 pairs): R and T Spectra",
     legend=:right,
     grid=true,
     size=(800, 500),
-    ylim=(0, 1.05)
+    ylim=(0, 1.05),
 )
 
-plot!(p2, collect(λ_values) ./ λ0, R_20, label="R", linewidth=2, color=:red)
-plot!(p2, collect(λ_values) ./ λ0, T_20, label="T", linewidth=2, color=:blue)
+plot!(p2, collect(λ_values) ./ λ0, R_20; label="R", linewidth=2, color=:red)
+plot!(p2, collect(λ_values) ./ λ0, T_20; label="T", linewidth=2, color=:blue)
 
 # Highlight stopband
 in_stopband = R_20 .> 0.99
@@ -167,7 +177,7 @@ if any(in_stopband)
     last_idx = findlast(in_stopband)
     λ_start = λ_values[first_idx] / λ0
     λ_stop = λ_values[last_idx] / λ0
-    vspan!(p2, [λ_start, λ_stop], alpha=0.15, color=:yellow, label="Stopband")
+    vspan!(p2, [λ_start, λ_stop]; alpha=0.15, color=:yellow, label="Stopband")
 end
 
 savefig(p2, joinpath(@__DIR__, "601_bragg_spectrum.png"))
@@ -189,18 +199,18 @@ for θ_deg in angles_fine
     push!(R_tm, result_tm.R)
 end
 
-p3 = plot(
+p3 = plot(;
     xlabel="Incident Angle θ (degrees)",
     ylabel="Reflectance at λ₀",
     title="Bragg Mirror (20 pairs): Angular Dependence",
     legend=:bottomleft,
     grid=true,
     size=(800, 500),
-    ylim=(0, 1.05)
+    ylim=(0, 1.05),
 )
 
-plot!(p3, collect(angles_fine), R_te, label="TE (s-pol)", linewidth=2, color=:blue)
-plot!(p3, collect(angles_fine), R_tm, label="TM (p-pol)", linewidth=2, color=:red)
+plot!(p3, collect(angles_fine), R_te; label="TE (s-pol)", linewidth=2, color=:blue)
+plot!(p3, collect(angles_fine), R_tm; label="TM (p-pol)", linewidth=2, color=:red)
 
 savefig(p3, joinpath(@__DIR__, "601_bragg_angular.png"))
 println("Saved: 601_bragg_angular.png")

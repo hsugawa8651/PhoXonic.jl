@@ -46,7 +46,9 @@ println()
 println("Reciprocal lattice vectors:")
 println("  Original: b1 = $(lat_original.reciprocal[1])")
 println("  Supercell: B1 = $(lat_super.reciprocal[1])")
-println("  Ratio: B1/b1 = $(norm(lat_super.reciprocal[1])/norm(lat_original.reciprocal[1]))")
+println(
+    "  Ratio: B1/b1 = $(norm(lat_super.reciprocal[1])/norm(lat_original.reciprocal[1]))"
+)
 println()
 
 # ============================================================================
@@ -65,11 +67,11 @@ rod = Dielectric(8.9)
 # Replicate the rod at each unit cell position within the supercell
 function create_supercell_inclusions_2d(original_inclusions, lat_original, Nx, Ny)
     a1, a2 = lat_original.vectors
-    new_inclusions = Tuple{PhoXonic.Shape{PhoXonic.Dim2}, PhoXonic.Material}[]
+    new_inclusions = Tuple{PhoXonic.Shape{PhoXonic.Dim2},PhoXonic.Material}[]
 
     for (shape, mat) in original_inclusions
-        for i in 0:(Nx-1)
-            for j in 0:(Ny-1)
+        for i in 0:(Nx - 1)
+            for j in 0:(Ny - 1)
                 # Offset for this unit cell
                 offset = i * a1 + j * a2
 
@@ -90,7 +92,9 @@ end
 
 # Original geometry: rod at (0.5, 0.5) in unit cell
 original_inclusions = [(Circle([0.5, 0.5], r), rod)]
-supercell_inclusions = create_supercell_inclusions_2d(original_inclusions, lat_original, Nx, Ny)
+supercell_inclusions = create_supercell_inclusions_2d(
+    original_inclusions, lat_original, Nx, Ny
+)
 
 println("Original: 1 inclusion")
 println("Supercell: $(length(supercell_inclusions)) inclusions")
@@ -140,18 +144,19 @@ println("4. Create Defect (Cavity)")
 println("-" ^ 70)
 println()
 
-function create_supercell_with_defect_2d(original_inclusions, lat_original, Nx, Ny;
-                                          defect_positions=[])
+function create_supercell_with_defect_2d(
+    original_inclusions, lat_original, Nx, Ny; defect_positions=[]
+)
     """
     Create supercell with defects (missing inclusions).
     defect_positions: list of (i, j) tuples indicating which unit cells have defects
     """
     a1, a2 = lat_original.vectors
-    new_inclusions = Tuple{PhoXonic.Shape{PhoXonic.Dim2}, PhoXonic.Material}[]
+    new_inclusions = Tuple{PhoXonic.Shape{PhoXonic.Dim2},PhoXonic.Material}[]
 
     for (shape, mat) in original_inclusions
-        for i in 0:(Nx-1)
-            for j in 0:(Ny-1)
+        for i in 0:(Nx - 1)
+            for j in 0:(Ny - 1)
                 # Skip defect positions
                 if (i, j) in defect_positions
                     continue
@@ -177,8 +182,11 @@ end
 Nx_def, Ny_def = 5, 5
 center_i, center_j = Nx_def ÷ 2, Ny_def ÷ 2
 defect_inclusions = create_supercell_with_defect_2d(
-    original_inclusions, lat_original, Nx_def, Ny_def;
-    defect_positions=[(center_i, center_j)]
+    original_inclusions,
+    lat_original,
+    Nx_def,
+    Ny_def;
+    defect_positions=[(center_i, center_j)],
 )
 
 println("$(Nx_def)×$(Ny_def) Supercell with point defect:")
@@ -198,17 +206,18 @@ println()
 # Create 7×5 supercell with line defect along x (middle row)
 Nx_wg, Ny_wg = 7, 5
 center_row = Ny_wg ÷ 2
-waveguide_defects = [(i, center_row) for i in 0:(Nx_wg-1)]
+waveguide_defects = [(i, center_row) for i in 0:(Nx_wg - 1)]
 
 waveguide_inclusions = create_supercell_with_defect_2d(
-    original_inclusions, lat_original, Nx_wg, Ny_wg;
-    defect_positions=waveguide_defects
+    original_inclusions, lat_original, Nx_wg, Ny_wg; defect_positions=waveguide_defects
 )
 
 println("$(Nx_wg)×$(Ny_wg) Supercell with line defect (waveguide):")
 println("  Total unit cells: $(Nx_wg * Ny_wg)")
 println("  Defect row: j = $center_row")
-println("  Inclusions: $(length(waveguide_inclusions)) (missing $(length(waveguide_defects)))")
+println(
+    "  Inclusions: $(length(waveguide_inclusions)) (missing $(length(waveguide_defects)))"
+)
 println()
 
 # ============================================================================

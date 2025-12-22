@@ -36,7 +36,6 @@ Return the material of the layer.
 """
 material(layer::Layer) = layer.material
 
-
 """
     Multilayer{M<:Material}
 
@@ -111,7 +110,6 @@ Return the total thickness of all layers.
 """
 total_thickness(ml::Multilayer) = sum(thickness(l) for l in ml.layers)
 
-
 # ============================================================================
 # Helper functions
 # ============================================================================
@@ -130,8 +128,9 @@ Create a multilayer by repeating a unit cell N times.
 - `incident`: Incident medium (defaults to first layer's material type with ε=1 or air-like)
 - `substrate`: Substrate medium (defaults to same as incident)
 """
-function periodic_multilayer(unit_cell::Vector{<:Layer}, N::Int;
-                             incident=nothing, substrate=nothing)
+function periodic_multilayer(
+    unit_cell::Vector{<:Layer}, N::Int; incident=nothing, substrate=nothing
+)
     repeated_layers = repeat(unit_cell, N)
 
     # Default incident/substrate
@@ -170,8 +169,14 @@ Create a Bragg mirror (quarter-wave stack) for center wavelength λ0.
 A Multilayer with 2N layers alternating between high and low index materials.
 Layer thicknesses satisfy the quarter-wave condition: n*d = λ0/4
 """
-function bragg_mirror(n_hi::Real, n_lo::Real, λ0::Real, N::Int;
-                      incident=Dielectric(1.0), substrate=Dielectric(1.0))
+function bragg_mirror(
+    n_hi::Real,
+    n_lo::Real,
+    λ0::Real,
+    N::Int;
+    incident=Dielectric(1.0),
+    substrate=Dielectric(1.0),
+)
     # Quarter-wave thicknesses
     d_hi = λ0 / (4 * n_hi)
     d_lo = λ0 / (4 * n_lo)

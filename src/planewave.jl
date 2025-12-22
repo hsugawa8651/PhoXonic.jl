@@ -39,7 +39,7 @@ function PlaneWaveBasis(lattice::Lattice{Dim1}, cutoff::Int)
     indices = NTuple{1,Int}[]
     G_vectors = Vec1[]
 
-    for p in -cutoff:cutoff
+    for p in (-cutoff):cutoff
         push!(indices, (p,))
         push!(G_vectors, p * b1)
     end
@@ -63,8 +63,8 @@ function PlaneWaveBasis(lattice::Lattice{Dim2}, cutoff::Int)
     indices = NTuple{2,Int}[]
     G_vectors = Vec2[]
 
-    for p in -cutoff:cutoff
-        for q in -cutoff:cutoff
+    for p in (-cutoff):cutoff
+        for q in (-cutoff):cutoff
             if p^2 + q^2 <= cutoff^2
                 push!(indices, (p, q))
                 push!(G_vectors, p * b1 + q * b2)
@@ -86,14 +86,16 @@ function PlaneWaveBasis(lattice::Lattice{Dim2}, cutoff_p::Int, cutoff_q::Int)
     indices = NTuple{2,Int}[]
     G_vectors = Vec2[]
 
-    for p in -cutoff_p:cutoff_p
-        for q in -cutoff_q:cutoff_q
+    for p in (-cutoff_p):cutoff_p
+        for q in (-cutoff_q):cutoff_q
             push!(indices, (p, q))
             push!(G_vectors, p * b1 + q * b2)
         end
     end
 
-    PlaneWaveBasis{Dim2}(lattice, max(cutoff_p, cutoff_q), indices, G_vectors, length(indices))
+    PlaneWaveBasis{Dim2}(
+        lattice, max(cutoff_p, cutoff_q), indices, G_vectors, length(indices)
+    )
 end
 
 # ============================================================================
@@ -111,9 +113,9 @@ function PlaneWaveBasis(lattice::Lattice{Dim3}, cutoff::Int)
     indices = NTuple{3,Int}[]
     G_vectors = Vec3[]
 
-    for p in -cutoff:cutoff
-        for q in -cutoff:cutoff
-            for r in -cutoff:cutoff
+    for p in (-cutoff):cutoff
+        for q in (-cutoff):cutoff
+            for r in (-cutoff):cutoff
                 if p^2 + q^2 + r^2 <= cutoff^2
                     push!(indices, (p, q, r))
                     push!(G_vectors, p * b1 + q * b2 + r * b3)

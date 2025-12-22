@@ -23,7 +23,7 @@ rod = Dielectric(11.56)  # Same as MPB default
 geo = Geometry(lat, air, [(Circle([0.0, 0.0], 0.2), rod)])
 
 # Create k-path: Γ → X → M → Γ
-kpath = simple_kpath_square(a=a, npoints=50)
+kpath = simple_kpath_square(; a=a, npoints=50)
 
 # ============================================================================
 # TM polarization (E field parallel to rods)
@@ -39,8 +39,13 @@ if isempty(gaps_tm)
     println("  No significant band gaps found.")
 else
     for g in gaps_tm
-        println("  Gap between bands ", g.bands, ": ",
-                round(g.gap_ratio*100, digits=1), "% gap-to-midgap")
+        println(
+            "  Gap between bands ",
+            g.bands,
+            ": ",
+            round(g.gap_ratio*100; digits=1),
+            "% gap-to-midgap",
+        )
     end
 end
 
@@ -58,8 +63,13 @@ if isempty(gaps_te)
     println("  No significant band gaps found.")
 else
     for g in gaps_te
-        println("  Gap between bands ", g.bands, ": ",
-                round(g.gap_ratio*100, digits=1), "% gap-to-midgap")
+        println(
+            "  Gap between bands ",
+            g.bands,
+            ": ",
+            round(g.gap_ratio*100; digits=1),
+            "% gap-to-midgap",
+        )
     end
 end
 
@@ -124,47 +134,53 @@ ymax = max(maximum(bands_tm.frequencies), maximum(bands_te.frequencies)) * 1.05
 ylims_common = (0, ymax)
 
 # TM plot
-p_tm = plot(
+p_tm = plot(;
     xlabel="Wave vector",
     ylabel="Frequency (ωa/2πc)",
     title="TM Bands (ε=11.56 rods)",
     legend=false,
     grid=true,
     size=(700, 450),
-    ylims=ylims_common
+    ylims=ylims_common,
 )
 for b in 1:size(bands_tm.frequencies, 2)
-    plot!(p_tm, dists, bands_tm.frequencies[:, b], linewidth=2, color=:blue)
+    plot!(p_tm, dists, bands_tm.frequencies[:, b]; linewidth=2, color=:blue)
 end
-vline!(p_tm, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
+vline!(p_tm, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
 xticks!(p_tm, label_positions, label_names)
 
 # Highlight TM band gap if exists
 gap_tm_1_2 = find_bandgap(bands_tm, 1, 2)
 if gap_tm_1_2.gap > 0
-    hspan!(p_tm, [gap_tm_1_2.max_lower, gap_tm_1_2.min_upper],
-           alpha=0.2, color=:blue, label="")
+    hspan!(
+        p_tm, [gap_tm_1_2.max_lower, gap_tm_1_2.min_upper]; alpha=0.2, color=:blue, label=""
+    )
 end
 
 # TE plot
-p_te = plot(
+p_te = plot(;
     xlabel="Wave vector",
     ylabel="Frequency (ωa/2πc)",
     title="TE Bands (ε=11.56 rods)",
     legend=false,
     grid=true,
     size=(700, 450),
-    ylims=ylims_common
+    ylims=ylims_common,
 )
 for b in 1:size(bands_te.frequencies, 2)
-    plot!(p_te, dists, bands_te.frequencies[:, b], linewidth=2, color=:red)
+    plot!(p_te, dists, bands_te.frequencies[:, b]; linewidth=2, color=:red)
 end
-vline!(p_te, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
+vline!(p_te, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
 xticks!(p_te, label_positions, label_names)
 
 # Combined plot (side by side)
-p_combined = plot(p_tm, p_te, layout=(1, 2), size=(1200, 450),
-    plot_title="Square Lattice Photonic Crystal (r=0.2a)")
+p_combined = plot(
+    p_tm,
+    p_te;
+    layout=(1, 2),
+    size=(1200, 450),
+    plot_title="Square Lattice Photonic Crystal (r=0.2a)",
+)
 
 # Save plots
 savefig(p_tm, joinpath(@__DIR__, "103_square_tm_bands.png"))

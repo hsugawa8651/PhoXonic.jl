@@ -19,8 +19,8 @@ println()
 μ_epoxy = 0.148e10
 λ_epoxy = 0.754e10 - 2*μ_epoxy
 
-steel = IsotropicElastic(ρ=ρ_steel, λ=λ_steel, μ=μ_steel)
-epoxy = IsotropicElastic(ρ=ρ_epoxy, λ=λ_epoxy, μ=μ_epoxy)
+steel = IsotropicElastic(; ρ=ρ_steel, λ=λ_steel, μ=μ_steel)
+epoxy = IsotropicElastic(; ρ=ρ_epoxy, λ=λ_epoxy, μ=μ_epoxy)
 
 a = 1.0
 lat = hexagonal_lattice(a)
@@ -36,7 +36,7 @@ println("--- Dense Solver ---")
 solver_dense = Solver(PSVWave(), geo, (64, 64); cutoff=10)
 println("Plane waves: ", solver_dense.basis.num_pw)
 
-kpath = simple_kpath_hexagonal(a=a, npoints=20)
+kpath = simple_kpath_hexagonal(; a=a, npoints=20)
 
 t_dense = @elapsed begin
     bands_dense = compute_bands(solver_dense, kpath; bands=1:10, verbose=false)
@@ -70,13 +70,23 @@ println("Max frequency difference: $(round(max_diff, digits=1)) rad/s")
 # ============================================================================
 # Plot comparison
 # ============================================================================
-p = plot(layout=(1,2), size=(900, 400), title=["Dense" "LOBPCG"])
+p = plot(; layout=(1, 2), size=(900, 400), title=["Dense" "LOBPCG"])
 
 for b in 1:size(bands_dense.frequencies, 2)
-    plot!(p[1], bands_dense.distances, bands_dense.frequencies[:, b],
-          color=:blue, legend=false)
-    plot!(p[2], bands_lobpcg.distances, bands_lobpcg.frequencies[:, b],
-          color=:red, legend=false)
+    plot!(
+        p[1],
+        bands_dense.distances,
+        bands_dense.frequencies[:, b];
+        color=:blue,
+        legend=false,
+    )
+    plot!(
+        p[2],
+        bands_lobpcg.distances,
+        bands_lobpcg.frequencies[:, b];
+        color=:red,
+        legend=false,
+    )
 end
 
 xlabel!(p[1], "Wave Vector")

@@ -35,7 +35,7 @@ C11_pb = rho_pb * cl_pb^2  # 52.89 GPa
 C44_pb = rho_pb * ct_pb^2  # 8.40 GPa
 lambda_pb = C11_pb - 2 * C44_pb
 
-lead = IsotropicElastic(ρ=rho_pb, λ=lambda_pb, μ=C44_pb)
+lead = IsotropicElastic(; ρ=rho_pb, λ=lambda_pb, μ=C44_pb)
 
 # Epoxy - light polymer matrix
 rho_ep = 1180.0   # kg/m^3
@@ -45,7 +45,7 @@ C11_ep = rho_ep * cl_ep^2  # 7.61 GPa
 C44_ep = rho_ep * ct_ep^2  # 1.59 GPa
 lambda_ep = C11_ep - 2 * C44_ep
 
-epoxy = IsotropicElastic(ρ=rho_ep, λ=lambda_ep, μ=C44_ep)
+epoxy = IsotropicElastic(; ρ=rho_ep, λ=lambda_ep, μ=C44_ep)
 
 println("\nMaterial parameters:")
 println("  Lead (Pb):")
@@ -92,7 +92,7 @@ println("\n" * "=" ^ 70)
 println("SH Wave Band Structure (out-of-plane shear)")
 println("=" ^ 70)
 
-kpath = simple_kpath_square(a=a, npoints=50)
+kpath = simple_kpath_square(; a=a, npoints=50)
 
 # High resolution for accurate gap detection
 solver_sh = Solver(SHWave(), geo, (128, 128); cutoff=9)
@@ -127,8 +127,13 @@ else
         local midgap = (gmin + gmax) / 2
 
         println("\n  Gap between bands ", g.bands, ":")
-        println("    Range: ", @sprintf("%.4f", gmin), " - ",
-                @sprintf("%.4f", gmax), " (normalized)")
+        println(
+            "    Range: ",
+            @sprintf("%.4f", gmin),
+            " - ",
+            @sprintf("%.4f", gmax),
+            " (normalized)",
+        )
         println("    Midgap frequency: ", @sprintf("%.4f", midgap))
         println("    Gap-midgap ratio: ", @sprintf("%.1f", g.gap_ratio * 100), "%")
     end
@@ -161,8 +166,17 @@ else
     for g in gaps_psv
         local gmin = g.max_lower * norm_factor
         local gmax = g.min_upper * norm_factor
-        println("  Bands ", g.bands, ": ", @sprintf("%.4f", gmin), " - ",
-                @sprintf("%.4f", gmax), " (", @sprintf("%.1f", g.gap_ratio * 100), "%)")
+        println(
+            "  Bands ",
+            g.bands,
+            ": ",
+            @sprintf("%.4f", gmin),
+            " - ",
+            @sprintf("%.4f", gmax),
+            " (",
+            @sprintf("%.1f", g.gap_ratio * 100),
+            "%)",
+        )
     end
 end
 
@@ -188,8 +202,9 @@ if !isempty(gaps_sh)
     gmax = g.min_upper * norm_factor
 
     println("\nComputed (SH Wave - first gap):")
-    println("  Gap range (normalized): ", @sprintf("%.4f", gmin), " - ",
-            @sprintf("%.4f", gmax))
+    println(
+        "  Gap range (normalized): ", @sprintf("%.4f", gmin), " - ", @sprintf("%.4f", gmax)
+    )
     println("  Gap-midgap ratio: ", @sprintf("%.1f", g.gap_ratio * 100), "%")
 end
 
@@ -199,8 +214,9 @@ if !isempty(gaps_psv)
     gmax = g.min_upper * norm_factor
 
     println("\nComputed (P-SV Wave - first gap):")
-    println("  Gap range (normalized): ", @sprintf("%.4f", gmin), " - ",
-            @sprintf("%.4f", gmax))
+    println(
+        "  Gap range (normalized): ", @sprintf("%.4f", gmin), " - ", @sprintf("%.4f", gmax)
+    )
     println("  Gap-midgap ratio: ", @sprintf("%.1f", g.gap_ratio * 100), "%")
 end
 
@@ -213,8 +229,11 @@ psv_pass = false
 if !isempty(gaps_psv)
     g = gaps_psv[1]
     if g.gap_ratio > 0.30 && g.gap_ratio < 0.55
-        println("P-SV gap-midgap ratio: PASS (", @sprintf("%.1f", g.gap_ratio * 100),
-                "% within range 30-55%)")
+        println(
+            "P-SV gap-midgap ratio: PASS (",
+            @sprintf("%.1f", g.gap_ratio * 100),
+            "% within range 30-55%)",
+        )
         psv_pass = true
     else
         println("P-SV gap-midgap ratio: ", @sprintf("%.1f", g.gap_ratio * 100), "%")
@@ -226,8 +245,11 @@ if !isempty(gaps_sh)
     g = gaps_sh[1]
     # SH wave typically has larger gap than P-SV for this system
     if g.gap_ratio > 0.40
-        println("SH gap-midgap ratio: PASS (", @sprintf("%.1f", g.gap_ratio * 100),
-                "% - large gap as expected for high density contrast)")
+        println(
+            "SH gap-midgap ratio: PASS (",
+            @sprintf("%.1f", g.gap_ratio * 100),
+            "% - large gap as expected for high density contrast)",
+        )
         sh_pass = true
     else
         println("SH gap-midgap ratio: ", @sprintf("%.1f", g.gap_ratio * 100), "%")
@@ -256,17 +278,17 @@ ymax = max(maximum(freqs_sh_norm), maximum(freqs_psv_norm[:, 1:min(10, end)])) *
 ylims_common = (0, ymax)
 
 # SH bands plot
-p_sh = plot(
+p_sh = plot(;
     xlabel="Wave vector",
     ylabel="Normalized frequency (ωa/2πcₜ)",
     title="SH Wave",
     legend=false,
     grid=true,
     size=(700, 500),
-    ylims=ylims_common
+    ylims=ylims_common,
 )
 for b in 1:size(freqs_sh_norm, 2)
-    plot!(p_sh, dists, freqs_sh_norm[:, b], linewidth=2, color=:blue)
+    plot!(p_sh, dists, freqs_sh_norm[:, b]; linewidth=2, color=:blue)
 end
 
 # Highlight band gap region
@@ -274,31 +296,36 @@ if !isempty(gaps_sh)
     g = gaps_sh[1]
     gmin = g.max_lower * norm_factor
     gmax = g.min_upper * norm_factor
-    hspan!(p_sh, [gmin, gmax], alpha=0.2, color=:blue, label="")
+    hspan!(p_sh, [gmin, gmax]; alpha=0.2, color=:blue, label="")
 end
 
-vline!(p_sh, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
+vline!(p_sh, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
 xticks!(p_sh, label_positions, label_names)
 
 # P-SV bands plot
-p_psv = plot(
+p_psv = plot(;
     xlabel="Wave vector",
     ylabel="Normalized frequency (ωa/2πcₜ)",
     title="P-SV Wave",
     legend=false,
     grid=true,
     size=(700, 500),
-    ylims=ylims_common
+    ylims=ylims_common,
 )
 for b in 1:min(10, size(freqs_psv_norm, 2))
-    plot!(p_psv, dists, freqs_psv_norm[:, b], linewidth=2, color=:red)
+    plot!(p_psv, dists, freqs_psv_norm[:, b]; linewidth=2, color=:red)
 end
-vline!(p_psv, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
+vline!(p_psv, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
 xticks!(p_psv, label_positions, label_names)
 
 # Combined comparison plot (side by side)
-p_combined = plot(p_sh, p_psv, layout=(1, 2), size=(1200, 500),
-    plot_title="Pb/Epoxy Phononic Crystal (Aravantinos-Zafiris 2014)")
+p_combined = plot(
+    p_sh,
+    p_psv;
+    layout=(1, 2),
+    size=(1200, 500),
+    plot_title="Pb/Epoxy Phononic Crystal (Aravantinos-Zafiris 2014)",
+)
 
 # Save plots
 savefig(p_sh, joinpath(@__DIR__, "202_pb_epoxy_sh_bands.png"))

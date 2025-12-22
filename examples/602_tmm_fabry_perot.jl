@@ -33,13 +33,13 @@ for m in 1:5
 end
 
 # Compute spectrum
-λ_values = range(0.5, 5.0, length=501)
+λ_values = range(0.5, 5.0; length=501)
 R, T = tmm_spectrum(solver, collect(λ_values))
 
 # Find transmission peaks
 println("\nTransmission peaks (T > 0.99):")
-for i in 2:length(T)-1
-    if T[i] > T[i-1] && T[i] > T[i+1] && T[i] > 0.99
+for i in 2:(length(T) - 1)
+    if T[i] > T[i - 1] && T[i] > T[i + 1] && T[i] > 0.99
         println("  λ = $(round(λ_values[i], digits=3)), T = $(round(T[i], digits=4))")
     end
 end
@@ -79,11 +79,13 @@ all_layers = vcat(left_layers, [defect_layer], right_layers)
 ml_cavity = Multilayer(all_layers, mat_lo, mat_lo)
 solver_cavity = TMMSolver(Photonic1D(), ml_cavity)
 
-println("Structure: $(n_mirror_pairs) mirror pairs | defect (λ/2) | $(n_mirror_pairs) mirror pairs")
+println(
+    "Structure: $(n_mirror_pairs) mirror pairs | defect (λ/2) | $(n_mirror_pairs) mirror pairs",
+)
 println("Total layers: $(length(all_layers))")
 
 # Compute spectrum around design wavelength
-λ_range = range(0.9*λ0, 1.1*λ0, length=1001)
+λ_range = range(0.9*λ0, 1.1*λ0; length=1001)
 R_cav, T_cav = tmm_spectrum(solver_cavity, collect(λ_range))
 
 # Find resonance (transmission peak in stopband)
@@ -136,7 +138,9 @@ for n_pairs in [3, 5, 7, 10]
         last_idx_n = findlast(above_half_n)
         FWHM_n = λ_range[last_idx_n] - λ_range[first_idx_n]
         Q_n = λ_peak_n / FWHM_n
-        println("  $n_pairs pairs: T_max = $(round(T_peak_n, digits=3)), Q ≈ $(round(Q_n, digits=0))")
+        println(
+            "  $n_pairs pairs: T_max = $(round(T_peak_n, digits=3)), Q ≈ $(round(Q_n, digits=0))",
+        )
     else
         println("  $n_pairs pairs: T_max = $(round(T_peak_n, digits=3)), Q = N/A")
     end
@@ -148,23 +152,23 @@ end
 
 println("\nGenerating plots...")
 
-p1 = plot(
+p1 = plot(;
     xlabel="Wavelength λ",
     ylabel="Transmittance T",
     title="Simple Fabry-Pérot Cavity (n=$n_cavity, d=$d_cavity)",
     legend=false,
     grid=true,
     size=(800, 500),
-    ylim=(0, 1.05)
+    ylim=(0, 1.05),
 )
 
-plot!(p1, collect(λ_values), T, linewidth=2, color=:blue)
+plot!(p1, collect(λ_values), T; linewidth=2, color=:blue)
 
 # Mark theoretical resonances
 for m in 1:5
     λ_res = 2 * n_cavity * d_cavity / m
     if λ_res >= minimum(λ_values) && λ_res <= maximum(λ_values)
-        vline!(p1, [λ_res], color=:red, linestyle=:dash, alpha=0.5)
+        vline!(p1, [λ_res]; color=:red, linestyle=:dash, alpha=0.5)
     end
 end
 
@@ -175,20 +179,20 @@ println("Saved: 602_fabry_perot_simple.png")
 # Plot 2: High-Finesse Cavity Spectrum
 # ============================================================================
 
-p2 = plot(
+p2 = plot(;
     xlabel="Wavelength λ/λ₀",
     ylabel="Transmittance T",
     title="High-Finesse Fabry-Pérot Cavity ($n_mirror_pairs pairs)",
     legend=false,
     grid=true,
     size=(800, 500),
-    ylim=(0, 1.05)
+    ylim=(0, 1.05),
 )
 
-plot!(p2, collect(λ_range) ./ λ0, T_cav, linewidth=2, color=:blue)
+plot!(p2, collect(λ_range) ./ λ0, T_cav; linewidth=2, color=:blue)
 
 # Mark resonance peak
-scatter!(p2, [λ_peak/λ0], [T_peak], markersize=8, color=:red, label="")
+scatter!(p2, [λ_peak/λ0], [T_peak]; markersize=8, color=:red, label="")
 
 savefig(p2, joinpath(@__DIR__, "602_fabry_perot_cavity.png"))
 println("Saved: 602_fabry_perot_cavity.png")
@@ -197,14 +201,14 @@ println("Saved: 602_fabry_perot_cavity.png")
 # Plot 3: Finesse Comparison
 # ============================================================================
 
-p3 = plot(
+p3 = plot(;
     xlabel="Wavelength λ/λ₀",
     ylabel="Transmittance T",
     title="Fabry-Pérot Cavity: Effect of Mirror Pairs",
     legend=:topright,
     grid=true,
     size=(800, 500),
-    ylim=(0, 1.05)
+    ylim=(0, 1.05),
 )
 
 colors_fp = [:blue, :red, :green, :purple]
@@ -216,8 +220,14 @@ for (i, n_pairs) in enumerate([3, 5, 7, 10])
     solver_n = TMMSolver(Photonic1D(), ml_n)
 
     R_n, T_n = tmm_spectrum(solver_n, collect(λ_range))
-    plot!(p3, collect(λ_range) ./ λ0, T_n,
-          label="$n_pairs pairs", linewidth=2, color=colors_fp[i])
+    plot!(
+        p3,
+        collect(λ_range) ./ λ0,
+        T_n;
+        label="$n_pairs pairs",
+        linewidth=2,
+        color=colors_fp[i],
+    )
 end
 
 savefig(p3, joinpath(@__DIR__, "602_fabry_perot_finesse.png"))

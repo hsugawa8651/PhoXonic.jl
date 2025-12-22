@@ -28,7 +28,7 @@ println("Number of plane waves: ", solver.basis.num_pw)
 
 # Create k-path: Γ → M → K → Γ
 println("\nComputing band structure along Γ → M → K → Γ...")
-kpath = simple_kpath_hexagonal(a=a, npoints=30)
+kpath = simple_kpath_hexagonal(; a=a, npoints=30)
 println("Number of k-points: ", length(kpath))
 
 # Compute bands
@@ -42,8 +42,15 @@ if isempty(gaps)
     println("No significant band gaps found.")
 else
     for g in gaps
-        println("Gap between bands ", g.bands, ": Δω = ", round(g.gap, digits=4),
-                " (", round(g.gap_ratio*100, digits=1), "% gap-to-midgap)")
+        println(
+            "Gap between bands ",
+            g.bands,
+            ": Δω = ",
+            round(g.gap; digits=4),
+            " (",
+            round(g.gap_ratio*100; digits=1),
+            "% gap-to-midgap)",
+        )
     end
 end
 
@@ -53,9 +60,9 @@ println("# distance  band1  band2  band3  band4  band5  band6  band7  band8")
 freqs = bands_result.frequencies
 dists = bands_result.distances
 for i in 1:length(dists)
-    print(round(dists[i], digits=4))
+    print(round(dists[i]; digits=4))
     for b in 1:8
-        print("  ", round(freqs[i, b], digits=4))
+        print("  ", round(freqs[i, b]; digits=4))
     end
     println()
 end
@@ -63,5 +70,5 @@ end
 # Print label positions
 println("\n=== High Symmetry Points ===")
 for (idx, label) in bands_result.labels
-    println(label, " at distance ", round(dists[idx], digits=4))
+    println(label, " at distance ", round(dists[idx]; digits=4))
 end

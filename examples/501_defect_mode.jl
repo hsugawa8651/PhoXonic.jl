@@ -37,15 +37,17 @@ geo_perfect = Geometry(lat, air, [(Circle([0.0, 0.0], r), silicon)])
 solver_perfect = Solver(TMWave(), geo_perfect, (32, 32); cutoff=5)
 
 # Compute band structure
-kpath = simple_kpath_square(a=a, npoints=30)
+kpath = simple_kpath_square(; a=a, npoints=30)
 bands_perfect = compute_bands(solver_perfect, kpath; bands=1:8)
 
 # Find bandgaps
 gaps = find_all_gaps(bands_perfect; threshold=0.01)
 println("\nPerfect crystal bandgaps (TM):")
 for g in gaps
-    println("  Bands $(g.bands): gap = $(round(g.gap, digits=4)), " *
-            "range = [$(round(g.max_lower, digits=4)), $(round(g.min_upper, digits=4))]")
+    println(
+        "  Bands $(g.bands): gap = $(round(g.gap, digits=4)), " *
+        "range = [$(round(g.max_lower, digits=4)), $(round(g.min_upper, digits=4))]",
+    )
 end
 
 # Select the first significant gap for defect mode analysis
@@ -75,13 +77,10 @@ println("\nStep 2: Creating supercell with point defect...")
 N_super = 5
 
 # Create supercell lattice
-lat_super = Lattice(
-    SVector(N_super * a, 0.0),
-    SVector(0.0, N_super * a)
-)
+lat_super = Lattice(SVector(N_super * a, 0.0), SVector(0.0, N_super * a))
 
 # Create inclusions: rods at all positions except center
-inclusions = Tuple{Circle, Dielectric}[]
+inclusions = Tuple{Circle,Dielectric}[]
 center_idx = (N_super + 1) / 2
 
 for i in 1:N_super
@@ -123,7 +122,7 @@ defect_pos = [N_super * a / 2, N_super * a / 2]
 
 # Frequency range for LDOS (focusing on the gap)
 n_freq = 50
-ω_range = range(ω_min * 0.8, ω_max * 1.2, length=n_freq)
+ω_range = range(ω_min * 0.8, ω_max * 1.2; length=n_freq)
 
 # K-points for Brillouin zone sampling (reduced zone due to supercell)
 # For supercell, Γ point is often sufficient
@@ -161,37 +160,43 @@ end
 println("\nStep 4: Creating plots...")
 
 # Plot 1: Perfect crystal band structure
-p_bands = plot(
+p_bands = plot(;
     xlabel="Wave vector",
     ylabel="Frequency (2πc/a)",
     title="Perfect Crystal TM Bands",
     legend=false,
     grid=true,
-    size=(500, 400)
+    size=(500, 400),
 )
 
 dists = bands_perfect.distances
 for b in 1:size(bands_perfect.frequencies, 2)
-    plot!(p_bands, dists, bands_perfect.frequencies[:, b] * a / (2π),
-          linewidth=2, color=:blue)
+    plot!(
+        p_bands, dists, bands_perfect.frequencies[:, b] * a / (2π); linewidth=2, color=:blue
+    )
 end
 
 # Add gap region
 if !isempty(gaps)
-    hspan!(p_bands, [ω_min * a / (2π), ω_max * a / (2π)],
-           alpha=0.2, color=:yellow, label="Bandgap")
+    hspan!(
+        p_bands,
+        [ω_min * a / (2π), ω_max * a / (2π)];
+        alpha=0.2,
+        color=:yellow,
+        label="Bandgap",
+    )
 end
 
 # Add labels
 label_positions = [dists[i] for (i, _) in bands_perfect.labels]
 label_names = [l for (_, l) in bands_perfect.labels]
-vline!(p_bands, label_positions, color=:gray, linestyle=:dash, alpha=0.5)
+vline!(p_bands, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
 xticks!(p_bands, label_positions, label_names)
 
 # Plot 2: LDOS
 p_ldos = plot(
     collect(ω_range) * a / (2π),
-    ldos,
+    ldos;
     xlabel="Frequency (2πc/a)",
     ylabel="LDOS (arb. units)",
     title="LDOS at Defect Site",
@@ -199,22 +204,22 @@ p_ldos = plot(
     color=:red,
     legend=false,
     grid=true,
-    size=(500, 400)
+    size=(500, 400),
 )
 
 # Mark the gap region
 if !isempty(gaps)
-    vspan!(p_ldos, [ω_min * a / (2π), ω_max * a / (2π)],
-           alpha=0.2, color=:yellow)
+    vspan!(p_ldos, [ω_min * a / (2π), ω_max * a / (2π)]; alpha=0.2, color=:yellow)
 end
 
 # Mark the defect mode
-vline!(p_ldos, [ω_defect * a / (2π)], color=:green, linestyle=:dash, linewidth=2)
-annotate!(p_ldos, ω_defect * a / (2π), ldos_max * 0.9,
-          text("Defect\nmode", :left, 8, :green))
+vline!(p_ldos, [ω_defect * a / (2π)]; color=:green, linestyle=:dash, linewidth=2)
+annotate!(
+    p_ldos, ω_defect * a / (2π), ldos_max * 0.9, text("Defect\nmode", :left, 8, :green)
+)
 
 # Combined plot
-p_combined = plot(p_bands, p_ldos, layout=(1, 2), size=(1000, 400))
+p_combined = plot(p_bands, p_ldos; layout=(1, 2), size=(1000, 400))
 
 # Save plots
 savefig(p_bands, joinpath(@__DIR__, "501_defect_bands.png"))
@@ -236,23 +241,40 @@ rod_pos = [0.5 * a, 0.5 * a]
 
 ldos_rod = compute_ldos(solver_defect, rod_pos, collect(ω_range), k_points; η=η)
 
-p_comparison = plot(
+p_comparison = plot(;
     xlabel="Frequency (2πc/a)",
     ylabel="LDOS (arb. units)",
     title="LDOS Comparison: Defect vs Bulk",
     legend=:topright,
     grid=true,
-    size=(600, 400)
+    size=(600, 400),
 )
 
-plot!(p_comparison, collect(ω_range) * a / (2π), ldos,
-      label="At defect", linewidth=2, color=:red)
-plot!(p_comparison, collect(ω_range) * a / (2π), ldos_rod,
-      label="In bulk", linewidth=2, color=:blue)
+plot!(
+    p_comparison,
+    collect(ω_range) * a / (2π),
+    ldos;
+    label="At defect",
+    linewidth=2,
+    color=:red,
+)
+plot!(
+    p_comparison,
+    collect(ω_range) * a / (2π),
+    ldos_rod;
+    label="In bulk",
+    linewidth=2,
+    color=:blue,
+)
 
 if !isempty(gaps)
-    vspan!(p_comparison, [ω_min * a / (2π), ω_max * a / (2π)],
-           alpha=0.2, color=:yellow, label="Bandgap")
+    vspan!(
+        p_comparison,
+        [ω_min * a / (2π), ω_max * a / (2π)];
+        alpha=0.2,
+        color=:yellow,
+        label="Bandgap",
+    )
 end
 
 savefig(p_comparison, joinpath(@__DIR__, "501_defect_ldos_comparison.png"))

@@ -83,7 +83,7 @@ println()
 # ============================================================================
 
 npoints = 30
-kpath = simple_kpath_square(a=a, npoints=npoints)
+kpath = simple_kpath_square(; a=a, npoints=npoints)
 
 println("Computing band structure...")
 println("  TM modes (E_z polarization)...")
@@ -118,8 +118,16 @@ if !isempty(gaps_tm)
         upper = gap.min_upper / (2π)
         width = upper - lower
         pct = 100 * width / ((lower + upper) / 2)
-        @printf("  Gap %d (bands %d-%d): [%.4f, %.4f], width=%.4f (%.1f%%)\n",
-                i, gap.bands[1], gap.bands[2], lower, upper, width, pct)
+        @printf(
+            "  Gap %d (bands %d-%d): [%.4f, %.4f], width=%.4f (%.1f%%)\n",
+            i,
+            gap.bands[1],
+            gap.bands[2],
+            lower,
+            upper,
+            width,
+            pct
+        )
     end
 else
     println("  No complete TM gap found")
@@ -134,8 +142,16 @@ if !isempty(gaps_te)
         upper = gap.min_upper / (2π)
         width = upper - lower
         pct = 100 * width / ((lower + upper) / 2)
-        @printf("  Gap %d (bands %d-%d): [%.4f, %.4f], width=%.4f (%.1f%%)\n",
-                i, gap.bands[1], gap.bands[2], lower, upper, width, pct)
+        @printf(
+            "  Gap %d (bands %d-%d): [%.4f, %.4f], width=%.4f (%.1f%%)\n",
+            i,
+            gap.bands[1],
+            gap.bands[2],
+            lower,
+            upper,
+            width,
+            pct
+        )
     end
 else
     println("  No complete TE gap found")
@@ -159,20 +175,26 @@ println("-" ^ 70)
 distances = bands_tm.distances
 
 # Create plot
-p = plot(size=(700, 500), legend=:topright,
-         xlabel="Wave vector", ylabel="Frequency ωa/2πc",
-         title="Joannopoulos Ch.5 Fig.2 - Square Lattice (ε=8.9, r/a=0.2)")
+p = plot(;
+    size=(700, 500),
+    legend=:topright,
+    xlabel="Wave vector",
+    ylabel="Frequency ωa/2πc",
+    title="Joannopoulos Ch.5 Fig.2 - Square Lattice (ε=8.9, r/a=0.2)",
+)
 
 # Plot TM bands (blue)
 for band in 1:nbands
-    plot!(p, distances, freqs_tm[:, band], color=:blue, lw=1.5,
-          label=(band == 1 ? "TM" : ""))
+    plot!(
+        p, distances, freqs_tm[:, band]; color=:blue, lw=1.5, label=(band == 1 ? "TM" : "")
+    )
 end
 
 # Plot TE bands (red)
 for band in 1:nbands
-    plot!(p, distances, freqs_te[:, band], color=:red, lw=1.5,
-          label=(band == 1 ? "TE" : ""))
+    plot!(
+        p, distances, freqs_te[:, band]; color=:red, lw=1.5, label=(band == 1 ? "TE" : "")
+    )
 end
 
 # Add TM gap shading if exists
@@ -180,7 +202,7 @@ if !isempty(gaps_tm)
     gap = gaps_tm[1]
     lower = gap.max_lower / (2π)
     upper = gap.min_upper / (2π)
-    hspan!(p, [lower, upper], alpha=0.2, color=:blue, label="TM gap")
+    hspan!(p, [lower, upper]; alpha=0.2, color=:blue, label="TM gap")
 end
 
 # Set axis limits
@@ -194,7 +216,7 @@ xticks!(p, xticks_pos, xticks_labels)
 
 # Add vertical lines at high-symmetry points
 for (idx, _) in labels
-    vline!(p, [distances[idx]], color=:gray, lw=0.5, label="")
+    vline!(p, [distances[idx]]; color=:gray, lw=0.5, label="")
 end
 
 savefig(p, "examples/911_joannopoulos_ch5_fig2.png")

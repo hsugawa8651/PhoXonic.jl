@@ -61,10 +61,10 @@ end
         δ = 2π * n * d / λ
 
         # P = [exp(iδ) 0; 0 exp(-iδ)]
-        @test P[1,1] ≈ exp(im * δ)
-        @test P[2,2] ≈ exp(-im * δ)
-        @test abs(P[1,2]) < 1e-15
-        @test abs(P[2,1]) < 1e-15
+        @test P[1, 1] ≈ exp(im * δ)
+        @test P[2, 2] ≈ exp(-im * δ)
+        @test abs(P[1, 2]) < 1e-15
+        @test abs(P[2, 1]) < 1e-15
     end
 
     @testset "Round trip identity" begin
@@ -97,10 +97,10 @@ end
         # M = (1/t) * [1 r; r 1] where r, t are Fresnel coeffs
         r, t = PhoXonic.fresnel_coefficients(n1, n2)
 
-        @test M[1,1] ≈ 1/t
-        @test M[1,2] ≈ r/t
-        @test M[2,1] ≈ r/t
-        @test M[2,2] ≈ 1/t
+        @test M[1, 1] ≈ 1/t
+        @test M[1, 2] ≈ r/t
+        @test M[2, 1] ≈ r/t
+        @test M[2, 2] ≈ 1/t
     end
 
     @testset "Determinant" begin
@@ -116,7 +116,7 @@ end
         M = PhoXonic.interface_matrix(n1, n2)
 
         # Matrix is symmetric
-        @test M[1,2] ≈ M[2,1]
+        @test M[1, 2] ≈ M[2, 1]
     end
 end
 
@@ -180,6 +180,6 @@ end
         # [E_inc^+; E_inc^-] = M * [E_sub^+; E_sub^-]
         # where E^+ is forward and E^- is backward traveling
         # M11 should be non-zero (forward transmission exists)
-        @test abs(M[1,1]) > 0
+        @test abs(M[1, 1]) > 0
     end
 end

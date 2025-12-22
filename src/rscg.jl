@@ -17,7 +17,6 @@ References:
 - Y. Nagai et al., Springer (2017) "Reduced-Shifted Conjugate-Gradient Method for a Green's Function"
 =#
 
-
 # ============================================================================
 # K-point conversion helpers (multiple dispatch instead of isa checks)
 # ============================================================================
@@ -105,11 +104,16 @@ struct CGRHSInv <: RHSInvMethod
     rtol::Float64
     maxiter::Int
 end
-CGRHSInv(; atol::Float64=1e-10, rtol::Float64=1e-10, maxiter::Int=100) = CGRHSInv(atol, rtol, maxiter)
+function CGRHSInv(; atol::Float64=1e-10, rtol::Float64=1e-10, maxiter::Int=100)
+    CGRHSInv(atol, rtol, maxiter)
+end
 
 # Conversion from Symbol (deprecated, for backward compatibility)
 function _convert_rhs_inv_method(method::Symbol)
-    Base.depwarn("Symbol-based rhs_inv_method is deprecated. Use ApproximateRHSInv() or CGRHSInv() instead.", :_convert_rhs_inv_method)
+    Base.depwarn(
+        "Symbol-based rhs_inv_method is deprecated. Use ApproximateRHSInv() or CGRHSInv() instead.",
+        :_convert_rhs_inv_method,
+    )
     if method == :approximate
         return ApproximateRHSInv()
     elseif method == :cg
@@ -121,8 +125,13 @@ end
 _convert_rhs_inv_method(method::RHSInvMethod) = method
 
 # Error fallback for unsupported types
-_convert_rhs_inv_method(method) =
-    throw(ArgumentError("Unsupported rhs_inv_method type: $(typeof(method)). Use ApproximateRHSInv() or CGRHSInv()."))
+function _convert_rhs_inv_method(method)
+    throw(
+        ArgumentError(
+            "Unsupported rhs_inv_method type: $(typeof(method)). Use ApproximateRHSInv() or CGRHSInv().",
+        ),
+    )
+end
 
 """
     compute_greens_function(solver::Solver, k, ω_values, source; η=1e-3)
@@ -141,8 +150,13 @@ Uses direct solve (dense method). For large systems, use matrix-free iterative m
 # Returns
 - Vector of Green's function values G(ω) * source for each ω
 """
-function compute_greens_function(solver::Solver, k, ω_values::AbstractVector{<:Real},
-                                  source::AbstractVector; η::Real=1e-3)
+function compute_greens_function(
+    solver::Solver,
+    k,
+    ω_values::AbstractVector{<:Real},
+    source::AbstractVector;
+    η::Real=1e-3,
+)
     N = solver.basis.num_pw
     T = ComplexF64
 
@@ -167,8 +181,12 @@ function compute_greens_function(solver::Solver, k, ω_values::AbstractVector{<:
 end
 
 # Convenience method with MatrixFreeOperator
-function compute_greens_function(op::MatrixFreeOperator, ω_values::AbstractVector{<:Real},
-                                  source::AbstractVector; η::Real=1e-3)
+function compute_greens_function(
+    op::MatrixFreeOperator,
+    ω_values::AbstractVector{<:Real},
+    source::AbstractVector;
+    η::Real=1e-3,
+)
     compute_greens_function(op.solver, op.k, ω_values, source; η=η)
 end
 
@@ -192,8 +210,12 @@ DOS(ω) = -1/π Im[Tr G(ω)] summed over k-points
 # Returns
 - Vector of DOS values at each frequency
 """
-function compute_dos(solver::Solver{Dim2}, ω_values::AbstractVector{<:Real},
-                     k_points::AbstractVector; η::Real=1e-3)
+function compute_dos(
+    solver::Solver{Dim2},
+    ω_values::AbstractVector{<:Real},
+    k_points::AbstractVector;
+    η::Real=1e-3,
+)
     N = solver.basis.num_pw
     dos = zeros(length(ω_values))
 
@@ -253,9 +275,13 @@ LDOS(r, ω) = -1/π Im[G(r, r, ω)]
 # Returns
 - Vector of LDOS values at each frequency
 """
-function compute_ldos(solver::Solver{Dim2}, position::AbstractVector{<:Real},
-                      ω_values::AbstractVector{<:Real},
-                      k_points::AbstractVector; η::Real=1e-3)
+function compute_ldos(
+    solver::Solver{Dim2},
+    position::AbstractVector{<:Real},
+    ω_values::AbstractVector{<:Real},
+    k_points::AbstractVector;
+    η::Real=1e-3,
+)
     N = solver.basis.num_pw
     ldos = zeros(length(ω_values))
 
@@ -287,8 +313,12 @@ function compute_ldos(solver::Solver{Dim2}, position::AbstractVector{<:Real},
 end
 
 # 1D versions
-function compute_dos(solver::Solver{Dim1}, ω_values::AbstractVector{<:Real},
-                     k_points::AbstractVector{<:Real}; η::Real=1e-3)
+function compute_dos(
+    solver::Solver{Dim1},
+    ω_values::AbstractVector{<:Real},
+    k_points::AbstractVector{<:Real};
+    η::Real=1e-3,
+)
     N = solver.basis.num_pw
     dos = zeros(length(ω_values))
 
@@ -317,9 +347,13 @@ function compute_dos(solver::Solver{Dim1}, ω_values::AbstractVector{<:Real},
     return dos
 end
 
-function compute_ldos(solver::Solver{Dim1}, position::Real,
-                      ω_values::AbstractVector{<:Real},
-                      k_points::AbstractVector{<:Real}; η::Real=1e-3)
+function compute_ldos(
+    solver::Solver{Dim1},
+    position::Real,
+    ω_values::AbstractVector{<:Real},
+    k_points::AbstractVector{<:Real};
+    η::Real=1e-3,
+)
     N = solver.basis.num_pw
     ldos = zeros(length(ω_values))
 
@@ -361,9 +395,13 @@ More efficient than exact trace for large systems.
 - `η`: Broadening parameter
 - `n_random`: Number of random vectors for stochastic averaging
 """
-function compute_dos_stochastic(solver::Solver{Dim2}, ω_values::AbstractVector{<:Real},
-                                k_points::AbstractVector;
-                                η::Real=1e-3, n_random::Int=10)
+function compute_dos_stochastic(
+    solver::Solver{Dim2},
+    ω_values::AbstractVector{<:Real},
+    k_points::AbstractVector;
+    η::Real=1e-3,
+    n_random::Int=10,
+)
     N = solver.basis.num_pw
     dos = zeros(length(ω_values))
 
@@ -420,7 +458,7 @@ For Green's function computation:
 # Usage with Krylov.jl
 Use `NegatedOperator(H)` to get `-H`, then solve `(σI + A)x = b` where `A = -H`.
 """
-struct EffectiveHamiltonian{TL<:AbstractMatrix, TR<:AbstractMatrix, TF, TV<:AbstractVector}
+struct EffectiveHamiltonian{TL<:AbstractMatrix,TR<:AbstractMatrix,TF,TV<:AbstractVector}
     LHS::TL
     RHS::TR
     RHS_factorization::TF
@@ -434,7 +472,7 @@ end
 Create an EffectiveHamiltonian from LHS and RHS matrices.
 Computes LU factorization of RHS for efficient `RHS⁻¹` application.
 """
-function EffectiveHamiltonian(LHS::AbstractMatrix{T}, RHS::AbstractMatrix{T}) where T
+function EffectiveHamiltonian(LHS::AbstractMatrix{T}, RHS::AbstractMatrix{T}) where {T}
     n = size(LHS, 1)
     @assert size(LHS) == size(RHS) == (n, n) "LHS and RHS must be square and same size"
     RHS_fact = lu(RHS)
@@ -455,7 +493,7 @@ end
 # Size interface for LinearMaps compatibility
 Base.size(H::EffectiveHamiltonian) = (H.n, H.n)
 Base.size(H::EffectiveHamiltonian, d::Int) = d <= 2 ? H.n : 1
-Base.eltype(H::EffectiveHamiltonian{TL}) where TL = eltype(TL)
+Base.eltype(H::EffectiveHamiltonian{TL}) where {TL} = eltype(TL)
 
 """
     mul!(y, H::EffectiveHamiltonian, x)
@@ -570,8 +608,10 @@ x, stats = rscg(A, b, shifts)
 - `:approximate`: Element-wise 1/ε in real space (fast, approximate for inhomogeneous media)
 - `:cg`: Iterative CG to solve RHS * y = x (slower, exact)
 """
-struct MatrixFreeEffectiveHamiltonian{D<:Dimension, W<:WaveType, T<:Complex, N, F, I, M<:RHSInvMethod}
-    op::MatrixFreeOperator{D, W, T, N, F, I}
+struct MatrixFreeEffectiveHamiltonian{
+    D<:Dimension,W<:WaveType,T<:Complex,N,F,I,M<:RHSInvMethod
+}
+    op::MatrixFreeOperator{D,W,T,N,F,I}
     rhs_inv::Array{T}  # 1/material in real space (for ApproximateRHSInv)
     tmp_fourier::Vector{T}  # temporary for Fourier coefficients
     tmp_fourier2::Vector{T}  # temporary for CG
@@ -609,8 +649,9 @@ H = MatrixFreeEffectiveHamiltonian(op, :approximate)  # deprecated
 H = MatrixFreeEffectiveHamiltonian(op, :cg)           # deprecated
 ```
 """
-function MatrixFreeEffectiveHamiltonian(op::MatrixFreeOperator{D, W, T, N, F, I},
-                                        rhs_inv_method::RHSInvMethod=ApproximateRHSInv()) where {D<:Dimension, W<:WaveType, T, N, F, I}
+function MatrixFreeEffectiveHamiltonian(
+    op::MatrixFreeOperator{D,W,T,N,F,I}, rhs_inv_method::RHSInvMethod=ApproximateRHSInv()
+) where {D<:Dimension,W<:WaveType,T,N,F,I}
     solver = op.solver
     res = op.ctx.resolution
     nc = ncomponents(solver.wave)
@@ -625,21 +666,27 @@ function MatrixFreeEffectiveHamiltonian(op::MatrixFreeOperator{D, W, T, N, F, I}
     tmp_fourier2 = zeros(T, n)
     tmp_grid = zeros(T, res)
 
-    MatrixFreeEffectiveHamiltonian{D, W, T, N, F, I, typeof(rhs_inv_method)}(
-        op, rhs_inv, tmp_fourier, tmp_fourier2, tmp_grid, n, rhs_inv_method)
+    MatrixFreeEffectiveHamiltonian{D,W,T,N,F,I,typeof(rhs_inv_method)}(
+        op, rhs_inv, tmp_fourier, tmp_fourier2, tmp_grid, n, rhs_inv_method
+    )
 end
 
 # Backward compatibility: Symbol-based constructor (deprecated)
-function MatrixFreeEffectiveHamiltonian(op::MatrixFreeOperator{D, W, T, N, F, I},
-                                        rhs_inv_method::Symbol;
-                                        cg_atol::Float64=1e-12,
-                                        cg_rtol::Float64=1e-10,
-                                        cg_maxiter::Int=100) where {D<:Dimension, W<:WaveType, T, N, F, I}
-    Base.depwarn("Symbol-based rhs_inv_method is deprecated. Use ApproximateRHSInv() or CGRHSInv() instead.", :MatrixFreeEffectiveHamiltonian)
+function MatrixFreeEffectiveHamiltonian(
+    op::MatrixFreeOperator{D,W,T,N,F,I},
+    rhs_inv_method::Symbol;
+    cg_atol::Float64=1e-12,
+    cg_rtol::Float64=1e-10,
+    cg_maxiter::Int=100,
+) where {D<:Dimension,W<:WaveType,T,N,F,I}
+    Base.depwarn(
+        "Symbol-based rhs_inv_method is deprecated. Use ApproximateRHSInv() or CGRHSInv() instead.",
+        :MatrixFreeEffectiveHamiltonian,
+    )
     method = if rhs_inv_method == :approximate
         ApproximateRHSInv()
     elseif rhs_inv_method == :cg
-        CGRHSInv(atol=cg_atol, rtol=cg_rtol, maxiter=cg_maxiter)
+        CGRHSInv(; atol=cg_atol, rtol=cg_rtol, maxiter=cg_maxiter)
     else
         throw(ArgumentError("rhs_inv_method must be :approximate or :cg"))
     end
@@ -648,25 +695,26 @@ end
 
 # Helper to get 1/RHS material array
 # Error fallback for unsupported wave types
-_get_rhs_inv(wave::WaveType, mats, res, ::Type{T}) where T =
+function _get_rhs_inv(wave::WaveType, mats, res, ::Type{T}) where {T}
     throw(ArgumentError("Unsupported wave type for _get_rhs_inv: $(typeof(wave))"))
+end
 
-function _get_rhs_inv(::TEWave, mats, res, ::Type{T}) where T
+function _get_rhs_inv(::TEWave, mats, res, ::Type{T}) where {T}
     # TE: RHS = μ
     T.(1.0 ./ mats.μ)
 end
 
-function _get_rhs_inv(::TMWave, mats, res, ::Type{T}) where T
+function _get_rhs_inv(::TMWave, mats, res, ::Type{T}) where {T}
     # TM: RHS = ε
     T.(1.0 ./ mats.ε)
 end
 
-function _get_rhs_inv(::SHWave, mats, res, ::Type{T}) where T
+function _get_rhs_inv(::SHWave, mats, res, ::Type{T}) where {T}
     # SH: RHS = ρ
     T.(1.0 ./ mats.ρ)
 end
 
-function _get_rhs_inv(::PSVWave, mats, res, ::Type{T}) where T
+function _get_rhs_inv(::PSVWave, mats, res, ::Type{T}) where {T}
     # PSV: RHS = ρ (same for both components)
     T.(1.0 ./ mats.ρ)
 end
@@ -674,15 +722,16 @@ end
 # Size interface
 Base.size(H::MatrixFreeEffectiveHamiltonian) = (H.n, H.n)
 Base.size(H::MatrixFreeEffectiveHamiltonian, d::Int) = d <= 2 ? H.n : 1
-Base.eltype(::MatrixFreeEffectiveHamiltonian{D, W, T}) where {D, W, T} = T
+Base.eltype(::MatrixFreeEffectiveHamiltonian{D,W,T}) where {D,W,T} = T
 
 """
     mul!(y, H::MatrixFreeEffectiveHamiltonian, x)
 
 Compute y = H * x = RHS⁻¹ * (LHS * x) in O(N log N) time.
 """
-function LinearAlgebra.mul!(y::AbstractVector, H::MatrixFreeEffectiveHamiltonian{Dim2, W, T},
-                            x::AbstractVector) where {W<:WaveType, T}
+function LinearAlgebra.mul!(
+    y::AbstractVector, H::MatrixFreeEffectiveHamiltonian{Dim2,W,T}, x::AbstractVector
+) where {W<:WaveType,T}
     # Step 1: tmp = LHS * x
     apply_lhs!(H.tmp_fourier, H.op, x)
 
@@ -693,23 +742,33 @@ function LinearAlgebra.mul!(y::AbstractVector, H::MatrixFreeEffectiveHamiltonian
 end
 
 # Helper for RHS⁻¹ application (uses trait-based + method-based dispatch)
-function _apply_rhs_inv!(y::AbstractVector{T}, H::MatrixFreeEffectiveHamiltonian{Dim2, W, T},
-                         x::AbstractVector{T}) where {W<:WaveType, T}
+function _apply_rhs_inv!(
+    y::AbstractVector{T}, H::MatrixFreeEffectiveHamiltonian{Dim2,W,T}, x::AbstractVector{T}
+) where {W<:WaveType,T}
     _apply_rhs_inv_impl!(wave_structure(W()), H.rhs_inv_method, y, H, x)
 end
 
 # Error fallback for unsupported combinations
-_apply_rhs_inv_impl!(trait, method, y, H, x) =
-    throw(ArgumentError("Unsupported wave structure/method combination: $(typeof(trait)), $(typeof(method))"))
+function _apply_rhs_inv_impl!(trait, method, y, H, x)
+    throw(
+        ArgumentError(
+            "Unsupported wave structure/method combination: $(typeof(trait)), $(typeof(method))",
+        ),
+    )
+end
 
 # ============================================================================
 # ScalarWave2D implementations (TE, TM, SH)
 # ============================================================================
 
 # ApproximateRHSInv: element-wise 1/ε in real space (fast, approximate)
-function _apply_rhs_inv_impl!(::ScalarWave2D, ::ApproximateRHSInv, y::AbstractVector{T},
-                              H::MatrixFreeEffectiveHamiltonian{Dim2, W, T},
-                              x::AbstractVector{T}) where {W<:WaveType, T}
+function _apply_rhs_inv_impl!(
+    ::ScalarWave2D,
+    ::ApproximateRHSInv,
+    y::AbstractVector{T},
+    H::MatrixFreeEffectiveHamiltonian{Dim2,W,T},
+    x::AbstractVector{T},
+) where {W<:WaveType,T}
     op = H.op
     basis = op.solver.basis
     res = resolution(op)
@@ -727,9 +786,13 @@ function _apply_rhs_inv_impl!(::ScalarWave2D, ::ApproximateRHSInv, y::AbstractVe
 end
 
 # CGRHSInv: solve RHS * y = x iteratively (slower, exact)
-function _apply_rhs_inv_impl!(::ScalarWave2D, method::CGRHSInv, y::AbstractVector{T},
-                              H::MatrixFreeEffectiveHamiltonian{Dim2, W, T},
-                              x::AbstractVector{T}) where {W<:WaveType, T}
+function _apply_rhs_inv_impl!(
+    ::ScalarWave2D,
+    method::CGRHSInv,
+    y::AbstractVector{T},
+    H::MatrixFreeEffectiveHamiltonian{Dim2,W,T},
+    x::AbstractVector{T},
+) where {W<:WaveType,T}
     op = H.op
 
     # Solve RHS * y = x using CG
@@ -788,9 +851,13 @@ end
 # ============================================================================
 
 # ApproximateRHSInv for VectorWave2D
-function _apply_rhs_inv_impl!(::VectorWave2D, ::ApproximateRHSInv, y::AbstractVector{T},
-                              H::MatrixFreeEffectiveHamiltonian{Dim2, W, T},
-                              x::AbstractVector{T}) where {W<:WaveType, T}
+function _apply_rhs_inv_impl!(
+    ::VectorWave2D,
+    ::ApproximateRHSInv,
+    y::AbstractVector{T},
+    H::MatrixFreeEffectiveHamiltonian{Dim2,W,T},
+    x::AbstractVector{T},
+) where {W<:WaveType,T}
     op = H.op
     basis = op.solver.basis
     res = resolution(op)
@@ -798,9 +865,9 @@ function _apply_rhs_inv_impl!(::VectorWave2D, ::ApproximateRHSInv, y::AbstractVe
 
     # x and y components
     x_x = @view x[1:N]
-    x_y = @view x[N+1:2N]
+    x_y = @view x[(N + 1):2N]
     y_x = @view y[1:N]
-    y_y = @view y[N+1:2N]
+    y_y = @view y[(N + 1):2N]
 
     # x component
     fourier_to_grid!(H.tmp_grid, x_x, basis, res)
@@ -816,9 +883,13 @@ function _apply_rhs_inv_impl!(::VectorWave2D, ::ApproximateRHSInv, y::AbstractVe
 end
 
 # CGRHSInv for VectorWave2D
-function _apply_rhs_inv_impl!(::VectorWave2D, method::CGRHSInv, y::AbstractVector{T},
-                              H::MatrixFreeEffectiveHamiltonian{Dim2, W, T},
-                              x::AbstractVector{T}) where {W<:WaveType, T}
+function _apply_rhs_inv_impl!(
+    ::VectorWave2D,
+    method::CGRHSInv,
+    y::AbstractVector{T},
+    H::MatrixFreeEffectiveHamiltonian{Dim2,W,T},
+    x::AbstractVector{T},
+) where {W<:WaveType,T}
     op = H.op
 
     # Solve RHS * y = x using CG (same structure as single component)
@@ -887,19 +958,20 @@ end
 # ============================================================================
 
 # Helper to get 1/RHS for 3D waves
-function _get_rhs_inv(::FullVectorEM, mats, res, ::Type{T}) where T
+function _get_rhs_inv(::FullVectorEM, mats, res, ::Type{T}) where {T}
     # FullVectorEM: RHS = μ (same for all 3 components)
     T.(1.0 ./ mats.μ)
 end
 
-function _get_rhs_inv(::FullElastic, mats, res, ::Type{T}) where T
+function _get_rhs_inv(::FullElastic, mats, res, ::Type{T}) where {T}
     # FullElastic: RHS = ρ (same for all 3 components)
     T.(1.0 ./ mats.ρ)
 end
 
 # 3D mul! implementation
-function LinearAlgebra.mul!(y::AbstractVector, H::MatrixFreeEffectiveHamiltonian{Dim3, W, T},
-                            x::AbstractVector) where {W<:WaveType, T}
+function LinearAlgebra.mul!(
+    y::AbstractVector, H::MatrixFreeEffectiveHamiltonian{Dim3,W,T}, x::AbstractVector
+) where {W<:WaveType,T}
     # Step 1: tmp = LHS * x
     apply_lhs!(H.tmp_fourier, H.op, x)
 
@@ -910,23 +982,33 @@ function LinearAlgebra.mul!(y::AbstractVector, H::MatrixFreeEffectiveHamiltonian
 end
 
 # Helper for RHS⁻¹ application for 3D waves (uses trait-based + method-based dispatch)
-function _apply_rhs_inv_3d!(y::AbstractVector{T}, H::MatrixFreeEffectiveHamiltonian{Dim3, W, T},
-                            x::AbstractVector{T}) where {W<:WaveType, T}
+function _apply_rhs_inv_3d!(
+    y::AbstractVector{T}, H::MatrixFreeEffectiveHamiltonian{Dim3,W,T}, x::AbstractVector{T}
+) where {W<:WaveType,T}
     _apply_rhs_inv_3d_impl!(wave_structure(W()), H.rhs_inv_method, y, H, x)
 end
 
 # Error fallback for unsupported combinations (3D)
-_apply_rhs_inv_3d_impl!(trait, method, y, H, x) =
-    throw(ArgumentError("Unsupported wave structure/method combination for 3D: $(typeof(trait)), $(typeof(method))"))
+function _apply_rhs_inv_3d_impl!(trait, method, y, H, x)
+    throw(
+        ArgumentError(
+            "Unsupported wave structure/method combination for 3D: $(typeof(trait)), $(typeof(method))",
+        ),
+    )
+end
 
 # ============================================================================
 # VectorWave3D implementations (FullVectorEM, FullElastic - 3 components)
 # ============================================================================
 
 # ApproximateRHSInv for VectorWave3D
-function _apply_rhs_inv_3d_impl!(::VectorWave3D, ::ApproximateRHSInv, y::AbstractVector{T},
-                                 H::MatrixFreeEffectiveHamiltonian{Dim3, W, T},
-                                 x::AbstractVector{T}) where {W<:WaveType, T}
+function _apply_rhs_inv_3d_impl!(
+    ::VectorWave3D,
+    ::ApproximateRHSInv,
+    y::AbstractVector{T},
+    H::MatrixFreeEffectiveHamiltonian{Dim3,W,T},
+    x::AbstractVector{T},
+) where {W<:WaveType,T}
     op = H.op
     basis = op.solver.basis
     res = resolution(op)
@@ -934,11 +1016,11 @@ function _apply_rhs_inv_3d_impl!(::VectorWave3D, ::ApproximateRHSInv, y::Abstrac
 
     # 3 components: x, y, z
     x_x = @view x[1:N]
-    x_y = @view x[N+1:2N]
-    x_z = @view x[2N+1:3N]
+    x_y = @view x[(N + 1):2N]
+    x_z = @view x[(2N + 1):3N]
     y_x = @view y[1:N]
-    y_y = @view y[N+1:2N]
-    y_z = @view y[2N+1:3N]
+    y_y = @view y[(N + 1):2N]
+    y_z = @view y[(2N + 1):3N]
 
     # x component
     fourier_to_grid!(H.tmp_grid, x_x, basis, res)
@@ -959,9 +1041,13 @@ function _apply_rhs_inv_3d_impl!(::VectorWave3D, ::ApproximateRHSInv, y::Abstrac
 end
 
 # CGRHSInv for VectorWave3D
-function _apply_rhs_inv_3d_impl!(::VectorWave3D, method::CGRHSInv, y::AbstractVector{T},
-                                 H::MatrixFreeEffectiveHamiltonian{Dim3, W, T},
-                                 x::AbstractVector{T}) where {W<:WaveType, T}
+function _apply_rhs_inv_3d_impl!(
+    ::VectorWave3D,
+    method::CGRHSInv,
+    y::AbstractVector{T},
+    H::MatrixFreeEffectiveHamiltonian{Dim3,W,T},
+    x::AbstractVector{T},
+) where {W<:WaveType,T}
     op = H.op
 
     # Solve RHS * y = x using CG
@@ -1047,8 +1133,9 @@ struct RSKGF <: GFMethod
     itmax::Int
     verbose::Int
 end
-RSKGF(; atol::Float64=1e-10, rtol::Float64=1e-10, itmax::Int=0, verbose::Int=0) =
+function RSKGF(; atol::Float64=1e-10, rtol::Float64=1e-10, itmax::Int=0, verbose::Int=0)
     RSKGF(atol, rtol, itmax, verbose)
+end
 
 """
     MatrixFreeGF(; rhs_inv_method=:approximate, atol=1e-10, rtol=1e-10, itmax=0, verbose=0)
@@ -1074,9 +1161,13 @@ struct MatrixFreeGF{M<:RHSInvMethod} <: GFMethod
 end
 
 # Unified constructor - accepts both RHSInvMethod and Symbol (deprecated)
-function MatrixFreeGF(; rhs_inv_method::Union{RHSInvMethod,Symbol}=ApproximateRHSInv(),
-                      atol::Float64=1e-10, rtol::Float64=1e-10,
-                      itmax::Int=0, verbose::Int=0)
+function MatrixFreeGF(;
+    rhs_inv_method::Union{RHSInvMethod,Symbol}=ApproximateRHSInv(),
+    atol::Float64=1e-10,
+    rtol::Float64=1e-10,
+    itmax::Int=0,
+    verbose::Int=0,
+)
     method = _convert_rhs_inv_method(rhs_inv_method)
     MatrixFreeGF{typeof(method)}(method, atol, rtol, itmax, verbose)
 end
@@ -1104,8 +1195,14 @@ G = compute_greens_function(solver, k, ω_values, source; η=1e-2)
 G = compute_greens_function(solver, k, ω_values, source, MatrixFreeGF(); η=1e-2)
 ```
 """
-function compute_greens_function(solver::Solver, k, ω_values::AbstractVector{<:Real},
-                                  source::AbstractVector, method::DirectGF; η::Real=1e-3)
+function compute_greens_function(
+    solver::Solver,
+    k,
+    ω_values::AbstractVector{<:Real},
+    source::AbstractVector,
+    method::DirectGF;
+    η::Real=1e-3,
+)
     N = solver.basis.num_pw
     T = ComplexF64
 
@@ -1126,19 +1223,29 @@ end
 # Generic fallback for GFMethod - extension will provide specific implementations
 # Note: Do NOT add specific fallbacks for RSKGF/MatrixFreeGF here as they would
 # conflict with package extension methods (Julia does not allow method overwriting)
-function compute_greens_function(solver::Solver, k, ω_values::AbstractVector{<:Real},
-                                  source::AbstractVector, method::GFMethod; η::Real=1e-3)
+function compute_greens_function(
+    solver::Solver,
+    k,
+    ω_values::AbstractVector{<:Real},
+    source::AbstractVector,
+    method::GFMethod;
+    η::Real=1e-3,
+)
     method_name = typeof(method).name.name
     if method_name in (:RSKGF, :MatrixFreeGF)
-        throw(ArgumentError(
-            "$method_name requires ReducedShiftedKrylov.jl. " *
-            "Add `using ReducedShiftedKrylov` to enable this feature."
-        ))
+        throw(
+            ArgumentError(
+                "$method_name requires ReducedShiftedKrylov.jl. " *
+                "Add `using ReducedShiftedKrylov` to enable this feature.",
+            ),
+        )
     else
-        throw(ArgumentError(
-            "Unsupported GFMethod: $(typeof(method)). " *
-            "Available methods: DirectGF(), RSKGF(), MatrixFreeGF()"
-        ))
+        throw(
+            ArgumentError(
+                "Unsupported GFMethod: $(typeof(method)). " *
+                "Available methods: DirectGF(), RSKGF(), MatrixFreeGF()",
+            ),
+        )
     end
 end
 
@@ -1165,8 +1272,13 @@ dos = compute_dos(solver, ω_values, k_points; η=1e-2)
 dos = compute_dos(solver, ω_values, k_points, MatrixFreeGF(); η=1e-2)
 ```
 """
-function compute_dos(solver::Solver{Dim2}, ω_values::AbstractVector{<:Real},
-                     k_points::AbstractVector, method::DirectGF; η::Real=1e-3)
+function compute_dos(
+    solver::Solver{Dim2},
+    ω_values::AbstractVector{<:Real},
+    k_points::AbstractVector,
+    method::DirectGF;
+    η::Real=1e-3,
+)
     N = solver.basis.num_pw
     dos = zeros(length(ω_values))
 
@@ -1197,20 +1309,29 @@ function compute_dos(solver::Solver{Dim2}, ω_values::AbstractVector{<:Real},
 end
 
 # Generic fallback for GFMethod
-function compute_dos(solver::Solver, ω_values::AbstractVector{<:Real},
-                     k_points::AbstractVector, method::GFMethod;
-                     η::Real=1e-3, n_random::Int=10)
+function compute_dos(
+    solver::Solver,
+    ω_values::AbstractVector{<:Real},
+    k_points::AbstractVector,
+    method::GFMethod;
+    η::Real=1e-3,
+    n_random::Int=10,
+)
     method_name = typeof(method).name.name
     if method_name in (:RSKGF, :MatrixFreeGF)
-        throw(ArgumentError(
-            "$method_name requires ReducedShiftedKrylov.jl. " *
-            "Add `using ReducedShiftedKrylov` to enable this feature."
-        ))
+        throw(
+            ArgumentError(
+                "$method_name requires ReducedShiftedKrylov.jl. " *
+                "Add `using ReducedShiftedKrylov` to enable this feature.",
+            ),
+        )
     else
-        throw(ArgumentError(
-            "Unsupported GFMethod: $(typeof(method)). " *
-            "Available methods: DirectGF(), RSKGF(), MatrixFreeGF()"
-        ))
+        throw(
+            ArgumentError(
+                "Unsupported GFMethod: $(typeof(method)). " *
+                "Available methods: DirectGF(), RSKGF(), MatrixFreeGF()",
+            ),
+        )
     end
 end
 
@@ -1247,11 +1368,14 @@ ldos = compute_ldos(solver, pos, ω_values, k_points, RSKGF(); η=1e-2)
 - `compute_dos`: Compute density of states (trace of Green's function)
 - `compute_greens_function`: Compute Green's function directly
 """
-function compute_ldos(solver::Solver{Dim2}, position::AbstractVector{<:Real},
-                      ω_values::AbstractVector{<:Real},
-                      k_points::AbstractVector,
-                      method::DirectGF;
-                      η::Real=1e-3)
+function compute_ldos(
+    solver::Solver{Dim2},
+    position::AbstractVector{<:Real},
+    ω_values::AbstractVector{<:Real},
+    k_points::AbstractVector,
+    method::DirectGF;
+    η::Real=1e-3,
+)
     N = solver.basis.num_pw
     ldos = zeros(length(ω_values))
 
@@ -1274,21 +1398,28 @@ function compute_ldos(solver::Solver{Dim2}, position::AbstractVector{<:Real},
 end
 
 # Generic fallback for GFMethod
-function compute_ldos(solver::Solver, position::AbstractVector{<:Real},
-                      ω_values::AbstractVector{<:Real},
-                      k_points::AbstractVector,
-                      method::GFMethod;
-                      η::Real=1e-3)
+function compute_ldos(
+    solver::Solver,
+    position::AbstractVector{<:Real},
+    ω_values::AbstractVector{<:Real},
+    k_points::AbstractVector,
+    method::GFMethod;
+    η::Real=1e-3,
+)
     method_name = typeof(method).name.name
     if method_name in (:RSKGF, :MatrixFreeGF)
-        throw(ArgumentError(
-            "$method_name requires ReducedShiftedKrylov.jl. " *
-            "Add `using ReducedShiftedKrylov` to enable this feature."
-        ))
+        throw(
+            ArgumentError(
+                "$method_name requires ReducedShiftedKrylov.jl. " *
+                "Add `using ReducedShiftedKrylov` to enable this feature.",
+            ),
+        )
     else
-        throw(ArgumentError(
-            "Unsupported GFMethod: $(typeof(method)). " *
-            "Available methods: DirectGF(), RSKGF(), MatrixFreeGF()"
-        ))
+        throw(
+            ArgumentError(
+                "Unsupported GFMethod: $(typeof(method)). " *
+                "Available methods: DirectGF(), RSKGF(), MatrixFreeGF()",
+            ),
+        )
     end
 end

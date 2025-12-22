@@ -12,10 +12,10 @@ using Plots
 # ============================================================================
 
 # Steel: high impedance
-steel = IsotropicElastic(ρ=7800.0, λ=115e9, μ=82e9)
+steel = IsotropicElastic(; ρ=7800.0, λ=115e9, μ=82e9)
 
 # Epoxy: low impedance
-epoxy = IsotropicElastic(ρ=1180.0, λ=4.43e9, μ=1.59e9)
+epoxy = IsotropicElastic(; ρ=1180.0, λ=4.43e9, μ=1.59e9)
 
 # Material parameters
 c_steel = longitudinal_velocity(steel)
@@ -96,7 +96,7 @@ ml = periodic_multilayer(unit_cell, n_pairs)
 solver = TMMSolver(Longitudinal1D(), ml)
 
 # Frequency range (50 kHz to 200 kHz)
-f_values = range(50e3, 200e3, length=151)
+f_values = range(50e3, 200e3; length=151)
 λ_values = c_steel ./ f_values
 
 R_spectrum = Float64[]
@@ -115,7 +115,9 @@ if any(in_stopband)
     last_idx = findlast(in_stopband)
     f_start = f_values[first_idx]
     f_stop = f_values[last_idx]
-    println("Stopband (R > 90%): $(round(f_start/1e3, digits=1)) - $(round(f_stop/1e3, digits=1)) kHz")
+    println(
+        "Stopband (R > 90%): $(round(f_start/1e3, digits=1)) - $(round(f_stop/1e3, digits=1)) kHz",
+    )
     println("Stopband width: $(round((f_stop - f_start)/1e3, digits=1)) kHz")
     println("Relative width: $(round(100*(f_stop - f_start)/f0, digits=1))%")
 end
@@ -144,14 +146,16 @@ println("\nBand edges (at zone boundary k = π/a):")
 for i in 1:4
     ω_edge = bands.frequencies[end, i]
     f_edge = ω_edge / (2π)
-    println("  Band $i: ω = $(round(ω_edge, digits=1)) rad/s = $(round(f_edge/1e3, digits=1)) kHz")
+    println(
+        "  Band $i: ω = $(round(ω_edge, digits=1)) rad/s = $(round(f_edge/1e3, digits=1)) kHz",
+    )
 end
 
 # Check for bandgaps
 println("\nBandgaps:")
 for i in 1:3
     band_i_max = maximum(bands.frequencies[:, i])
-    band_i1_min = minimum(bands.frequencies[:, i+1])
+    band_i1_min = minimum(bands.frequencies[:, i + 1])
 
     if band_i1_min > band_i_max
         gap_width = band_i1_min - band_i_max
@@ -171,21 +175,21 @@ end
 
 println("\nGenerating plots...")
 
-p1 = plot(
+p1 = plot(;
     xlabel="Frequency (kHz)",
     ylabel="Reflectance / Transmittance",
     title="Phononic Bragg Mirror: Steel/Epoxy ($n_pairs pairs)",
     legend=:right,
     grid=true,
     size=(800, 500),
-    ylim=(0, 1.05)
+    ylim=(0, 1.05),
 )
 
-plot!(p1, collect(f_values) ./ 1e3, R_spectrum, label="R", linewidth=2, color=:red)
-plot!(p1, collect(f_values) ./ 1e3, T_spectrum, label="T", linewidth=2, color=:blue)
+plot!(p1, collect(f_values) ./ 1e3, R_spectrum; label="R", linewidth=2, color=:red)
+plot!(p1, collect(f_values) ./ 1e3, T_spectrum; label="T", linewidth=2, color=:blue)
 
 # Mark design frequency
-vline!(p1, [f0/1e3], color=:gray, linestyle=:dash, label="f₀", alpha=0.7)
+vline!(p1, [f0/1e3]; color=:gray, linestyle=:dash, label="f₀", alpha=0.7)
 
 # Highlight stopband
 in_stopband = R_spectrum .> 0.90
@@ -194,7 +198,7 @@ if any(in_stopband)
     last_idx = findlast(in_stopband)
     f_start = f_values[first_idx] / 1e3
     f_stop = f_values[last_idx] / 1e3
-    vspan!(p1, [f_start, f_stop], alpha=0.15, color=:yellow, label="Stopband")
+    vspan!(p1, [f_start, f_stop]; alpha=0.15, color=:yellow, label="Stopband")
 end
 
 savefig(p1, joinpath(@__DIR__, "603_phononic_spectrum.png"))
@@ -204,13 +208,13 @@ println("Saved: 603_phononic_spectrum.png")
 # Plot 2: Band Structure
 # ============================================================================
 
-p2 = plot(
+p2 = plot(;
     xlabel="Wave vector k (rad/m)",
     ylabel="Frequency (kHz)",
     title="Phononic Band Structure: Steel/Epoxy",
     legend=false,
     grid=true,
-    size=(800, 500)
+    size=(800, 500),
 )
 
 k_values = bands.distances
@@ -218,17 +222,17 @@ k_values = bands.distances
 for b in 1:size(bands.frequencies, 2)
     # Convert ω to frequency in kHz
     freqs_kHz = bands.frequencies[:, b] ./ (2π * 1e3)
-    plot!(p2, k_values, freqs_kHz, linewidth=2, color=:blue)
+    plot!(p2, k_values, freqs_kHz; linewidth=2, color=:blue)
 end
 
 # Highlight band gaps
 for i in 1:3
     band_i_max = maximum(bands.frequencies[:, i])
-    band_i1_min = minimum(bands.frequencies[:, i+1])
+    band_i1_min = minimum(bands.frequencies[:, i + 1])
     if band_i1_min > band_i_max
         f_lower = band_i_max / (2π * 1e3)
         f_upper = band_i1_min / (2π * 1e3)
-        hspan!(p2, [f_lower, f_upper], alpha=0.2, color=:yellow)
+        hspan!(p2, [f_lower, f_upper]; alpha=0.2, color=:yellow)
     end
 end
 
@@ -242,14 +246,14 @@ println("Saved: 603_phononic_bands.png")
 # Plot 3: Reflectivity vs Number of Pairs
 # ============================================================================
 
-p3 = plot(
+p3 = plot(;
     xlabel="Number of Pairs",
     ylabel="Reflectivity at f₀ (%)",
     title="Phononic Bragg Mirror: Reflectivity vs Pairs",
     legend=false,
     grid=true,
     size=(800, 500),
-    ylim=(0, 105)
+    ylim=(0, 105),
 )
 
 pairs_list = 1:20
@@ -262,7 +266,15 @@ for np in pairs_list
     push!(R_vs_pairs, 100 * result_np.R)
 end
 
-plot!(p3, collect(pairs_list), R_vs_pairs, linewidth=2, color=:blue, marker=:circle, markersize=4)
+plot!(
+    p3,
+    collect(pairs_list),
+    R_vs_pairs;
+    linewidth=2,
+    color=:blue,
+    marker=:circle,
+    markersize=4,
+)
 
 savefig(p3, joinpath(@__DIR__, "603_phononic_pairs.png"))
 println("Saved: 603_phononic_pairs.png")

@@ -60,7 +60,7 @@ nk = 100
 nbands = 4
 
 # k-path: -0.5 to 0.5 in units of 2π/a (full first Brillouin zone)
-k_normalized = range(-0.5, 0.5, length=nk)
+k_normalized = range(-0.5, 0.5; length=nk)
 k_values = k_normalized .* (2π / a)
 
 println("Computational parameters:")
@@ -88,8 +88,12 @@ for (i, k) in enumerate(k_values)
     freqs1[i, :] = ω ./ (2π)  # Normalized frequency ωa/(2πc)
 end
 
-println("  Band 1 range: [$(round(minimum(freqs1[:,1]), digits=4)), $(round(maximum(freqs1[:,1]), digits=4))]")
-println("  Band 2 range: [$(round(minimum(freqs1[:,2]), digits=4)), $(round(maximum(freqs1[:,2]), digits=4))]")
+println(
+    "  Band 1 range: [$(round(minimum(freqs1[:,1]), digits=4)), $(round(maximum(freqs1[:,1]), digits=4))]",
+)
+println(
+    "  Band 2 range: [$(round(minimum(freqs1[:,2]), digits=4)), $(round(maximum(freqs1[:,2]), digits=4))]",
+)
 println("  Expected: Linear dispersion ω = c|k|/√ε, no band gap")
 println()
 
@@ -172,8 +176,16 @@ println()
 println("| Structure       | PhoXonic Gap      | Book (approx)   | Status |")
 println("|-----------------|-------------------|-----------------|--------|")
 @printf("| GaAs Bulk       | No gap            | No gap          |   ✓    |\n")
-@printf("| GaAs/GaAlAs     | [%.3f, %.3f]    | ~[0.15, 0.20]   |   ✓    |\n", band1_max_2, band2_min_2)
-@printf("| GaAs/Air        | [%.3f, %.3f]    | ~[0.15, 0.25]   |   ✓    |\n", band1_max_3, band2_min_3)
+@printf(
+    "| GaAs/GaAlAs     | [%.3f, %.3f]    | ~[0.15, 0.20]   |   ✓    |\n",
+    band1_max_2,
+    band2_min_2
+)
+@printf(
+    "| GaAs/Air        | [%.3f, %.3f]    | ~[0.15, 0.25]   |   ✓    |\n",
+    band1_max_3,
+    band2_min_3
+)
 println()
 
 # ============================================================================
@@ -189,56 +201,62 @@ ymax = max(maximum(freqs1), maximum(freqs2), maximum(freqs3)) * 1.05
 ylims_common = (0, ymax)
 
 # Case 1: GaAs Bulk
-p1 = plot(
+p1 = plot(;
     xlabel="Wave vector (ka/2π)",
     ylabel="Frequency (ωa/2πc)",
     title="GaAs Bulk (ε=13)",
     legend=false,
     grid=true,
-    ylims=ylims_common
+    ylims=ylims_common,
 )
 for b in 1:nbands
-    plot!(p1, k_normalized, freqs1[:, b], linewidth=2, color=:blue)
+    plot!(p1, k_normalized, freqs1[:, b]; linewidth=2, color=:blue)
 end
-vline!(p1, [-0.5, 0, 0.5], color=:gray, linestyle=:dash, alpha=0.5)
+vline!(p1, [-0.5, 0, 0.5]; color=:gray, linestyle=:dash, alpha=0.5)
 
 # Case 2: GaAs/GaAlAs
-p2 = plot(
+p2 = plot(;
     xlabel="Wave vector (ka/2π)",
     ylabel="Frequency (ωa/2πc)",
     title="GaAs/GaAlAs (ε=13/12)",
     legend=false,
     grid=true,
-    ylims=ylims_common
+    ylims=ylims_common,
 )
 for b in 1:nbands
-    plot!(p2, k_normalized, freqs2[:, b], linewidth=2, color=:blue)
+    plot!(p2, k_normalized, freqs2[:, b]; linewidth=2, color=:blue)
 end
-vline!(p2, [-0.5, 0, 0.5], color=:gray, linestyle=:dash, alpha=0.5)
+vline!(p2, [-0.5, 0, 0.5]; color=:gray, linestyle=:dash, alpha=0.5)
 if gap2 > 0
-    hspan!(p2, [band1_max_2, band2_min_2], alpha=0.2, color=:yellow, label="")
+    hspan!(p2, [band1_max_2, band2_min_2]; alpha=0.2, color=:yellow, label="")
 end
 
 # Case 3: GaAs/Air
-p3 = plot(
+p3 = plot(;
     xlabel="Wave vector (ka/2π)",
     ylabel="Frequency (ωa/2πc)",
     title="GaAs/Air (ε=13/1)",
     legend=false,
     grid=true,
-    ylims=ylims_common
+    ylims=ylims_common,
 )
 for b in 1:nbands
-    plot!(p3, k_normalized, freqs3[:, b], linewidth=2, color=:blue)
+    plot!(p3, k_normalized, freqs3[:, b]; linewidth=2, color=:blue)
 end
-vline!(p3, [-0.5, 0, 0.5], color=:gray, linestyle=:dash, alpha=0.5)
+vline!(p3, [-0.5, 0, 0.5]; color=:gray, linestyle=:dash, alpha=0.5)
 if gap3 > 0
-    hspan!(p3, [band1_max_3, band2_min_3], alpha=0.2, color=:yellow, label="")
+    hspan!(p3, [band1_max_3, band2_min_3]; alpha=0.2, color=:yellow, label="")
 end
 
 # Combined plot
-p_combined = plot(p1, p2, p3, layout=(1, 3), size=(1400, 400),
-    plot_title="1D Photonic Crystal: Joannopoulos Ch.4 Fig.2")
+p_combined = plot(
+    p1,
+    p2,
+    p3;
+    layout=(1, 3),
+    size=(1400, 400),
+    plot_title="1D Photonic Crystal: Joannopoulos Ch.4 Fig.2",
+)
 
 savefig(p_combined, joinpath(@__DIR__, "311_joannopoulos_ch4_fig2.png"))
 println("Saved: 311_joannopoulos_ch4_fig2.png")

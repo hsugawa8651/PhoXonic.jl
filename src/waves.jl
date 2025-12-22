@@ -267,8 +267,9 @@ Return the structure trait for a wave type.
 Enables dispatch based on dimensionality and number of components.
 """
 # Error fallback for unsupported wave types
-wave_structure(w::WaveType) =
+function wave_structure(w::WaveType)
     throw(ArgumentError("Unsupported wave type for wave_structure: $(typeof(w))"))
+end
 
 wave_structure(::TEWave) = ScalarWave2D()
 wave_structure(::TMWave) = ScalarWave2D()
@@ -289,8 +290,9 @@ wave_structure(::Longitudinal1D) = ScalarWave1D()
 Return the number of field components for a wave type.
 """
 # Error fallback for unsupported wave types
-ncomponents(w::WaveType) =
+function ncomponents(w::WaveType)
     throw(ArgumentError("Unsupported wave type for ncomponents: $(typeof(w))"))
+end
 
 ncomponents(::TEWave) = 1
 ncomponents(::TMWave) = 1
@@ -307,8 +309,9 @@ ncomponents(::FullElastic) = 3
 Return the applicable dimension type for a wave type.
 """
 # Error fallback for unsupported wave types
-applicable_dimension(::Type{W}) where W<:WaveType =
+function applicable_dimension(::Type{W}) where {W<:WaveType}
     throw(ArgumentError("Unsupported wave type for applicable_dimension: $W"))
+end
 
 applicable_dimension(::Type{TEWave}) = Dim2
 applicable_dimension(::Type{TMWave}) = Dim2

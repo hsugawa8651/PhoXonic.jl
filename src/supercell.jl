@@ -36,15 +36,18 @@ end
 
 Replicate inclusions over the supercell, optionally skipping certain positions.
 """
-function _replicate_inclusions(inclusions::Vector{<:Tuple{Shape{Dim1}, Material}},
-                                lat::Lattice{Dim1}, size::Tuple{Int};
-                                skip_positions::Vector{Tuple{Int}}=Tuple{Int}[])
+function _replicate_inclusions(
+    inclusions::Vector{<:Tuple{Shape{Dim1},Material}},
+    lat::Lattice{Dim1},
+    size::Tuple{Int};
+    skip_positions::Vector{Tuple{Int}}=Tuple{Int}[],
+)
     Nx = size[1]
     a1 = lat.vectors[1]
-    result = Tuple{Shape{Dim1}, Material}[]
+    result = Tuple{Shape{Dim1},Material}[]
 
     for (shape, mat) in inclusions
-        for i in 0:(Nx-1)
+        for i in 0:(Nx - 1)
             if (i,) in skip_positions
                 continue
             end
@@ -56,15 +59,18 @@ function _replicate_inclusions(inclusions::Vector{<:Tuple{Shape{Dim1}, Material}
     return result
 end
 
-function _replicate_inclusions(inclusions::Vector{<:Tuple{Shape{Dim2}, Material}},
-                                lat::Lattice{Dim2}, size::NTuple{2,Int};
-                                skip_positions::Vector{NTuple{2,Int}}=NTuple{2,Int}[])
+function _replicate_inclusions(
+    inclusions::Vector{<:Tuple{Shape{Dim2},Material}},
+    lat::Lattice{Dim2},
+    size::NTuple{2,Int};
+    skip_positions::Vector{NTuple{2,Int}}=NTuple{2,Int}[],
+)
     Nx, Ny = size
     a1, a2 = lat.vectors
-    result = Tuple{Shape{Dim2}, Material}[]
+    result = Tuple{Shape{Dim2},Material}[]
 
     for (shape, mat) in inclusions
-        for i in 0:(Nx-1), j in 0:(Ny-1)
+        for i in 0:(Nx - 1), j in 0:(Ny - 1)
             if (i, j) in skip_positions
                 continue
             end
@@ -76,15 +82,18 @@ function _replicate_inclusions(inclusions::Vector{<:Tuple{Shape{Dim2}, Material}
     return result
 end
 
-function _replicate_inclusions(inclusions::Vector{<:Tuple{Shape{Dim3}, Material}},
-                                lat::Lattice{Dim3}, size::NTuple{3,Int};
-                                skip_positions::Vector{NTuple{3,Int}}=NTuple{3,Int}[])
+function _replicate_inclusions(
+    inclusions::Vector{<:Tuple{Shape{Dim3},Material}},
+    lat::Lattice{Dim3},
+    size::NTuple{3,Int};
+    skip_positions::Vector{NTuple{3,Int}}=NTuple{3,Int}[],
+)
     Nx, Ny, Nz = size
     a1, a2, a3 = lat.vectors
-    result = Tuple{Shape{Dim3}, Material}[]
+    result = Tuple{Shape{Dim3},Material}[]
 
     for (shape, mat) in inclusions
-        for i in 0:(Nx-1), j in 0:(Ny-1), k in 0:(Nz-1)
+        for i in 0:(Nx - 1), j in 0:(Ny - 1), k in 0:(Nz - 1)
             if (i, j, k) in skip_positions
                 continue
             end
@@ -135,33 +144,44 @@ geo_defect = create_supercell(geo, (5, 5); point_defects=[(2, 2)])
 
 See also: [`translate`](@ref), [`line_defect_positions`](@ref)
 """
-function create_supercell(geo::Geometry{Dim1}, size::Tuple{Int};
-                          point_defects::Vector{Tuple{Int}}=Tuple{Int}[])
+function create_supercell(
+    geo::Geometry{Dim1}, size::Tuple{Int}; point_defects::Vector{Tuple{Int}}=Tuple{Int}[]
+)
     new_lat = _supercell_lattice(geo.lattice, size)
-    new_inclusions = _replicate_inclusions(geo.inclusions, geo.lattice, size;
-                                           skip_positions=point_defects)
+    new_inclusions = _replicate_inclusions(
+        geo.inclusions, geo.lattice, size; skip_positions=point_defects
+    )
     Geometry(new_lat, geo.background, new_inclusions)
 end
 
-function create_supercell(geo::Geometry{Dim2}, size::NTuple{2,Int};
-                          point_defects::Vector{NTuple{2,Int}}=NTuple{2,Int}[])
+function create_supercell(
+    geo::Geometry{Dim2},
+    size::NTuple{2,Int};
+    point_defects::Vector{NTuple{2,Int}}=NTuple{2,Int}[],
+)
     new_lat = _supercell_lattice(geo.lattice, size)
-    new_inclusions = _replicate_inclusions(geo.inclusions, geo.lattice, size;
-                                           skip_positions=point_defects)
+    new_inclusions = _replicate_inclusions(
+        geo.inclusions, geo.lattice, size; skip_positions=point_defects
+    )
     Geometry(new_lat, geo.background, new_inclusions)
 end
 
-function create_supercell(geo::Geometry{Dim3}, size::NTuple{3,Int};
-                          point_defects::Vector{NTuple{3,Int}}=NTuple{3,Int}[])
+function create_supercell(
+    geo::Geometry{Dim3},
+    size::NTuple{3,Int};
+    point_defects::Vector{NTuple{3,Int}}=NTuple{3,Int}[],
+)
     new_lat = _supercell_lattice(geo.lattice, size)
-    new_inclusions = _replicate_inclusions(geo.inclusions, geo.lattice, size;
-                                           skip_positions=point_defects)
+    new_inclusions = _replicate_inclusions(
+        geo.inclusions, geo.lattice, size; skip_positions=point_defects
+    )
     Geometry(new_lat, geo.background, new_inclusions)
 end
 
 # Convenience: allow integer for 1D
-create_supercell(geo::Geometry{Dim1}, n::Int; kwargs...) =
+function create_supercell(geo::Geometry{Dim1}, n::Int; kwargs...)
     create_supercell(geo, (n,); kwargs...)
+end
 
 # ============================================================================
 # Line defect helper
@@ -196,10 +216,10 @@ function line_defect_positions(direction::Symbol, index::Int, size::NTuple{2,Int
     Nx, Ny = size
     if direction == :x
         # Horizontal line: all cells at row j=index
-        return [(i, index) for i in 0:(Nx-1)]
+        return [(i, index) for i in 0:(Nx - 1)]
     elseif direction == :y
         # Vertical line: all cells at column i=index
-        return [(index, j) for j in 0:(Ny-1)]
+        return [(index, j) for j in 0:(Ny - 1)]
     else
         error("Unknown direction: $direction. Use :x or :y for 2D.")
     end
@@ -211,13 +231,13 @@ function line_defect_positions(direction::Symbol, index::Int, size::NTuple{3,Int
         # Line along x-axis at (y=index[1], z=index[2]) - but index is single Int
         # For simplicity, assume index is for the y-direction, z=Nz÷2
         z_idx = Nz ÷ 2
-        return [(i, index, z_idx) for i in 0:(Nx-1)]
+        return [(i, index, z_idx) for i in 0:(Nx - 1)]
     elseif direction == :y
         x_idx = Nx ÷ 2
-        return [(x_idx, j, index) for j in 0:(Ny-1)]
+        return [(x_idx, j, index) for j in 0:(Ny - 1)]
     elseif direction == :z
         x_idx = Nx ÷ 2
-        return [(x_idx, index, k) for k in 0:(Nz-1)]
+        return [(x_idx, index, k) for k in 0:(Nz - 1)]
     else
         error("Unknown direction: $direction. Use :x, :y, or :z for 3D.")
     end
@@ -234,15 +254,17 @@ end
 positions = line_defect_positions(:x, (2, 3), (7, 5, 5))
 ```
 """
-function line_defect_positions(direction::Symbol, indices::NTuple{2,Int}, size::NTuple{3,Int})
+function line_defect_positions(
+    direction::Symbol, indices::NTuple{2,Int}, size::NTuple{3,Int}
+)
     Nx, Ny, Nz = size
     idx1, idx2 = indices
     if direction == :x
-        return [(i, idx1, idx2) for i in 0:(Nx-1)]
+        return [(i, idx1, idx2) for i in 0:(Nx - 1)]
     elseif direction == :y
-        return [(idx1, j, idx2) for j in 0:(Ny-1)]
+        return [(idx1, j, idx2) for j in 0:(Ny - 1)]
     elseif direction == :z
-        return [(idx1, idx2, k) for k in 0:(Nz-1)]
+        return [(idx1, idx2, k) for k in 0:(Nz - 1)]
     else
         error("Unknown direction: $direction. Use :x, :y, or :z for 3D.")
     end

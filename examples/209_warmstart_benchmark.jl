@@ -23,8 +23,8 @@ println()
 μ_epoxy = 0.148e10
 λ_epoxy = 0.754e10 - 2*μ_epoxy
 
-steel = IsotropicElastic(ρ=ρ_steel, λ=λ_steel, μ=μ_steel)
-epoxy = IsotropicElastic(ρ=ρ_epoxy, λ=λ_epoxy, μ=μ_epoxy)
+steel = IsotropicElastic(; ρ=ρ_steel, λ=λ_steel, μ=μ_steel)
+epoxy = IsotropicElastic(; ρ=ρ_epoxy, λ=λ_epoxy, μ=μ_epoxy)
 
 a = 1.0
 lat = hexagonal_lattice(a)
@@ -46,7 +46,7 @@ println("Plane waves: $num_pw")
 println("Matrix size: $dim × $dim")
 
 # k-path
-kpath = simple_kpath_hexagonal(a=a, npoints=30)
+kpath = simple_kpath_hexagonal(; a=a, npoints=30)
 k_points = kpath.points
 n_kpts = length(k_points)
 println("k-points: $n_kpts")
@@ -142,8 +142,7 @@ t_random = @elapsed begin
         # Random initial vectors
         X0 = create_random_init(dim, nbands)
 
-        results = IterativeSolvers.lobpcg(A, B, false, X0;
-                                          tol=tol, maxiter=maxiter)
+        results = IterativeSolvers.lobpcg(A, B, false, X0; tol=tol, maxiter=maxiter)
 
         λ_vals = results.λ
         ω² = real.(λ_vals)
@@ -203,8 +202,9 @@ t_warmstart = @elapsed begin
             X0, _ = qr(X0)
             X0 = Matrix(X0)
 
-            results = IterativeSolvers.lobpcg(A_scaled, B_scaled, false, X0;
-                                              P=P, tol=tol, maxiter=maxiter)
+            results = IterativeSolvers.lobpcg(
+                A_scaled, B_scaled, false, X0; P=P, tol=tol, maxiter=maxiter
+            )
 
             # Rescale eigenvalues back to original
             λ_scaled = results.λ
@@ -264,51 +264,70 @@ error_warmstart = maximum(abs.(freqs_warmstart - freqs_dense))
 @printf("%-25s %12s %12s %12s\n", "Method", "Time (s)", "Speedup", "Max Error")
 println("-" ^ 60)
 @printf("%-25s %12.2f %12s %12s\n", "Dense (reference)", t_dense, "1.0x", "-")
-@printf("%-25s %12.2f %12.2fx %12.1f\n", "LOBPCG (random)", t_random, t_dense/t_random, error_random)
-@printf("%-25s %12.2f %12.2fx %12.1f\n", "LOBPCG (warm start)", t_warmstart, t_dense/t_warmstart, error_warmstart)
+@printf(
+    "%-25s %12.2f %12.2fx %12.1f\n",
+    "LOBPCG (random)",
+    t_random,
+    t_dense/t_random,
+    error_random
+)
+@printf(
+    "%-25s %12.2f %12.2fx %12.1f\n",
+    "LOBPCG (warm start)",
+    t_warmstart,
+    t_dense/t_warmstart,
+    error_warmstart
+)
 println("=" ^ 60)
 
 # ============================================================================
 # Plot: Iteration count comparison
 # ============================================================================
-p1 = plot(
+p1 = plot(;
     xlabel="k-point index",
     ylabel="Iterations",
     title="LOBPCG Iterations per k-point",
     legend=:topright,
-    size=(600, 400)
+    size=(600, 400),
 )
 
-plot!(p1, 1:n_kpts, iters_random, label="Random init", marker=:circle, markersize=3)
-plot!(p1, 1:n_kpts, iters_warmstart, label="Warm start", marker=:square, markersize=3)
+plot!(p1, 1:n_kpts, iters_random; label="Random init", marker=:circle, markersize=3)
+plot!(p1, 1:n_kpts, iters_warmstart; label="Warm start", marker=:square, markersize=3)
 
 # ============================================================================
 # Plot: Band structure comparison
 # ============================================================================
 dists = kpath.distances
 
-p2 = plot(
+p2 = plot(;
     xlabel="Wave Vector",
     ylabel="ω (rad/s)",
     title="Band Structure Comparison",
     legend=:topright,
-    size=(600, 400)
+    size=(600, 400),
 )
 
 for b in 1:nbands
     if b == 1
-        plot!(p2, dists, freqs_dense[:, b], color=:black, linewidth=2, label="Dense")
-        plot!(p2, dists, freqs_warmstart[:, b], color=:red, linestyle=:dash, label="Warm start")
+        plot!(p2, dists, freqs_dense[:, b]; color=:black, linewidth=2, label="Dense")
+        plot!(
+            p2,
+            dists,
+            freqs_warmstart[:, b];
+            color=:red,
+            linestyle=:dash,
+            label="Warm start",
+        )
     else
-        plot!(p2, dists, freqs_dense[:, b], color=:black, linewidth=2, label="")
-        plot!(p2, dists, freqs_warmstart[:, b], color=:red, linestyle=:dash, label="")
+        plot!(p2, dists, freqs_dense[:, b]; color=:black, linewidth=2, label="")
+        plot!(p2, dists, freqs_warmstart[:, b]; color=:red, linestyle=:dash, label="")
     end
 end
 
 # ============================================================================
 # Combined plot
 # ============================================================================
-p_combined = plot(p1, p2, layout=(1, 2), size=(1100, 400))
+p_combined = plot(p1, p2; layout=(1, 2), size=(1100, 400))
 
 savefig(p_combined, joinpath(@__DIR__, "209_warmstart_benchmark.png"))
 println("\nSaved: 209_warmstart_benchmark.png")
@@ -319,7 +338,11 @@ println("\nSaved: 209_warmstart_benchmark.png")
 println("\nIteration Statistics:")
 println("  Random init:")
 println("    First k-point: $(iters_random[1])")
-println("    Min: $(minimum(iters_random)), Max: $(maximum(iters_random)), Avg: $(round(mean(iters_random), digits=1))")
+println(
+    "    Min: $(minimum(iters_random)), Max: $(maximum(iters_random)), Avg: $(round(mean(iters_random), digits=1))",
+)
 println("  Warm start:")
 println("    First k-point: $(iters_warmstart[1])")
-println("    Min: $(minimum(iters_warmstart)), Max: $(maximum(iters_warmstart)), Avg: $(round(mean(iters_warmstart), digits=1))")
+println(
+    "    Min: $(minimum(iters_warmstart)), Max: $(maximum(iters_warmstart)), Avg: $(round(mean(iters_warmstart), digits=1))",
+)

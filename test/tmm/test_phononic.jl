@@ -8,8 +8,8 @@ using LinearAlgebra
 # Steel: ρ = 7800 kg/m³, c_L ≈ 5960 m/s
 # Epoxy: ρ = 1180 kg/m³, c_L ≈ 2540 m/s
 
-const STEEL = IsotropicElastic(ρ=7800.0, λ=115e9, μ=82e9)
-const EPOXY = IsotropicElastic(ρ=1180.0, λ=4.43e9, μ=1.59e9)
+const STEEL = IsotropicElastic(; ρ=7800.0, λ=115e9, μ=82e9)
+const EPOXY = IsotropicElastic(; ρ=1180.0, λ=4.43e9, μ=1.59e9)
 
 @testset "Acoustic impedance" begin
     @testset "Definition Z = ρc" begin
@@ -289,7 +289,8 @@ end
         @test issorted(ω_tmm_X)
 
         # Both should show a gap (band2_min > band1_max)
-        gap_tmm = minimum(bands_tmm.frequencies[:, 2]) - maximum(bands_tmm.frequencies[:, 1])
+        gap_tmm =
+            minimum(bands_tmm.frequencies[:, 2]) - maximum(bands_tmm.frequencies[:, 1])
         @test gap_tmm > 0
     end
 end
