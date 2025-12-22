@@ -962,8 +962,13 @@ function _solve_krylovkit(
     σ = method.shift
 
     if σ > 0
-        # Shift-and-invert mode: use dense matrices with factorization
-        _solve_krylovkit_shifted(solver, k, method, bands)
+        if method.matrix_free
+            # Shift-and-invert mode: matrix-free with iterative inner solver
+            _solve_krylovkit_shifted_matrixfree(solver, k, method, bands)
+        else
+            # Shift-and-invert mode: use dense matrices with factorization
+            _solve_krylovkit_shifted(solver, k, method, bands)
+        end
     else
         # Standard mode: use matrix-free operators
         _solve_krylovkit_standard(solver, k, method, bands)
@@ -1168,6 +1173,133 @@ function _solve_krylovkit_shifted(
     # Check convergence
     if length(positive_indices) < nev && method.verbosity > 0
         @warn "KrylovKit (shifted): Only $(length(positive_indices)) eigenvalues found above shift"
+    end
+
+    # Convert back to original eigenvalues: λ = σ + 1/μ
+    λ_vals = σ .+ 1.0 ./ real.(μ_positive)
+
+    # Convert to frequencies
+    ω² = max.(λ_vals, 0.0)  # Handle small negative values
+    frequencies = sqrt.(ω²)
+
+    # Build eigenvector matrix
+    eigenvectors = stack(vecs_positive)
+
+    # Sort by frequency (smallest first)
+    perm = sortperm(frequencies)
+    frequencies = frequencies[perm]
+    eigenvectors = eigenvectors[:, perm]
+
+    # Select requested bands (uses multiple dispatch)
+    return _select_first_bands(frequencies, eigenvectors, bands)
+end
+
+"""
+    _solve_krylovkit_shifted_matrixfree(solver, k, method, bands)
+
+Matrix-free shift-and-invert eigenvalue solver.
+
+Unlike `_solve_krylovkit_shifted`, this version uses O(N) memory instead of O(N²)
+by avoiding explicit construction of dense matrices. Instead, it uses:
+1. Matrix-free operators (apply_lhs!, apply_rhs!) via FFT
+2. Iterative inner solver (Krylov.cg) to solve (A - σB)y = Bx
+
+This is particularly useful for large 3D calculations where dense matrix storage
+becomes prohibitive.
+
+# Algorithm
+1. Create matrix-free ShiftedOperator S = (A - σB)
+2. For each application of (A - σB)⁻¹ B x:
+   a. Compute z = B x using apply_rhs!
+   b. Solve S y = z using iterative CG
+3. Use KrylovKit.eigsolve with :LR to find largest μ = 1/(λ - σ)
+4. Convert back: λ = σ + 1/μ
+
+# Memory Complexity
+| Component | Dense | Matrix-Free |
+|-----------|-------|-------------|
+| LHS, RHS  | O(N²) | O(N)        |
+| Shifted   | O(N²) | O(N)        |
+| LU factor | O(N²) | N/A         |
+| Total     | ~3N²  | ~4N         |
+"""
+function _solve_krylovkit_shifted_matrixfree(
+    solver::Solver{D,W}, k::Vector{Float64}, method::KrylovKitMethod, bands
+) where {D,W}
+    σ = method.shift
+
+    # Create matrix-free operator
+    op = MatrixFreeOperator(solver, k)
+    N = solver.basis.num_pw
+    nc = ncomponents(solver.wave)
+    dim = N * nc
+
+    # Number of eigenvalues to compute
+    nev = _nev(bands, dim)
+
+    # Create shifted operator S = (A - σB)
+    S = ShiftedOperator(op, σ)
+
+    # Temporary vectors for B*x computation
+    z = zeros(ComplexF64, dim)
+
+    # Inner solver tolerance (tighter than outer)
+    inner_tol = method.tol * 0.1
+    inner_maxiter = 500
+
+    # Function: (A - σB)⁻¹ B x
+    function shifted_inv_B(x)
+        # z = B * x
+        apply_rhs!(z, op, x)
+
+        # Solve (A - σB) y = z using CG
+        # Note: Krylov.cg expects real symmetric or complex Hermitian
+        y, stats = Krylov.cg(S, z; atol=inner_tol, rtol=inner_tol, itmax=inner_maxiter)
+
+        if !stats.solved && method.verbosity > 0
+            @warn "Inner CG solver did not converge: $(stats.status)"
+        end
+
+        return y
+    end
+
+    # Initial vector
+    x0 = randn(ComplexF64, dim)
+    x0 ./= norm(x0)
+
+    # Request more eigenvalues to ensure we get enough positive ones
+    nev_request = min(dim, nev * 3 + 10)
+
+    # For eigenvalues λ > σ, we have μ = 1/(λ-σ) > 0
+    # For eigenvalues λ < σ, we have μ < 0
+    # We want positive μ (largest real), which gives λ closest to σ from above
+    μ_vals, vecs, info = KrylovKit.eigsolve(
+        shifted_inv_B,
+        x0,
+        nev_request,
+        :LR;  # Largest Real (positive μ)
+        tol=method.tol,
+        maxiter=method.maxiter,
+        krylovdim=max(method.krylovdim, nev_request + 10),
+        verbosity=method.verbosity,
+        ishermitian=true,
+    )
+
+    # Filter for positive μ (corresponding to λ > σ)
+    positive_indices = findall(x -> real(x) > 0, μ_vals)
+
+    if isempty(positive_indices)
+        @warn "Matrix-free shifted: No eigenvalues found above shift σ = $σ. Try a smaller shift."
+        # Fall back to returning what we have
+        positive_indices = 1:min(nev, length(μ_vals))
+    end
+
+    μ_positive = μ_vals[positive_indices]
+    vecs_positive = vecs[positive_indices]
+
+    # Check convergence
+    if length(positive_indices) < nev && method.verbosity > 0
+        @warn "Matrix-free shifted: Only $(length(positive_indices)) eigenvalues found above shift"
     end
 
     # Convert back to original eigenvalues: λ = σ + 1/μ

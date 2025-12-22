@@ -728,6 +728,38 @@ using LinearAlgebra
             @test isapprox(ω[2], expected, rtol=0.01)  # Doubly degenerate
         end
 
+        @testset "Matrix-free shift-and-invert 3D" begin
+            lat = cubic_lattice(1.0)
+            air = Dielectric(1.0, 1.0)
+            geo = Geometry(lat, air)
+
+            # Dense shift-and-invert (reference)
+            solver_dense = Solver(
+                FullVectorEM(), geo, (8, 8, 8), KrylovKitMethod(shift=0.01); cutoff=2
+            )
+            # Matrix-free shift-and-invert
+            solver_matrixfree = Solver(
+                FullVectorEM(),
+                geo,
+                (8, 8, 8),
+                KrylovKitMethod(shift=0.01, matrix_free=true);
+                cutoff=2,
+            )
+            k = [0.5, 0.3, 0.2]
+
+            ω_dense, _ = solve(solver_dense, k; bands=1:3)
+            ω_matrixfree, _ = solve(solver_matrixfree, k; bands=1:3)
+
+            # Results should match
+            for i in 1:3
+                @test isapprox(ω_matrixfree[i], ω_dense[i], rtol=0.02)
+            end
+
+            # Both should give correct result for homogeneous medium
+            expected = norm(k)
+            @test isapprox(ω_matrixfree[1], expected, rtol=0.02)
+        end
+
         @testset "SHWave iterative vs dense" begin
             lat = square_lattice(0.01)
             epoxy = IsotropicElastic(ρ=1180.0, λ=4.43e9, μ=1.59e9)

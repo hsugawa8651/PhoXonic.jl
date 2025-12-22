@@ -129,6 +129,9 @@ effectively filters out these unphysical modes and focuses on the transverse
   - `shift = 0`: Standard generalized eigenvalue problem (no transformation)
   - `shift > 0`: Shift-and-invert, finds eigenvalues closest to σ
   - Recommended: `shift = 0.01` for 3D photonic crystals to skip longitudinal modes
+- `matrix_free::Bool`: Use matrix-free operators for shift-and-invert (default: false)
+  - `false`: Build dense matrices (faster for N < 2000)
+  - `true`: Use O(N) memory with iterative inner solver (for large 3D problems)
 
 # Example
 ```julia
@@ -150,10 +153,11 @@ struct KrylovKitMethod <: IterativeMethod
     krylovdim::Int
     verbosity::Int
     shift::Float64
+    matrix_free::Bool
 end
 
 """
-    KrylovKitMethod(; tol=1e-8, maxiter=300, krylovdim=30, verbosity=0, shift=0.0)
+    KrylovKitMethod(; tol=1e-8, maxiter=300, krylovdim=30, verbosity=0, shift=0.0, matrix_free=false)
 
 Create a KrylovKit-based iterative eigenvalue solver.
 
@@ -165,6 +169,9 @@ Create a KrylovKit-based iterative eigenvalue solver.
 - `shift`: Spectral shift for shift-and-invert transformation (default: 0.0)
   - Use `shift=0.01` for 3D photonic crystals to skip spurious longitudinal modes
   - Use larger values to target specific frequency ranges
+- `matrix_free`: Use matrix-free operators for shift-and-invert (default: false)
+  - `false`: Build dense matrices (faster for N < 2000, O(N²) memory)
+  - `true`: Use iterative inner solver (O(N) memory, for large 3D problems)
 
 # Example
 ```julia
@@ -173,12 +180,22 @@ solver = Solver(TEWave(), geo, (64, 64), KrylovKitMethod(); cutoff=10)
 
 # 3D with shift-and-invert to skip longitudinal modes
 solver = Solver(FullVectorEM(), geo, (16, 16, 16), KrylovKitMethod(shift=0.01); cutoff=3)
+
+# Large 3D with matrix-free shift-and-invert (memory-efficient)
+solver = Solver(FullVectorEM(), geo, (32, 32, 32), KrylovKitMethod(shift=0.01, matrix_free=true); cutoff=5)
 ```
 """
 function KrylovKitMethod(;
-    tol::Real=1e-8, maxiter::Int=300, krylovdim::Int=30, verbosity::Int=0, shift::Real=0.0
+    tol::Real=1e-8,
+    maxiter::Int=300,
+    krylovdim::Int=30,
+    verbosity::Int=0,
+    shift::Real=0.0,
+    matrix_free::Bool=false,
 )
-    KrylovKitMethod(Float64(tol), maxiter, krylovdim, verbosity, Float64(shift))
+    KrylovKitMethod(
+        Float64(tol), maxiter, krylovdim, verbosity, Float64(shift), matrix_free
+    )
 end
 
 """
