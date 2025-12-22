@@ -1,13 +1,26 @@
-# Last-Modified: 2025-12-14T18:01:04+09:00
+# Last-Modified: 2025-12-22T23:00:00+09:00
 
 #=
 Eigenvalue problem solver for photonic and phononic crystals.
 =#
 
 """
-    Solver{D<:Dimension, W<:WaveType, M<:SolverMethod}
+    AbstractSolver
 
-Solver for computing band structures of photonic/phononic crystals.
+Abstract base type for all solvers in PhoXonic.jl.
+
+Subtypes:
+- `Solver`: Plane wave expansion (PWE) solver
+
+This abstract type allows for future extensions (e.g., GME solver).
+"""
+abstract type AbstractSolver end
+
+"""
+    Solver{D<:Dimension, W<:WaveType, M<:SolverMethod} <: AbstractSolver
+
+Solver for computing band structures of photonic/phononic crystals using
+the plane wave expansion (PWE) method.
 
 # Fields
 - `wave`: Wave type (TE, TM, SH, etc.)
@@ -17,7 +30,7 @@ Solver for computing band structures of photonic/phononic crystals.
 - `material_arrays`: Pre-computed material arrays on the grid
 - `method`: Solver method (DenseMethod(), BasicRSCG(), etc.)
 """
-struct Solver{D<:Dimension,W<:WaveType,M<:SolverMethod}
+struct Solver{D<:Dimension,W<:WaveType,M<:SolverMethod} <: AbstractSolver
     wave::W
     geometry::Geometry{D}
     basis::PlaneWaveBasis{D}
@@ -583,6 +596,106 @@ function build_matrices(solver::Solver{Dim3,FullElastic}, k::AbstractVector{<:Re
 end
 
 # ============================================================================
+# get_weight_matrix: Return weight matrix for inner products
+# ============================================================================
+
+"""
+    get_weight_matrix(solver::Solver)
+
+Return the weight matrix W for computing inner products of eigenvectors.
+
+The weight matrix is the RHS matrix of the generalized eigenvalue problem
+(LHS * v = ω² * RHS * v). It defines the inner product in the function space:
+for eigenvectors v₁ and v₂, the overlap is computed as v₁' * W * v₂.
+
+For normalized eigenvectors from `solve_at_k_with_vectors`, we have:
+`vecs' * W * vecs ≈ I`
+
+# Weight matrices by wave type:
+| WaveType | W |
+|----------|---|
+| TE | μ (permeability) |
+| TM | ε (permittivity) |
+| SH | ρ (density) |
+| PSV | diag(ρ, ρ) |
+| FullVectorEM | diag(ε, ε, ε) |
+| FullElastic | diag(ρ, ρ, ρ) |
+| Photonic1D | ε |
+| Longitudinal1D | ρ |
+
+# Returns
+- `W::Matrix{ComplexF64}`: Weight matrix
+
+# Example
+```julia
+W = get_weight_matrix(solver)
+ω, vecs = solve_at_k_with_vectors(solver, k, DenseMethod(); bands=1:4)
+overlap = vecs' * W * vecs  # ≈ I(4)
+```
+
+See also: [`solve_at_k_with_vectors`](@ref), [`build_matrices`](@ref)
+"""
+function get_weight_matrix(solver::Solver{Dim2,TEWave})
+    # TE: W = μ (permeability convolution matrix)
+    return convolution_matrix(solver.material_arrays.μ, solver.basis)
+end
+
+function get_weight_matrix(solver::Solver{Dim2,TMWave})
+    # TM: W = ε (permittivity convolution matrix)
+    return convolution_matrix(solver.material_arrays.ε, solver.basis)
+end
+
+function get_weight_matrix(solver::Solver{Dim2,SHWave})
+    # SH: W = ρ (density convolution matrix)
+    return convolution_matrix(solver.material_arrays.ρ, solver.basis)
+end
+
+function get_weight_matrix(solver::Solver{Dim2,PSVWave})
+    # PSV: W = diag(ρ, ρ)
+    N = solver.basis.num_pw
+    ρ_c = convolution_matrix(solver.material_arrays.ρ, solver.basis)
+    Z = zeros(ComplexF64, N, N)
+    return [
+        ρ_c Z
+        Z ρ_c
+    ]
+end
+
+function get_weight_matrix(solver::Solver{Dim1,Photonic1D})
+    # 1D Photonic: W = μ (consistent with RHS in build_matrices)
+    return convolution_matrix(solver.material_arrays.μ, solver.basis)
+end
+
+function get_weight_matrix(solver::Solver{Dim1,Longitudinal1D})
+    # 1D Elastic: W = ρ
+    return convolution_matrix(solver.material_arrays.ρ, solver.basis)
+end
+
+function get_weight_matrix(solver::Solver{Dim3,FullVectorEM})
+    # 3D EM: W = diag(μ, μ, μ) (consistent with RHS in build_matrices)
+    N = solver.basis.num_pw
+    μ_c = convolution_matrix(solver.material_arrays.μ, solver.basis)
+    Z = zeros(ComplexF64, N, N)
+    return [
+        μ_c Z Z
+        Z μ_c Z
+        Z Z μ_c
+    ]
+end
+
+function get_weight_matrix(solver::Solver{Dim3,FullElastic})
+    # 3D Elastic: W = diag(ρ, ρ, ρ)
+    N = solver.basis.num_pw
+    ρ_c = convolution_matrix(solver.material_arrays.ρ, solver.basis)
+    Z = zeros(ComplexF64, N, N)
+    return [
+        ρ_c Z Z
+        Z ρ_c Z
+        Z Z ρ_c
+    ]
+end
+
+# ============================================================================
 # Solve eigenvalue problem
 # ============================================================================
 
@@ -628,10 +741,12 @@ end
 # ============================================================================
 
 """
-    solve_at_k(solver, k, method; bands=1:10, X0=nothing, P=nothing, return_eigenvectors=false)
+    solve_at_k(solver, k, method; bands=1:10, X0=nothing, P=nothing)
 
 Solve eigenvalue problem at a single k-point with explicit control over method,
-initial vectors, and preconditioner.
+initial vectors, and preconditioner. Returns only frequencies.
+
+For eigenvectors, use [`solve_at_k_with_vectors`](@ref) instead.
 
 # Arguments
 - `solver::Solver`: Solver instance
@@ -646,12 +761,9 @@ initial vectors, and preconditioner.
   - If `nothing`, random orthonormal vectors are used
 - `P`: Preconditioner (default: nothing = use method's preconditioner setting)
   - Must implement `ldiv!(y, P, x)`
-- `return_eigenvectors::Bool`: If true, return (frequencies, eigenvectors) (default: false)
 
 # Returns
-- If `return_eigenvectors=false`: Vector of frequencies
-- If `return_eigenvectors=true`: Tuple (frequencies, eigenvectors)
-  - eigenvectors: `dim × nev` matrix
+- `Vector{Float64}`: Frequencies for the requested bands
 
 # Example
 ```julia
@@ -661,13 +773,8 @@ dim = matrix_dimension(solver)  # 2514 for cutoff=20
 # Frequencies only
 freqs = solve_at_k(solver, k, LOBPCGMethod(); bands=1:20)
 
-# With eigenvectors (for warm start)
-freqs, vecs = solve_at_k(solver, k, DenseMethod();
-                         bands=1:20, return_eigenvectors=true)
-
-# Manual warm start
-freqs2, vecs2 = solve_at_k(solver, k_next, LOBPCGMethod();
-                           bands=1:20, X0=vecs, return_eigenvectors=true)
+# With eigenvectors - use solve_at_k_with_vectors
+freqs, vecs = solve_at_k_with_vectors(solver, k, DenseMethod(); bands=1:20)
 
 # Custom preconditioner
 using LinearAlgebra
@@ -676,23 +783,51 @@ P = Diagonal(1.0 ./ diag(LHS))
 freqs = solve_at_k(solver, k, LOBPCGMethod(); bands=1:20, P=P)
 ```
 
-See also: [`solve`](@ref), [`matrix_dimension`](@ref), [`compute_bands`](@ref)
+See also: [`solve_at_k_with_vectors`](@ref), [`solve`](@ref), [`matrix_dimension`](@ref)
 """
 function solve_at_k(
-    solver::Solver,
-    k,
-    method::SolverMethod;
-    bands=1:10,
-    X0=nothing,
-    P=nothing,
-    return_eigenvectors::Bool=false,
+    solver::Solver, k, method::SolverMethod; bands=1:10, X0=nothing, P=nothing
+)
+    frequencies, _ = _solve_at_k_impl(solver, k, method; bands=bands, X0=X0, P=P)
+    return frequencies
+end
+
+"""
+    solve_at_k_with_vectors(solver, k, method; bands=1:10, X0=nothing, P=nothing)
+
+Solve eigenvalue problem at a single k-point and return both frequencies and eigenvectors.
+
+This function always returns eigenvectors, unlike `solve_at_k` which returns only frequencies
+by default. Use this when you need the eigenvectors for further analysis (e.g., computing
+overlaps, mode profiles, or topological invariants).
+
+# Arguments
+- `solver::AbstractSolver`: The solver object
+- `k`: Wave vector (Real for 1D, AbstractVector for 2D/3D)
+- `method::SolverMethod`: Solver method (DenseMethod(), KrylovKitMethod(), LOBPCGMethod())
+
+# Keyword Arguments
+- `bands`: Range of bands to compute (default: 1:10)
+- `X0`: Initial guess for eigenvectors (for LOBPCG, optional)
+- `P`: Preconditioner (for LOBPCG, optional)
+
+# Returns
+- `(frequencies, eigenvectors)`: Tuple of frequencies (Vector{Float64}) and eigenvectors (Matrix{ComplexF64})
+
+# Example
+```julia
+ω, vecs = solve_at_k_with_vectors(solver, [0.1, 0.2], DenseMethod(); bands=1:4)
+W = get_weight_matrix(solver)
+overlap = vecs' * W * vecs  # Should be ≈ I (orthonormal)
+```
+
+See also: [`solve_at_k`](@ref), [`get_weight_matrix`](@ref), [`build_matrices`](@ref)
+"""
+function solve_at_k_with_vectors(
+    solver::Solver, k, method::SolverMethod; bands=1:10, X0=nothing, P=nothing
 )
     frequencies, eigenvectors = _solve_at_k_impl(solver, k, method; bands=bands, X0=X0, P=P)
-    if return_eigenvectors
-        return (frequencies, eigenvectors)
-    else
-        return frequencies
-    end
+    return (frequencies, eigenvectors)
 end
 
 # Internal implementation dispatching by method type
@@ -1530,4 +1665,47 @@ See concrete method signatures for detailed documentation.
 """
 function matrix_dimension(solver::Any)
     error("matrix_dimension: expected solver::Solver, got $(typeof(solver))")
+end
+
+"""
+    solve_at_k_with_vectors(solver, k, method; kwargs...)
+
+Solve eigenvalue problem and return both frequencies and eigenvectors.
+
+See concrete method signatures for detailed documentation and keyword arguments.
+"""
+function solve_at_k_with_vectors(solver::Any, k::Any, method::Any; kwargs...)
+    error(
+        "solve_at_k_with_vectors: expected (solver::AbstractSolver, k, method::SolverMethod), " *
+        "got ($(typeof(solver)), $(typeof(k)), $(typeof(method)))",
+    )
+end
+
+"""
+    build_matrices(solver, k)
+
+Build the LHS and RHS matrices for the generalized eigenvalue problem.
+
+See concrete method signatures for detailed documentation.
+"""
+function build_matrices(solver::Any, k::Any)
+    error(
+        "build_matrices: expected (solver::AbstractSolver, k), " *
+        "got ($(typeof(solver)), $(typeof(k)))",
+    )
+end
+
+"""
+    get_weight_matrix(solver)
+
+Return the weight matrix W for computing inner products of eigenvectors.
+
+The weight matrix satisfies: `vecs' * W * vecs ≈ I` for orthonormal eigenvectors.
+This is the RHS matrix of the generalized eigenvalue problem, which defines
+the inner product in the function space.
+
+See concrete method signatures for detailed documentation.
+"""
+function get_weight_matrix(solver::Any)
+    error("get_weight_matrix: expected solver::AbstractSolver, got $(typeof(solver))")
 end

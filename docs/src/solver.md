@@ -287,13 +287,13 @@ solver = Solver(PSVWave(), geo, (64, 64); cutoff=20)
 dim = matrix_dimension(solver)  # 2514 for cutoff=20
 
 # First k-point with Dense
-freqs1, vecs1 = solve_at_k(solver, k_points[1], DenseMethod();
-                           bands=1:20, return_eigenvectors=true)
+freqs1, vecs1 = solve_at_k_with_vectors(solver, k_points[1], DenseMethod();
+                                        bands=1:20)
 
 # Subsequent k-points with warm start
 for k in k_points[2:end]
-    freqs, vecs = solve_at_k(solver, k, LOBPCGMethod();
-                             bands=1:20, X0=vecs, return_eigenvectors=true)
+    freqs, vecs = solve_at_k_with_vectors(solver, k, LOBPCGMethod();
+                                          bands=1:20, X0=vecs)
     vecs1 = vecs  # Update for next iteration
 end
 ```

@@ -1530,10 +1530,8 @@ using LinearAlgebra
             @test length(freqs) == 5
             @test all(freqs .>= 0)
 
-            # With eigenvectors
-            freqs2, vecs = solve_at_k(
-                solver, k, DenseMethod(); bands=1:5, return_eigenvectors=true
-            )
+            # With eigenvectors (use solve_at_k_with_vectors)
+            freqs2, vecs = solve_at_k_with_vectors(solver, k, DenseMethod(); bands=1:5)
             @test freqs ≈ freqs2
             @test size(vecs) == (matrix_dimension(solver), 5)
         end
@@ -1544,22 +1542,18 @@ using LinearAlgebra
             k1, k2 = [0.1, 0.2], [0.15, 0.25]
 
             # First k-point with Dense
-            freqs1, vecs1 = solve_at_k(
-                solver, k1, DenseMethod(); bands=1:5, return_eigenvectors=true
-            )
+            freqs1, vecs1 = solve_at_k_with_vectors(solver, k1, DenseMethod(); bands=1:5)
 
             # Second k-point with LOBPCG using warm start
-            freqs2, vecs2 = solve_at_k(
-                solver, k2, LOBPCGMethod(); bands=1:5, X0=vecs1, return_eigenvectors=true
+            freqs2, vecs2 = solve_at_k_with_vectors(
+                solver, k2, LOBPCGMethod(); bands=1:5, X0=vecs1
             )
 
             @test length(freqs2) == 5
             @test size(vecs2) == (dim, 5)
 
             # Compare with Dense reference
-            freqs_ref, _ = solve_at_k(
-                solver, k2, DenseMethod(); bands=1:5, return_eigenvectors=true
-            )
+            freqs_ref, _ = solve_at_k_with_vectors(solver, k2, DenseMethod(); bands=1:5)
             @test maximum(abs.(freqs2 - freqs_ref)) < 1000  # Allow some tolerance
         end
 
@@ -1869,4 +1863,7 @@ using LinearAlgebra
 
     # TMM (Transfer Matrix Method) tests
     include("tmm/runtests.jl")
+
+    # Mid-level API tests
+    include("test_midlevel_api.jl")
 end
