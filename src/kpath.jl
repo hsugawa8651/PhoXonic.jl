@@ -364,10 +364,10 @@ bands = compute_bands(solver, kpath; bands=1:6)
 function simple_kpath_fcc(; a::Real=1.0, npoints::Int=50)
     scale = 2π / a
     Γ = [0.0, 0.0, 0.0]
-    X = [0.0, 1.0 * scale, 0.0]
-    W = [0.5 * scale, 1.0 * scale, 0.0]
-    L = [0.5 * scale, 0.5 * scale, 0.5 * scale]
-    K = [0.75 * scale, 0.75 * scale, 0.0]
+    X = [1.0 * scale, 0.0, 0.0]           # (1, 0, 0) × 2π/a
+    W = [1.0 * scale, 0.5 * scale, 0.0]   # (1, 1/2, 0) × 2π/a
+    L = [0.5 * scale, 0.5 * scale, 0.5 * scale]  # (1/2, 1/2, 1/2) × 2π/a
+    K = [0.75 * scale, 0.75 * scale, 0.0]        # (3/4, 3/4, 0) × 2π/a
 
     SimpleKPath([Γ, X, W, L, Γ, K], ["Γ", "X", "W", "L", "Γ", "K"]; npoints=npoints)
 end
