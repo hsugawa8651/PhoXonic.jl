@@ -135,3 +135,15 @@ for f in examples/[1-9]*.jl; do
     julia --project=. "$f" || { echo "FAILED: $f"; exit 1; }
 done
 ```
+
+## Long-Running Examples
+
+The following examples may take significant time to complete due to iterative solver comparisons or 3D calculations:
+
+| File | Reason | Estimated Time |
+|------|--------|----------------|
+| 201_phononic_steel_epoxy.jl | KrylovKit solver comparison | 2-5 min |
+| 208_solver_comparison.jl | Multiple solver comparisons | 2-5 min |
+| 209_warmstart_benchmark.jl | LOBPCG benchmark | 2-5 min |
+| 4xx (3D examples) | 3D band structure | 5-10 min |
+| 501_defect_mode.jl | DirectGF calculation | 2-5 min |

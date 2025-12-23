@@ -180,9 +180,40 @@ method = KrylovKitMethod(
     maxiter = 300,    # Maximum iterations
     krylovdim = 30,   # Krylov subspace dimension
     verbosity = 0,    # 0=silent, 1=warnings, 2=info
-    shift = 0.0       # Spectral shift (0 = no shift)
+    shift = 0.0,      # Spectral shift (0 = no shift)
+    matrix_free = false  # Use matrix-free operators for shift-and-invert
 )
 ```
+
+### Matrix-Free Shift-and-Invert
+
+For large 3D calculations where memory is limited, the `matrix_free=true` option
+avoids building dense matrices:
+
+```julia
+# Memory-efficient for large 3D systems
+solver = Solver(
+    FullVectorEM(), geo, (32, 32, 32),
+    KrylovKitMethod(shift=0.01, matrix_free=true);
+    cutoff=5
+)
+```
+
+**Comparison:**
+
+| Aspect | `matrix_free=false` (default) | `matrix_free=true` |
+|--------|-------------------------------|-------------------|
+| Memory | O(N²) | O(N) |
+| Speed | Faster for N < 2000 | Slower (nested iteration) |
+| Best for | Small/medium 3D | Large 3D (N > 2000) |
+
+**How it works:**
+
+- Default mode: Builds dense matrices LHS, RHS, computes LU factorization of (A - σB)
+- Matrix-free mode: Uses FFT-based operators and iterative CG solver for inner system
+
+For most 3D calculations with `cutoff ≤ 5`, the default dense mode is faster.
+Use `matrix_free=true` when memory becomes the limiting factor.
 
 ## LOBPCGMethod
 
@@ -287,13 +318,13 @@ solver = Solver(PSVWave(), geo, (64, 64); cutoff=20)
 dim = matrix_dimension(solver)  # 2514 for cutoff=20
 
 # First k-point with Dense
-freqs1, vecs1 = solve_at_k(solver, k_points[1], DenseMethod();
-                           bands=1:20, return_eigenvectors=true)
+freqs1, vecs1 = solve_at_k_with_vectors(solver, k_points[1], DenseMethod();
+                                        bands=1:20)
 
 # Subsequent k-points with warm start
 for k in k_points[2:end]
-    freqs, vecs = solve_at_k(solver, k, LOBPCGMethod();
-                             bands=1:20, X0=vecs, return_eigenvectors=true)
+    freqs, vecs = solve_at_k_with_vectors(solver, k, LOBPCGMethod();
+                                          bands=1:20, X0=vecs)
     vecs1 = vecs  # Update for next iteration
 end
 ```

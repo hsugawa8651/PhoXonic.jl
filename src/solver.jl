@@ -1,13 +1,26 @@
-# Last-Modified: 2025-12-14T18:01:04+09:00
+# Last-Modified: 2025-12-22T23:00:00+09:00
 
 #=
 Eigenvalue problem solver for photonic and phononic crystals.
 =#
 
 """
-    Solver{D<:Dimension, W<:WaveType, M<:SolverMethod}
+    AbstractSolver
 
-Solver for computing band structures of photonic/phononic crystals.
+Abstract base type for all solvers in PhoXonic.jl.
+
+Subtypes:
+- `Solver`: Plane wave expansion (PWE) solver
+
+This abstract type allows for future extensions (e.g., GME solver).
+"""
+abstract type AbstractSolver end
+
+"""
+    Solver{D<:Dimension, W<:WaveType, M<:SolverMethod} <: AbstractSolver
+
+Solver for computing band structures of photonic/phononic crystals using
+the plane wave expansion (PWE) method.
 
 # Fields
 - `wave`: Wave type (TE, TM, SH, etc.)
@@ -17,7 +30,7 @@ Solver for computing band structures of photonic/phononic crystals.
 - `material_arrays`: Pre-computed material arrays on the grid
 - `method`: Solver method (DenseMethod(), BasicRSCG(), etc.)
 """
-struct Solver{D<:Dimension,W<:WaveType,M<:SolverMethod}
+struct Solver{D<:Dimension,W<:WaveType,M<:SolverMethod} <: AbstractSolver
     wave::W
     geometry::Geometry{D}
     basis::PlaneWaveBasis{D}
@@ -290,84 +303,93 @@ end
 # ============================================================================
 
 """
+    wave_vector_diagonals(basis::PlaneWaveBasis, k::AbstractVector)
+
+Create diagonal matrices for wave vector components K_i = k_i + G_i.
+
+Returns a tuple of Diagonal matrices (Kx, Ky) for 2D or (Kx, Ky, Kz) for 3D.
+
+# Example
+```julia
+Kx, Ky = wave_vector_diagonals(basis, k)  # 2D
+Kx, Ky, Kz = wave_vector_diagonals(basis, k)  # 3D
+```
+"""
+function wave_vector_diagonals(basis::PlaneWaveBasis{Dim2}, k::AbstractVector)
+    Kx = Diagonal([k[1] + G[1] for G in basis.G])
+    Ky = Diagonal([k[2] + G[2] for G in basis.G])
+    return (Kx, Ky)
+end
+
+function wave_vector_diagonals(basis::PlaneWaveBasis{Dim3}, k::AbstractVector)
+    Kx = Diagonal([k[1] + G[1] for G in basis.G])
+    Ky = Diagonal([k[2] + G[2] for G in basis.G])
+    Kz = Diagonal([k[3] + G[3] for G in basis.G])
+    return (Kx, Ky, Kz)
+end
+
+"""
     build_matrices(solver::Solver, k)
 
 Build the eigenvalue problem matrices LHS * ψ = ω² * RHS * ψ for wave vector k.
 """
 function build_matrices(solver::Solver{Dim2,TEWave}, k::AbstractVector{<:Real})
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
-    # Wave vector operators: K_x = k_x + G_x, K_y = k_y + G_y
-    Kx = Diagonal([k[1] + G[1] for G in basis.G])
-    Ky = Diagonal([k[2] + G[2] for G in basis.G])
-
-    # Convolution matrices
-    ε_inv_c = convolution_matrix(mats.ε_inv, basis)
-    μ_c = convolution_matrix(mats.μ, basis)
+    Kx, Ky = wave_vector_diagonals(basis, k)
 
     # LHS = Kx * ε⁻¹ * Kx + Ky * ε⁻¹ * Ky
+    ε_inv_c = convolution_matrix(mats.ε_inv, basis)
     LHS = Kx * ε_inv_c * Kx + Ky * ε_inv_c * Ky
 
-    # RHS = μ
-    RHS = μ_c
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
 end
 
 function build_matrices(solver::Solver{Dim2,TMWave}, k::AbstractVector{<:Real})
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
-    Kx = Diagonal([k[1] + G[1] for G in basis.G])
-    Ky = Diagonal([k[2] + G[2] for G in basis.G])
-
-    μ_inv_c = convolution_matrix(mats.μ_inv, basis)
-    ε_c = convolution_matrix(mats.ε, basis)
+    Kx, Ky = wave_vector_diagonals(basis, k)
 
     # LHS = Kx * μ⁻¹ * Kx + Ky * μ⁻¹ * Ky
+    μ_inv_c = convolution_matrix(mats.μ_inv, basis)
     LHS = Kx * μ_inv_c * Kx + Ky * μ_inv_c * Ky
 
-    # RHS = ε
-    RHS = ε_c
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
 end
 
 function build_matrices(solver::Solver{Dim2,SHWave}, k::AbstractVector{<:Real})
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
-    Kx = Diagonal([k[1] + G[1] for G in basis.G])
-    Ky = Diagonal([k[2] + G[2] for G in basis.G])
-
-    C44_c = convolution_matrix(mats.C44, basis)
-    ρ_c = convolution_matrix(mats.ρ, basis)
+    Kx, Ky = wave_vector_diagonals(basis, k)
 
     # LHS = Kx * C44 * Kx + Ky * C44 * Ky
+    C44_c = convolution_matrix(mats.C44, basis)
     LHS = Kx * C44_c * Kx + Ky * C44_c * Ky
 
-    # RHS = ρ
-    RHS = ρ_c
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
 end
 
 function build_matrices(solver::Solver{Dim2,PSVWave}, k::AbstractVector{<:Real})
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
-    Kx = Diagonal([k[1] + G[1] for G in basis.G])
-    Ky = Diagonal([k[2] + G[2] for G in basis.G])
+    Kx, Ky = wave_vector_diagonals(basis, k)
 
     C11_c = convolution_matrix(mats.C11, basis)
     C12_c = convolution_matrix(mats.C12, basis)
     C44_c = convolution_matrix(mats.C44, basis)
-    ρ_c = convolution_matrix(mats.ρ, basis)
 
     # Block matrix construction
     # K_xx = ∂_x C₁₁ ∂_x + ∂_y C₄₄ ∂_y
@@ -385,8 +407,8 @@ function build_matrices(solver::Solver{Dim2,PSVWave}, k::AbstractVector{<:Real})
     # Assemble 2N × 2N block matrices
     LHS = [K_xx K_xy; K_yx K_yy]
 
-    Z = zeros(ComplexF64, N, N)
-    RHS = [ρ_c Z; Z ρ_c]
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
 end
@@ -397,42 +419,34 @@ end
 
 function build_matrices(solver::Solver{Dim1,Photonic1D}, k::Real)
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
     # Wave vector operator: K = k + G
     K = Diagonal([k + G[1] for G in basis.G])
 
-    # Convolution matrices
-    ε_inv_c = convolution_matrix(mats.ε_inv, basis)
-    μ_c = convolution_matrix(mats.μ, basis)
-
     # LHS = K * ε⁻¹ * K
+    ε_inv_c = convolution_matrix(mats.ε_inv, basis)
     LHS = K * ε_inv_c * K
 
-    # RHS = μ
-    RHS = μ_c
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
 end
 
 function build_matrices(solver::Solver{Dim1,Longitudinal1D}, k::Real)
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
     # Wave vector operator: K = k + G
     K = Diagonal([k + G[1] for G in basis.G])
 
-    # Convolution matrices
-    C11_c = convolution_matrix(mats.C11, basis)
-    ρ_c = convolution_matrix(mats.ρ, basis)
-
     # LHS = K * C11 * K
+    C11_c = convolution_matrix(mats.C11, basis)
     LHS = K * C11_c * K
 
-    # RHS = ρ
-    RHS = ρ_c
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
 end
@@ -473,17 +487,12 @@ Storage order: [H_x; H_y; H_z] (component-order for FFT efficiency)
 """
 function build_matrices(solver::Solver{Dim3,FullVectorEM}, k::AbstractVector{<:Real})
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
-    # Convolution matrices (N×N each)
+    # Convolution matrix for LHS
     ε_inv_c = convolution_matrix(mats.ε_inv, basis)
-    μ_c = convolution_matrix(mats.μ, basis)
 
-    # Wave vectors K = k + G for each plane wave
-    Kx = Diagonal([k[1] + G[1] for G in basis.G])
-    Ky = Diagonal([k[2] + G[2] for G in basis.G])
-    Kz = Diagonal([k[3] + G[3] for G in basis.G])
+    Kx, Ky, Kz = wave_vector_diagonals(basis, k)
 
     # Build LHS: 9 blocks L_ij where L_ij = curl_i × ε⁻¹ × curl_j
     # curl_i is the i-th row of the curl operator in Fourier space
@@ -514,13 +523,8 @@ function build_matrices(solver::Solver{Dim3,FullVectorEM}, k::AbstractVector{<:R
         L_zx L_zy L_zz
     ]
 
-    # RHS: block diagonal μ
-    Z = zeros(ComplexF64, N, N)
-    RHS = [
-        μ_c Z Z;
-        Z μ_c Z;
-        Z Z μ_c
-    ]
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
 end
@@ -536,19 +540,14 @@ Storage order: [u_x; u_y; u_z] (component-order)
 """
 function build_matrices(solver::Solver{Dim3,FullElastic}, k::AbstractVector{<:Real})
     basis = solver.basis
-    N = basis.num_pw
     mats = solver.material_arrays
 
-    # Convolution matrices
+    # Convolution matrices for LHS
     C11_c = convolution_matrix(mats.C11, basis)
     C12_c = convolution_matrix(mats.C12, basis)
     C44_c = convolution_matrix(mats.C44, basis)
-    ρ_c = convolution_matrix(mats.ρ, basis)
 
-    # Wave vectors
-    Kx = Diagonal([k[1] + G[1] for G in basis.G])
-    Ky = Diagonal([k[2] + G[2] for G in basis.G])
-    Kz = Diagonal([k[3] + G[3] for G in basis.G])
+    Kx, Ky, Kz = wave_vector_diagonals(basis, k)
 
     # Build stiffness matrix blocks for isotropic material
     # K_xx = Kx*C11*Kx + Ky*C44*Ky + Kz*C44*Kz
@@ -571,15 +570,103 @@ function build_matrices(solver::Solver{Dim3,FullElastic}, k::AbstractVector{<:Re
         K_zx K_zy K_zz
     ]
 
-    # RHS: block diagonal ρ
-    Z = zeros(ComplexF64, N, N)
-    RHS = [
-        ρ_c Z Z;
-        Z ρ_c Z;
-        Z Z ρ_c
-    ]
+    # RHS = W (weight matrix)
+    RHS = get_weight_matrix(solver)
 
     return LHS, RHS
+end
+
+# ============================================================================
+# get_weight_matrix: Return weight matrix for inner products
+# ============================================================================
+
+"""
+    get_weight_matrix(solver::Solver)
+
+Return the weight matrix W for computing inner products of eigenvectors.
+
+The weight matrix is the RHS matrix of the generalized eigenvalue problem
+(LHS * v = ω² * RHS * v). It defines the inner product in the function space:
+for eigenvectors v₁ and v₂, the overlap is computed as v₁' * W * v₂.
+
+For normalized eigenvectors from `solve_at_k_with_vectors`, we have:
+`vecs' * W * vecs ≈ I`
+
+# Weight matrices by wave type:
+| WaveType | W |
+|----------|---|
+| TE | μ (permeability) |
+| TM | ε (permittivity) |
+| SH | ρ (density) |
+| PSV | diag(ρ, ρ) |
+| FullVectorEM | diag(μ, μ, μ) |
+| FullElastic | diag(ρ, ρ, ρ) |
+| Photonic1D | μ |
+| Longitudinal1D | ρ |
+
+# Returns
+- `W::Matrix{ComplexF64}`: Weight matrix
+
+# Example
+```julia
+W = get_weight_matrix(solver)
+ω, vecs = solve_at_k_with_vectors(solver, k, DenseMethod(); bands=1:4)
+overlap = vecs' * W * vecs  # ≈ I(4)
+```
+
+See also: [`solve_at_k_with_vectors`](@ref), [`build_matrices`](@ref)
+"""
+
+# Helper for block diagonal weight matrices
+function block_diagonal_weight(M::AbstractMatrix, n::Int)
+    N = size(M, 1)
+    Z = zeros(eltype(M), N, N)
+    n == 2 && return [M Z; Z M]
+    n == 3 && return [M Z Z; Z M Z; Z Z M]
+    error("Unsupported block size: $n")
+end
+
+function get_weight_matrix(solver::Solver{Dim2,TEWave})
+    # TE: W = μ (permeability convolution matrix)
+    return convolution_matrix(solver.material_arrays.μ, solver.basis)
+end
+
+function get_weight_matrix(solver::Solver{Dim2,TMWave})
+    # TM: W = ε (permittivity convolution matrix)
+    return convolution_matrix(solver.material_arrays.ε, solver.basis)
+end
+
+function get_weight_matrix(solver::Solver{Dim2,SHWave})
+    # SH: W = ρ (density convolution matrix)
+    return convolution_matrix(solver.material_arrays.ρ, solver.basis)
+end
+
+function get_weight_matrix(solver::Solver{Dim2,PSVWave})
+    # PSV: W = diag(ρ, ρ)
+    ρ_c = convolution_matrix(solver.material_arrays.ρ, solver.basis)
+    return block_diagonal_weight(ρ_c, 2)
+end
+
+function get_weight_matrix(solver::Solver{Dim1,Photonic1D})
+    # 1D Photonic: W = μ (consistent with RHS in build_matrices)
+    return convolution_matrix(solver.material_arrays.μ, solver.basis)
+end
+
+function get_weight_matrix(solver::Solver{Dim1,Longitudinal1D})
+    # 1D Elastic: W = ρ
+    return convolution_matrix(solver.material_arrays.ρ, solver.basis)
+end
+
+function get_weight_matrix(solver::Solver{Dim3,FullVectorEM})
+    # 3D EM: W = diag(μ, μ, μ) (consistent with RHS in build_matrices)
+    μ_c = convolution_matrix(solver.material_arrays.μ, solver.basis)
+    return block_diagonal_weight(μ_c, 3)
+end
+
+function get_weight_matrix(solver::Solver{Dim3,FullElastic})
+    # 3D Elastic: W = diag(ρ, ρ, ρ)
+    ρ_c = convolution_matrix(solver.material_arrays.ρ, solver.basis)
+    return block_diagonal_weight(ρ_c, 3)
 end
 
 # ============================================================================
@@ -628,10 +715,12 @@ end
 # ============================================================================
 
 """
-    solve_at_k(solver, k, method; bands=1:10, X0=nothing, P=nothing, return_eigenvectors=false)
+    solve_at_k(solver, k, method; bands=1:10, X0=nothing, P=nothing)
 
 Solve eigenvalue problem at a single k-point with explicit control over method,
-initial vectors, and preconditioner.
+initial vectors, and preconditioner. Returns only frequencies.
+
+For eigenvectors, use [`solve_at_k_with_vectors`](@ref) instead.
 
 # Arguments
 - `solver::Solver`: Solver instance
@@ -646,12 +735,9 @@ initial vectors, and preconditioner.
   - If `nothing`, random orthonormal vectors are used
 - `P`: Preconditioner (default: nothing = use method's preconditioner setting)
   - Must implement `ldiv!(y, P, x)`
-- `return_eigenvectors::Bool`: If true, return (frequencies, eigenvectors) (default: false)
 
 # Returns
-- If `return_eigenvectors=false`: Vector of frequencies
-- If `return_eigenvectors=true`: Tuple (frequencies, eigenvectors)
-  - eigenvectors: `dim × nev` matrix
+- `Vector{Float64}`: Frequencies for the requested bands
 
 # Example
 ```julia
@@ -661,13 +747,8 @@ dim = matrix_dimension(solver)  # 2514 for cutoff=20
 # Frequencies only
 freqs = solve_at_k(solver, k, LOBPCGMethod(); bands=1:20)
 
-# With eigenvectors (for warm start)
-freqs, vecs = solve_at_k(solver, k, DenseMethod();
-                         bands=1:20, return_eigenvectors=true)
-
-# Manual warm start
-freqs2, vecs2 = solve_at_k(solver, k_next, LOBPCGMethod();
-                           bands=1:20, X0=vecs, return_eigenvectors=true)
+# With eigenvectors - use solve_at_k_with_vectors
+freqs, vecs = solve_at_k_with_vectors(solver, k, DenseMethod(); bands=1:20)
 
 # Custom preconditioner
 using LinearAlgebra
@@ -676,23 +757,51 @@ P = Diagonal(1.0 ./ diag(LHS))
 freqs = solve_at_k(solver, k, LOBPCGMethod(); bands=1:20, P=P)
 ```
 
-See also: [`solve`](@ref), [`matrix_dimension`](@ref), [`compute_bands`](@ref)
+See also: [`solve_at_k_with_vectors`](@ref), [`solve`](@ref), [`matrix_dimension`](@ref)
 """
 function solve_at_k(
-    solver::Solver,
-    k,
-    method::SolverMethod;
-    bands=1:10,
-    X0=nothing,
-    P=nothing,
-    return_eigenvectors::Bool=false,
+    solver::Solver, k, method::SolverMethod; bands=1:10, X0=nothing, P=nothing
+)
+    frequencies, _ = _solve_at_k_impl(solver, k, method; bands=bands, X0=X0, P=P)
+    return frequencies
+end
+
+"""
+    solve_at_k_with_vectors(solver, k, method; bands=1:10, X0=nothing, P=nothing)
+
+Solve eigenvalue problem at a single k-point and return both frequencies and eigenvectors.
+
+This function always returns eigenvectors, unlike `solve_at_k` which returns only frequencies
+by default. Use this when you need the eigenvectors for further analysis (e.g., computing
+overlaps, mode profiles, or topological invariants).
+
+# Arguments
+- `solver::AbstractSolver`: The solver object
+- `k`: Wave vector (Real for 1D, AbstractVector for 2D/3D)
+- `method::SolverMethod`: Solver method (DenseMethod(), KrylovKitMethod(), LOBPCGMethod())
+
+# Keyword Arguments
+- `bands`: Range of bands to compute (default: 1:10)
+- `X0`: Initial guess for eigenvectors (for LOBPCG, optional)
+- `P`: Preconditioner (for LOBPCG, optional)
+
+# Returns
+- `(frequencies, eigenvectors)`: Tuple of frequencies (Vector{Float64}) and eigenvectors (Matrix{ComplexF64})
+
+# Example
+```julia
+ω, vecs = solve_at_k_with_vectors(solver, [0.1, 0.2], DenseMethod(); bands=1:4)
+W = get_weight_matrix(solver)
+overlap = vecs' * W * vecs  # Should be ≈ I (orthonormal)
+```
+
+See also: [`solve_at_k`](@ref), [`get_weight_matrix`](@ref), [`build_matrices`](@ref)
+"""
+function solve_at_k_with_vectors(
+    solver::Solver, k, method::SolverMethod; bands=1:10, X0=nothing, P=nothing
 )
     frequencies, eigenvectors = _solve_at_k_impl(solver, k, method; bands=bands, X0=X0, P=P)
-    if return_eigenvectors
-        return (frequencies, eigenvectors)
-    else
-        return frequencies
-    end
+    return (frequencies, eigenvectors)
 end
 
 # Internal implementation dispatching by method type
@@ -861,8 +970,13 @@ function _solve_krylovkit(
     σ = method.shift
 
     if σ > 0
-        # Shift-and-invert mode: use dense matrices with factorization
-        _solve_krylovkit_shifted(solver, k, method, bands)
+        if method.matrix_free
+            # Shift-and-invert mode: matrix-free with iterative inner solver
+            _solve_krylovkit_shifted_matrixfree(solver, k, method, bands)
+        else
+            # Shift-and-invert mode: use dense matrices with factorization
+            _solve_krylovkit_shifted(solver, k, method, bands)
+        end
     else
         # Standard mode: use matrix-free operators
         _solve_krylovkit_standard(solver, k, method, bands)
@@ -1088,6 +1202,133 @@ function _solve_krylovkit_shifted(
     return _select_first_bands(frequencies, eigenvectors, bands)
 end
 
+"""
+    _solve_krylovkit_shifted_matrixfree(solver, k, method, bands)
+
+Matrix-free shift-and-invert eigenvalue solver.
+
+Unlike `_solve_krylovkit_shifted`, this version uses O(N) memory instead of O(N²)
+by avoiding explicit construction of dense matrices. Instead, it uses:
+1. Matrix-free operators (apply_lhs!, apply_rhs!) via FFT
+2. Iterative inner solver (Krylov.cg) to solve (A - σB)y = Bx
+
+This is particularly useful for large 3D calculations where dense matrix storage
+becomes prohibitive.
+
+# Algorithm
+1. Create matrix-free ShiftedOperator S = (A - σB)
+2. For each application of (A - σB)⁻¹ B x:
+   a. Compute z = B x using apply_rhs!
+   b. Solve S y = z using iterative CG
+3. Use KrylovKit.eigsolve with :LR to find largest μ = 1/(λ - σ)
+4. Convert back: λ = σ + 1/μ
+
+# Memory Complexity
+| Component | Dense | Matrix-Free |
+|-----------|-------|-------------|
+| LHS, RHS  | O(N²) | O(N)        |
+| Shifted   | O(N²) | O(N)        |
+| LU factor | O(N²) | N/A         |
+| Total     | ~3N²  | ~4N         |
+"""
+function _solve_krylovkit_shifted_matrixfree(
+    solver::Solver{D,W}, k::Vector{Float64}, method::KrylovKitMethod, bands
+) where {D,W}
+    σ = method.shift
+
+    # Create matrix-free operator
+    op = MatrixFreeOperator(solver, k)
+    N = solver.basis.num_pw
+    nc = ncomponents(solver.wave)
+    dim = N * nc
+
+    # Number of eigenvalues to compute
+    nev = _nev(bands, dim)
+
+    # Create shifted operator S = (A - σB)
+    S = ShiftedOperator(op, σ)
+
+    # Temporary vectors for B*x computation
+    z = zeros(ComplexF64, dim)
+
+    # Inner solver tolerance (tighter than outer)
+    inner_tol = method.tol * 0.1
+    inner_maxiter = 500
+
+    # Function: (A - σB)⁻¹ B x
+    function shifted_inv_B(x)
+        # z = B * x
+        apply_rhs!(z, op, x)
+
+        # Solve (A - σB) y = z using CG
+        # Note: Krylov.cg expects real symmetric or complex Hermitian
+        y, stats = Krylov.cg(S, z; atol=inner_tol, rtol=inner_tol, itmax=inner_maxiter)
+
+        if !stats.solved && method.verbosity > 0
+            @warn "Inner CG solver did not converge: $(stats.status)"
+        end
+
+        return y
+    end
+
+    # Initial vector
+    x0 = randn(ComplexF64, dim)
+    x0 ./= norm(x0)
+
+    # Request more eigenvalues to ensure we get enough positive ones
+    nev_request = min(dim, nev * 3 + 10)
+
+    # For eigenvalues λ > σ, we have μ = 1/(λ-σ) > 0
+    # For eigenvalues λ < σ, we have μ < 0
+    # We want positive μ (largest real), which gives λ closest to σ from above
+    μ_vals, vecs, info = KrylovKit.eigsolve(
+        shifted_inv_B,
+        x0,
+        nev_request,
+        :LR;  # Largest Real (positive μ)
+        tol=method.tol,
+        maxiter=method.maxiter,
+        krylovdim=max(method.krylovdim, nev_request + 10),
+        verbosity=method.verbosity,
+        ishermitian=true,
+    )
+
+    # Filter for positive μ (corresponding to λ > σ)
+    positive_indices = findall(x -> real(x) > 0, μ_vals)
+
+    if isempty(positive_indices)
+        @warn "Matrix-free shifted: No eigenvalues found above shift σ = $σ. Try a smaller shift."
+        # Fall back to returning what we have
+        positive_indices = 1:min(nev, length(μ_vals))
+    end
+
+    μ_positive = μ_vals[positive_indices]
+    vecs_positive = vecs[positive_indices]
+
+    # Check convergence
+    if length(positive_indices) < nev && method.verbosity > 0
+        @warn "Matrix-free shifted: Only $(length(positive_indices)) eigenvalues found above shift"
+    end
+
+    # Convert back to original eigenvalues: λ = σ + 1/μ
+    λ_vals = σ .+ 1.0 ./ real.(μ_positive)
+
+    # Convert to frequencies
+    ω² = max.(λ_vals, 0.0)  # Handle small negative values
+    frequencies = sqrt.(ω²)
+
+    # Build eigenvector matrix
+    eigenvectors = stack(vecs_positive)
+
+    # Sort by frequency (smallest first)
+    perm = sortperm(frequencies)
+    frequencies = frequencies[perm]
+    eigenvectors = eigenvectors[:, perm]
+
+    # Select requested bands (uses multiple dispatch)
+    return _select_first_bands(frequencies, eigenvectors, bands)
+end
+
 # ============================================================================
 # LOBPCG method implementation
 # ============================================================================
@@ -1262,18 +1503,24 @@ end
 """
     _solve_lobpcg_shifted(solver, k, method; bands)
 
-Shift-and-invert LOBPCG solver.
+Shift-and-invert solver for LOBPCGMethod with shift > 0.
 
 Uses spectral transformation to find eigenvalues above shift σ:
 - Original problem: `A x = λ B x`
 - Transformed: `(A - σB)⁻¹ B x = μ x` where `μ = 1/(λ - σ)`
 
-For λ > σ: μ > 0 (positive, LOBPCG finds largest)
+For λ > σ: μ > 0 (positive, largest μ corresponds to smallest λ > σ)
 For λ < σ: μ < 0 (negative, filtered out)
 For λ ≈ σ: |μ| → ∞ (very large, avoided by appropriate σ choice)
 
 This is particularly useful for 3D H-field formulation where spurious
 longitudinal modes exist at λ ≈ 0. Setting σ = 0.01 skips these modes.
+
+**Note**: Despite the function name, this does NOT use LOBPCG internally.
+The shifted matrix (A - σB) is not positive definite, which violates LOBPCG's
+requirements. Instead, this function builds the dense transformed operator
+T = (A - σB)⁻¹ B and uses standard `eigen(T)`. This loses LOBPCG's memory
+efficiency but provides correct results.
 """
 function _solve_lobpcg_shifted(solver::Solver, k, method::LOBPCGMethod; bands=1:10)
     σ = method.shift
@@ -1530,4 +1777,47 @@ See concrete method signatures for detailed documentation.
 """
 function matrix_dimension(solver::Any)
     error("matrix_dimension: expected solver::Solver, got $(typeof(solver))")
+end
+
+"""
+    solve_at_k_with_vectors(solver, k, method; kwargs...)
+
+Solve eigenvalue problem and return both frequencies and eigenvectors.
+
+See concrete method signatures for detailed documentation and keyword arguments.
+"""
+function solve_at_k_with_vectors(solver::Any, k::Any, method::Any; kwargs...)
+    error(
+        "solve_at_k_with_vectors: expected (solver::AbstractSolver, k, method::SolverMethod), " *
+        "got ($(typeof(solver)), $(typeof(k)), $(typeof(method)))",
+    )
+end
+
+"""
+    build_matrices(solver, k)
+
+Build the LHS and RHS matrices for the generalized eigenvalue problem.
+
+See concrete method signatures for detailed documentation.
+"""
+function build_matrices(solver::Any, k::Any)
+    error(
+        "build_matrices: expected (solver::AbstractSolver, k), " *
+        "got ($(typeof(solver)), $(typeof(k)))",
+    )
+end
+
+"""
+    get_weight_matrix(solver)
+
+Return the weight matrix W for computing inner products of eigenvectors.
+
+The weight matrix satisfies: `vecs' * W * vecs ≈ I` for orthonormal eigenvectors.
+This is the RHS matrix of the generalized eigenvalue problem, which defines
+the inner product in the function space.
+
+See concrete method signatures for detailed documentation.
+"""
+function get_weight_matrix(solver::Any)
+    error("get_weight_matrix: expected solver::AbstractSolver, got $(typeof(solver))")
 end

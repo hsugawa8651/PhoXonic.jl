@@ -269,3 +269,12 @@ function line_defect_positions(
         error("Unknown direction: $direction. Use :x, :y, or :z for 3D.")
     end
 end
+
+# Error fallback for invalid create_supercell arguments
+function create_supercell(args...)
+    arg_types = isempty(args) ? "()" : "(" * join(typeof.(args), ", ") * ")"
+    error(
+        "No matching create_supercell method for arguments: $arg_types. " *
+        "Use create_supercell(geo::Geometry, size::NTuple{D,Int}; point_defects=[]).",
+    )
+end

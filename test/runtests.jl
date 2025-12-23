@@ -37,6 +37,25 @@ using LinearAlgebra
             @test abs(dot(a1, b2)) < 1e-10
             @test abs(dot(a2, b1)) < 1e-10
         end
+
+        @testset "Error fallbacks" begin
+            @test_throws ErrorException Lattice()  # no arguments
+            @test_throws ErrorException Lattice("invalid")
+            @test_throws ErrorException Lattice([1.0, 2.0])  # single vector
+            @test_throws ErrorException Lattice(1, 2, 3, 4)  # too many arguments
+        end
+    end
+
+    @testset "Geometry error fallbacks" begin
+        @test_throws ErrorException Geometry()  # no arguments
+        @test_throws ErrorException Geometry("invalid")
+        @test_throws ErrorException Geometry(square_lattice())  # missing background
+    end
+
+    @testset "PlaneWaveBasis error fallbacks" begin
+        @test_throws ErrorException PlaneWaveBasis()  # no arguments
+        @test_throws ErrorException PlaneWaveBasis("invalid")
+        @test_throws ErrorException PlaneWaveBasis(square_lattice())  # missing cutoff
     end
 
     @testset "Shapes" begin
@@ -726,6 +745,38 @@ using LinearAlgebra
             expected = norm(k)
             @test isapprox(ω[1], expected, rtol=0.01)
             @test isapprox(ω[2], expected, rtol=0.01)  # Doubly degenerate
+        end
+
+        @testset "Matrix-free shift-and-invert 3D" begin
+            lat = cubic_lattice(1.0)
+            air = Dielectric(1.0, 1.0)
+            geo = Geometry(lat, air)
+
+            # Dense shift-and-invert (reference)
+            solver_dense = Solver(
+                FullVectorEM(), geo, (8, 8, 8), KrylovKitMethod(shift=0.01); cutoff=2
+            )
+            # Matrix-free shift-and-invert
+            solver_matrixfree = Solver(
+                FullVectorEM(),
+                geo,
+                (8, 8, 8),
+                KrylovKitMethod(shift=0.01, matrix_free=true);
+                cutoff=2,
+            )
+            k = [0.5, 0.3, 0.2]
+
+            ω_dense, _ = solve(solver_dense, k; bands=1:3)
+            ω_matrixfree, _ = solve(solver_matrixfree, k; bands=1:3)
+
+            # Results should match
+            for i in 1:3
+                @test isapprox(ω_matrixfree[i], ω_dense[i], rtol=0.02)
+            end
+
+            # Both should give correct result for homogeneous medium
+            expected = norm(k)
+            @test isapprox(ω_matrixfree[1], expected, rtol=0.02)
         end
 
         @testset "SHWave iterative vs dense" begin
@@ -1530,10 +1581,8 @@ using LinearAlgebra
             @test length(freqs) == 5
             @test all(freqs .>= 0)
 
-            # With eigenvectors
-            freqs2, vecs = solve_at_k(
-                solver, k, DenseMethod(); bands=1:5, return_eigenvectors=true
-            )
+            # With eigenvectors (use solve_at_k_with_vectors)
+            freqs2, vecs = solve_at_k_with_vectors(solver, k, DenseMethod(); bands=1:5)
             @test freqs ≈ freqs2
             @test size(vecs) == (matrix_dimension(solver), 5)
         end
@@ -1544,22 +1593,18 @@ using LinearAlgebra
             k1, k2 = [0.1, 0.2], [0.15, 0.25]
 
             # First k-point with Dense
-            freqs1, vecs1 = solve_at_k(
-                solver, k1, DenseMethod(); bands=1:5, return_eigenvectors=true
-            )
+            freqs1, vecs1 = solve_at_k_with_vectors(solver, k1, DenseMethod(); bands=1:5)
 
             # Second k-point with LOBPCG using warm start
-            freqs2, vecs2 = solve_at_k(
-                solver, k2, LOBPCGMethod(); bands=1:5, X0=vecs1, return_eigenvectors=true
+            freqs2, vecs2 = solve_at_k_with_vectors(
+                solver, k2, LOBPCGMethod(); bands=1:5, X0=vecs1
             )
 
             @test length(freqs2) == 5
             @test size(vecs2) == (dim, 5)
 
             # Compare with Dense reference
-            freqs_ref, _ = solve_at_k(
-                solver, k2, DenseMethod(); bands=1:5, return_eigenvectors=true
-            )
+            freqs_ref, _ = solve_at_k_with_vectors(solver, k2, DenseMethod(); bands=1:5)
             @test maximum(abs.(freqs2 - freqs_ref)) < 1000  # Allow some tolerance
         end
 
@@ -1869,4 +1914,7 @@ using LinearAlgebra
 
     # TMM (Transfer Matrix Method) tests
     include("tmm/runtests.jl")
+
+    # Mid-level API tests
+    include("test_midlevel_api.jl")
 end

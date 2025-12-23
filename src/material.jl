@@ -290,3 +290,12 @@ Base.promote_rule(::Type{ElasticVoid}, ::Type{IsotropicElastic}) = ElasticMateri
 # Convert to common supertype
 Base.convert(::Type{ElasticMaterial}, x::IsotropicElastic) = x
 Base.convert(::Type{ElasticMaterial}, x::ElasticVoid) = x
+
+# Error fallback for invalid Dielectric constructor arguments
+function Dielectric(args...)
+    arg_types = isempty(args) ? "()" : "(" * join(typeof.(args), ", ") * ")"
+    error(
+        "No matching Dielectric constructor for arguments: $arg_types. " *
+        "Use Dielectric(ε::Real) or Dielectric(ε::Real, μ::Real).",
+    )
+end

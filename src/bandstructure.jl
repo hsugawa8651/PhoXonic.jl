@@ -398,20 +398,13 @@ function _compute_bands_warmstart!(
 
         if ik == 1 && method.first_dense
             # First k-point: use Dense for accurate eigenvectors
-            ω, vecs = solve_at_k(
-                solver, k_vec, DenseMethod(); bands=bands, return_eigenvectors=true
-            )
+            ω, vecs = solve_at_k_with_vectors(solver, k_vec, DenseMethod(); bands=bands)
             frequencies[ik, :] = ω
             prev_eigenvectors = vecs
         else
             # Subsequent k-points: use LOBPCG with warm start
-            ω, vecs = solve_at_k(
-                solver,
-                k_vec,
-                method;
-                bands=bands,
-                X0=prev_eigenvectors,
-                return_eigenvectors=true,
+            ω, vecs = solve_at_k_with_vectors(
+                solver, k_vec, method; bands=bands, X0=prev_eigenvectors
             )
             frequencies[ik, :] = ω
             prev_eigenvectors = vecs

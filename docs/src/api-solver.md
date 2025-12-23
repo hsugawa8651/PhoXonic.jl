@@ -35,10 +35,33 @@ FullElastic
 
 ## Solver
 
+### Solver Types
+
 ```@docs
+AbstractSolver
 Solver
+```
+
+### High-level API
+
+```@docs
 solve
 solve_at_k
+```
+
+### Mid-level API
+
+For custom algorithms and advanced analysis:
+
+```@docs
+solve_at_k_with_vectors
+build_matrices
+get_weight_matrix
+```
+
+### Utilities
+
+```@docs
 matrix_dimension
 group_velocity
 ```

@@ -100,6 +100,17 @@ Create a simple k-path through specified waypoints.
 function SimpleKPath(
     waypoints::Vector{<:AbstractVector}, labels::Vector{String}; npoints::Int=50
 )
+    # Input validation
+    if isempty(waypoints)
+        error("SimpleKPath: waypoints must not be empty")
+    end
+    if length(waypoints) != length(labels)
+        error("SimpleKPath: waypoints and labels must have the same length")
+    end
+    if npoints < 1
+        error("SimpleKPath: npoints must be at least 1")
+    end
+
     D = length(waypoints[1])
 
     all_points = SVector{D,Float64}[]
@@ -327,12 +338,12 @@ Create a simple k-path for face-centered cubic (FCC) lattice.
 
 Path: Γ → X → W → L → Γ → K
 
-High-symmetry points (in Cartesian coordinates, units of 2π/a):
+High-symmetry points (values shown are multiplied by 2π/a to give Cartesian coordinates):
 - Γ = (0, 0, 0)
-- X = (0, 1, 0)
-- W = (1/2, 1, 0)
-- L = (1/2, 1/2, 1/2)
-- K = (3/4, 3/4, 0)
+- X = (0, 1, 0) × 2π/a
+- W = (1/2, 1, 0) × 2π/a
+- L = (1/2, 1/2, 1/2) × 2π/a
+- K = (3/4, 3/4, 0) × 2π/a
 
 # Arguments
 - `a`: Conventional lattice constant (default: 1.0)
@@ -353,10 +364,10 @@ bands = compute_bands(solver, kpath; bands=1:6)
 function simple_kpath_fcc(; a::Real=1.0, npoints::Int=50)
     scale = 2π / a
     Γ = [0.0, 0.0, 0.0]
-    X = [0.0, 1.0 * scale, 0.0]
-    W = [0.5 * scale, 1.0 * scale, 0.0]
-    L = [0.5 * scale, 0.5 * scale, 0.5 * scale]
-    K = [0.75 * scale, 0.75 * scale, 0.0]
+    X = [1.0 * scale, 0.0, 0.0]           # (1, 0, 0) × 2π/a
+    W = [1.0 * scale, 0.5 * scale, 0.0]   # (1, 1/2, 0) × 2π/a
+    L = [0.5 * scale, 0.5 * scale, 0.5 * scale]  # (1/2, 1/2, 1/2) × 2π/a
+    K = [0.75 * scale, 0.75 * scale, 0.0]        # (3/4, 3/4, 0) × 2π/a
 
     SimpleKPath([Γ, X, W, L, Γ, K], ["Γ", "X", "W", "L", "Γ", "K"]; npoints=npoints)
 end
@@ -368,11 +379,11 @@ Create a simple k-path for body-centered cubic (BCC) lattice.
 
 Path: Γ → H → N → Γ → P → H
 
-High-symmetry points (in Cartesian coordinates, units of 2π/a):
+High-symmetry points (values shown are multiplied by 2π/a to give Cartesian coordinates):
 - Γ = (0, 0, 0)
-- H = (0, 0, 1)
-- N = (0, 1/2, 1/2)
-- P = (1/4, 1/4, 1/4)
+- H = (0, 0, 1) × 2π/a
+- N = (0, 1/2, 1/2) × 2π/a
+- P = (1/4, 1/4, 1/4) × 2π/a
 
 # Arguments
 - `a`: Conventional lattice constant (default: 1.0)

@@ -3,23 +3,24 @@
 #=
 Matrix-free operators for iterative solvers.
 
-The Hamiltonian H is applied without explicitly constructing the full matrix.
+The operators are applied without explicitly constructing the full matrix.
 This reduces memory from O(N²) to O(N) and computation from O(N²) to O(N log N).
 
-For photonic/phononic crystals, the eigenvalue problem is:
-    LHS * ψ = ω² * RHS * ψ
+For photonic/phononic crystals, the generalized eigenvalue problem is:
+    A * ψ = ω² * B * ψ   (or equivalently: LHS * ψ = ω² * RHS * ψ)
 
 where:
-    LHS = K * M * K  (with K = k + G diagonal, M = convolution matrix)
-    RHS = convolution matrix of ρ or μ
+    A (LHS) = K * M * K  (with K = k + G diagonal, M = convolution matrix)
+    B (RHS) = convolution matrix of ρ or μ
 
-The matrix-free approach computes H*v = RHS⁻¹ * LHS * v via FFT:
+The matrix-free approach computes A*v and B*v separately via FFT:
     1. Apply K in Fourier space (diagonal, O(N))
     2. FFT to real space (O(N log N))
     3. Multiply by material property in real space (O(N))
     4. FFT back to Fourier space (O(N log N))
     5. Apply K in Fourier space (diagonal, O(N))
-    6. Solve RHS * y = result (or apply RHS⁻¹)
+
+The iterative solver (KrylovKit.geneigsolve) handles the generalized problem directly.
 
 ## Thread Safety (FFTW)
 
@@ -543,7 +544,7 @@ function apply_lhs!(
     return y
 end
 
-# SH wave (phononic)
+# SH wave (phononic) - LHS = Kx * C44 * Kx + Ky * C44 * Ky
 function apply_lhs!(
     y::AbstractVector{T}, op::MatrixFreeOperator{Dim2,SHWave,T}, x::AbstractVector{T}
 ) where {T}
@@ -580,7 +581,7 @@ function apply_lhs!(
     return y
 end
 
-# Longitudinal 1D (phononic)
+# Longitudinal 1D (phononic) - LHS = K * C11 * K
 function apply_lhs!(
     y::AbstractVector{T},
     op::MatrixFreeOperator{Dim1,Longitudinal1D,T},
@@ -823,6 +824,7 @@ function apply_rhs!(
     return y
 end
 
+# SH wave (phononic) - RHS = ρ
 function apply_rhs!(
     y::AbstractVector{T}, op::MatrixFreeOperator{Dim2,SHWave,T}, x::AbstractVector{T}
 ) where {T}
@@ -870,6 +872,7 @@ function apply_rhs!(
     return y
 end
 
+# Photonic 1D - RHS = μ
 function apply_rhs!(
     y::AbstractVector{T}, op::MatrixFreeOperator{Dim1,Photonic1D,T}, x::AbstractVector{T}
 ) where {T}
@@ -887,6 +890,7 @@ function apply_rhs!(
     return y
 end
 
+# Longitudinal 1D (phononic) - RHS = ρ
 function apply_rhs!(
     y::AbstractVector{T},
     op::MatrixFreeOperator{Dim1,Longitudinal1D,T},
@@ -1220,4 +1224,97 @@ function apply_lhs!(
     apply_term!(y_z, x_z, 3, 3, C11)  # Kz * C11 * Kz * x_z
 
     return y
+end
+
+# ============================================================================
+# ShiftedOperator: (A - σB) for shift-and-invert eigenvalue problems
+# ============================================================================
+
+"""
+    ShiftedOperator{D, W, T}
+
+Matrix-free representation of the shifted operator `(A - σB)` for shift-and-invert
+eigenvalue problems.
+
+The shift-and-invert transformation converts `A x = λ B x` to `(A - σB)⁻¹ B x = μ x`
+where `μ = 1/(λ - σ)`. This struct represents `(A - σB)` which is used as the
+inner linear system in the iterative shift-and-invert solver.
+
+# Fields
+- `op::MatrixFreeOperator{D,W,T}`: The matrix-free operator for A (LHS) and B (RHS)
+- `σ::Float64`: The spectral shift
+- `tmp::Vector{T}`: Temporary storage for B*x computation
+
+# Usage
+```julia
+op = MatrixFreeOperator(solver, k)
+S = ShiftedOperator(op, 0.01)  # S represents (A - 0.01*B)
+y = S * x  # Computes (A - σB) * x
+```
+
+For solving (A - σB)⁻¹ B x, use with Krylov.jl:
+```julia
+z = B * x  # compute apply_rhs!
+y, stats = Krylov.cg(S, z)  # solve (A - σB) y = z
+```
+"""
+struct ShiftedOperator{D<:Dimension,W<:WaveType,T<:Complex,N,F,I}
+    op::MatrixFreeOperator{D,W,T,N,F,I}
+    σ::Float64
+    tmp::Vector{T}
+end
+
+"""
+    ShiftedOperator(op::MatrixFreeOperator, σ::Real)
+
+Create a shifted operator representing `(A - σB)`.
+"""
+function ShiftedOperator(op::MatrixFreeOperator{D,W,T,N,F,I}, σ::Real) where {D,W,T,N,F,I}
+    dim = op.solver.basis.num_pw * ncomponents(op.solver.wave)
+    tmp = zeros(T, dim)
+    ShiftedOperator{D,W,T,N,F,I}(op, Float64(σ), tmp)
+end
+
+Base.size(S::ShiftedOperator) = (length(S.tmp), length(S.tmp))
+Base.size(S::ShiftedOperator, d::Int) = length(S.tmp)
+Base.eltype(::ShiftedOperator{D,W,T}) where {D,W,T} = T
+
+"""
+    mul!(y, S::ShiftedOperator, x)
+
+Compute `y = (A - σB) * x` matrix-free.
+"""
+function LinearAlgebra.mul!(
+    y::AbstractVector{T}, S::ShiftedOperator{D,W,T}, x::AbstractVector{T}
+) where {D,W,T}
+    # y = A * x
+    apply_lhs!(y, S.op, x)
+
+    # tmp = B * x
+    apply_rhs!(S.tmp, S.op, x)
+
+    # y = A*x - σ*B*x
+    y .-= S.σ .* S.tmp
+
+    return y
+end
+
+# Functor interface for Krylov.jl
+(S::ShiftedOperator)(x::AbstractVector) = S * x
+
+function Base.:*(S::ShiftedOperator, x::AbstractVector)
+    y = similar(S.tmp)
+    mul!(y, S, x)
+    return y
+end
+
+"""
+    to_linear_map_shifted(op::MatrixFreeOperator, σ::Real)
+
+Create a LinearMap representing `(A - σB)` for use with iterative solvers.
+"""
+function to_linear_map_shifted(op::MatrixFreeOperator{D,W}, σ::Real) where {D,W}
+    S = ShiftedOperator(op, σ)
+    dim = length(S.tmp)
+    LinearMap{ComplexF64}(x -> S * x, dim; ismutating=false, ishermitian=true)
 end
