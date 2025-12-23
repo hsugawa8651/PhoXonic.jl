@@ -119,6 +119,38 @@ See also: [`TEWave`](@ref), [`TMWave`](@ref), [`FullElastic`](@ref)
 """
 struct FullVectorEM <: PhotonicWave end
 
+"""
+    TransverseEM <: PhotonicWave
+
+Transverse electromagnetic wave for 3D photonic crystals (recommended).
+
+Uses H-field formulation with transverse projection, ensuring ∇·H = 0.
+This is the MPB-compatible formulation for accurate band structure calculations.
+
+# Field Components
+- Basis: 2 polarization vectors (e₁, e₂) perpendicular to k+G
+- Matrix size: 2N×2N (vs 3N×3N for FullVectorEM)
+- No spurious longitudinal modes
+
+# Mathematical Formulation
+For each plane wave G, the H field is expanded as:
+    H_G = h₁(G) e₁(G) + h₂(G) e₂(G)
+where e₁, e₂ are orthonormal vectors perpendicular to k+G.
+
+# Example
+```julia
+lat = fcc_lattice(1.0)
+geo = Geometry(lat, air, [(Sphere([0,0,0], 0.25), dielectric)])
+
+# Recommended for band structure calculations
+solver = Solver(TransverseEM(), geo, (16, 16, 16); cutoff=5)
+bands = compute_bands(solver, kpath; bands=1:10)
+```
+
+See also: [`FullVectorEM`](@ref), [`TEWave`](@ref), [`TMWave`](@ref)
+"""
+struct TransverseEM <: PhotonicWave end
+
 # ============================================================================
 # Phononic Wave Types
 # ============================================================================
@@ -276,6 +308,7 @@ wave_structure(::TMWave) = ScalarWave2D()
 wave_structure(::SHWave) = ScalarWave2D()
 wave_structure(::PSVWave) = VectorWave2D()
 wave_structure(::FullVectorEM) = VectorWave3D()
+wave_structure(::TransverseEM) = VectorWave3D()  # Transverse 2-component basis in 3D
 wave_structure(::FullElastic) = VectorWave3D()
 wave_structure(::Photonic1D) = ScalarWave1D()
 wave_structure(::Longitudinal1D) = ScalarWave1D()
@@ -301,6 +334,7 @@ ncomponents(::SHWave) = 1
 ncomponents(::Longitudinal1D) = 1
 ncomponents(::PSVWave) = 2
 ncomponents(::FullVectorEM) = 3
+ncomponents(::TransverseEM) = 2  # 2 polarizations per plane wave
 ncomponents(::FullElastic) = 3
 
 """
@@ -320,6 +354,7 @@ applicable_dimension(::Type{PSVWave}) = Dim2
 applicable_dimension(::Type{Photonic1D}) = Dim1
 applicable_dimension(::Type{Longitudinal1D}) = Dim1
 applicable_dimension(::Type{FullVectorEM}) = Dim3
+applicable_dimension(::Type{TransverseEM}) = Dim3
 applicable_dimension(::Type{FullElastic}) = Dim3
 
 """

@@ -86,7 +86,7 @@ export PlaneWaveBasis, convolution_matrix
 export WaveType, PhotonicWave, PhononicWave
 export TEWave, TMWave, SHWave, PSVWave
 export Photonic1D, Longitudinal1D
-export FullVectorEM, FullElastic
+export FullVectorEM, TransverseEM, FullElastic
 
 # Exports - Solver methods
 export SolverMethod, IterativeMethod, RSCGMethod
