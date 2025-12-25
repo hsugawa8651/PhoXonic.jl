@@ -7,6 +7,7 @@ makedocs(;
     format=Documenter.HTML(; prettyurls=get(ENV, "CI", nothing) == "true"),
     pages=[
         "Home" => "index.md",
+        "Getting Started" => "getting_started.md",
         "Workflow" => "workflow.md",
         "3D Calculations" => "workflow_3d.md",
         "Solver Methods" => "solver.md",

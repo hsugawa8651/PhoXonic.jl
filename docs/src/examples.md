@@ -4,7 +4,7 @@
 
 ### Triangular Lattice Rods (TM mode)
 
-Source: `examples/101_triangular_rods.jl`
+Source: [`examples/101_triangular_rods.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/101_triangular_rods.jl)
 
 Dielectric rods (ε=12) in air, radius r=0.2a.
 
@@ -29,7 +29,7 @@ The TM mode shows a clear band gap between bands 1 and 2.
 
 ### Square Lattice Rods (TE/TM comparison)
 
-Source: `examples/103_square_rods.jl`
+Source: [`examples/103_square_rods.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/103_square_rods.jl)
 
 ![Square lattice structure](assets/801_structure_sq_rods.png)
 
@@ -59,7 +59,7 @@ solver = Solver(TMWave(), geo, (64, 64), LOBPCGMethod())
 
 ### Steel/Epoxy (SH and P-SV modes)
 
-Source: `examples/201_phononic_steel_epoxy.jl`
+Source: [`examples/201_phononic_steel_epoxy.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/201_phononic_steel_epoxy.jl)
 
 Steel cylinders in epoxy matrix.
 
@@ -104,7 +104,7 @@ LOBPCG becomes faster than Dense for cutoff ≥ 12. See [LOBPCGMethod](solver.md
 
 ### Bragg Reflector
 
-Source: `examples/301_bragg_reflector.jl`
+Source: [`examples/301_bragg_reflector.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/301_bragg_reflector.jl)
 
 Quarter-wave stack of two dielectric materials.
 
@@ -137,7 +137,7 @@ transverse basis that automatically satisfies ∇·H = 0, eliminating spurious l
 
 ### FCC Lattice with Spheres
 
-Source: `examples/401_fcc_spheres.jl`
+Source: [`examples/401_fcc_spheres.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/401_fcc_spheres.jl)
 
 Dielectric spheres (ε=12) in air on an FCC lattice.
 
@@ -159,7 +159,7 @@ bands = compute_bands(solver, kpath; bands=1:6)
 
 ### Simple Cubic Lattice with Spheres
 
-Source: `examples/402_sc_spheres.jl`
+Source: [`examples/402_sc_spheres.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/402_sc_spheres.jl)
 
 ```julia
 lat = cubic_lattice(1.0)
@@ -178,12 +178,11 @@ See the `examples/` directory in the repository for additional examples:
 
 | Category | File | Description |
 |----------|------|-------------|
-| 2D Photonic | `104_honeycomb_rods.jl` | Honeycomb lattice |
-| 2D Photonic | `111_triangular_holes.jl` | Air holes in dielectric |
-| 2D Photonic | `121_subpixel_comparison.jl` | Convergence with subpixel averaging |
-| 2D Phononic | `207_solver_simple.jl` | Dense vs LOBPCG comparison |
-| 2D Phononic | `208_solver_comparison.jl` | Solver benchmark across sizes |
-| 1D Elastic | `302_elastic_superlattice.jl` | Elastic wave superlattice |
-| 3D Phononic | `403_sc_phononic.jl` | Simple cubic phononic |
-| Defect | `501_defect_mode.jl` | Defect states and LDOS |
-| TMM | `601_tmm_bragg_mirror.jl` | Transfer matrix method |
+| 2D Photonic | [`104_honeycomb_rods.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/104_honeycomb_rods.jl) | Honeycomb lattice |
+| 2D Photonic | [`111_triangular_holes.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/111_triangular_holes.jl) | Air holes in dielectric |
+| 2D Photonic | [`121_subpixel_comparison.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/121_subpixel_comparison.jl) | Convergence with subpixel averaging |
+| 2D Phononic | [`207_solver_simple.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/207_solver_simple.jl) | Dense vs LOBPCG comparison |
+| 2D Phononic | [`208_solver_comparison.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/208_solver_comparison.jl) | Solver benchmark across sizes |
+| 1D Elastic | [`302_elastic_superlattice.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/302_elastic_superlattice.jl) | Elastic wave superlattice |
+| Defect | [`501_defect_mode.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/501_defect_mode.jl) | Defect states and LDOS |
+| TMM | [`601_tmm_bragg_mirror.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/601_tmm_bragg_mirror.jl) | Transfer matrix method |
