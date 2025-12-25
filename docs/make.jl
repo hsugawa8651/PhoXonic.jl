@@ -27,8 +27,8 @@ makedocs(;
         ],
         "Dependencies" => "dependencies.md",
     ],
-    # Source links: enabled in CI (points to public repo), disabled locally
-    remotes=get(ENV, "CI", nothing) == "true" ? Documenter.Remotes.GitHub("hsugawa8651", "PhoXonic.jl") : nothing,
+    # Source links always point to public repo
+    repo=Documenter.Remotes.GitHub("hsugawa8651", "PhoXonic.jl"),
     warnonly=[:missing_docs, :cross_references],
 )
 
