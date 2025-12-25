@@ -374,12 +374,12 @@ nkpoints(bs::BandStructure) = size(bs.frequencies, 1)
 # Warm start helper for LOBPCG
 # ============================================================================
 
-"""
+#=
     _compute_bands_warmstart!(frequencies, solver, kpoints, bands, verbose)
 
 Internal helper for warm start band computation with LOBPCG.
 Uses previous eigenvectors as initial guess for faster convergence.
-"""
+=#
 function _compute_bands_warmstart!(
     frequencies::Matrix{Float64}, solver::Solver, kpoints, bands, verbose::Bool
 )
