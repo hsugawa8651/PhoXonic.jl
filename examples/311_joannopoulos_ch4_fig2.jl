@@ -16,6 +16,7 @@
 using PhoXonic
 using Printf
 using Plots
+default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
 
 println("=" ^ 70)
 println("Joannopoulos Book - Chapter 4, Figure 2")
@@ -208,6 +209,7 @@ p1 = plot(;
     legend=false,
     grid=true,
     ylims=ylims_common,
+    left_margin=5Plots.mm,
 )
 for b in 1:nbands
     plot!(p1, k_normalized, freqs1[:, b]; linewidth=2, color=:blue)

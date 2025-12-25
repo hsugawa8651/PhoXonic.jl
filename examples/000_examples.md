@@ -1,6 +1,6 @@
 # PhoXonic.jl Examples
 
-Last-Modified: 2025-12-22
+Last-Modified: 2025-12-24
 
 ## Numbering System
 
@@ -41,8 +41,10 @@ Last-Modified: 2025-12-22
 | 208_solver_comparison.jl | Solver comparison |
 | 209_warmstart_benchmark.jl | LOBPCG warm start benchmark |
 | 210_vacuum_phononic.jl | Vacuum phononic crystal (ElasticVoid) |
-| 211_tanaka2000_vacuum_al.jl | Tanaka 2000: Al/vacuum (Tanaka limit validation) |
-| 212_maldovan2006_phoxonic.jl | Maldovan 2006: Phoxonic crystal (Si/air) |
+| 211_kushwaha1993_fig1.jl | Kushwaha 1993 Fig.1: Ni/Al square lattice |
+| 212_kushwaha1993_fig2.jl | Kushwaha 1993 Fig.2: Ni/Al square lattice (different f) |
+| 213_tanaka2000_vacuum_al.jl | Tanaka 2000: Al/vacuum (Tanaka limit validation) |
+| 214_maldovan2006_phoxonic.jl | Maldovan 2006: Phoxonic crystal (Si/air) |
 
 ### 3xx: 1D Structures
 
@@ -54,11 +56,18 @@ Last-Modified: 2025-12-22
 
 ### 4xx: 3D Structures
 
+3D photonic crystal examples use `TransverseEM` wave type, which is recommended for 3D calculations.
+`TransverseEM` uses a 2N×2N transverse basis (eliminating spurious longitudinal modes) and
+automatically satisfies ∇·H = 0.
+
 | File | Description |
 |------|-------------|
-| 401_fcc_spheres.jl | FCC lattice spheres (3D photonic) |
-| 402_sc_spheres.jl | SC lattice spheres (3D photonic) |
-| 403_sc_phononic.jl | SC phononic |
+| 401_fcc_spheres.jl | FCC lattice spheres (3D photonic, TransverseEM) |
+| 402_sc_spheres.jl | SC lattice spheres (3D photonic, TransverseEM) |
+| 403_fcc_phononic.jl | FCC phononic (not included in v1) |
+| 411_joannopoulos_ch6_fig3.jl | Diamond air spheres (Joannopoulos Ch.6 Fig.3) |
+| 412_joannopoulos_ch6_fig8.jl | Inverse opal (Joannopoulos Ch.6 Fig.8) |
+| 413_mpb_diamond.jl | MPB diamond tutorial (dielectric spheres) |
 
 ### 5xx: Defects / Supercells
 

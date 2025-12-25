@@ -80,6 +80,26 @@ This example also compares Dense, KrylovKit, and LOBPCG methods for phononic pro
 
 ---
 
+### Solver Comparison (Dense vs LOBPCG)
+
+Source: `examples/207_solver_simple.jl`, `examples/208_solver_comparison.jl`
+
+Benchmark Dense and LOBPCG solvers for phononic band structure calculations.
+
+```julia
+# Dense solver (default, exact)
+solver_dense = Solver(PSVWave(), geo, (64, 64); cutoff=15)
+
+# LOBPCG solver (faster for large problems)
+solver_lobpcg = Solver(PSVWave(), geo, (64, 64), LOBPCGMethod(); cutoff=15)
+
+bands = compute_bands(solver, kpath; bands=1:10)
+```
+
+LOBPCG becomes faster than Dense for cutoff ≥ 12. See [LOBPCGMethod](solver.md#LOBPCGMethod) for details.
+
+---
+
 ## 1D Structures
 
 ### Bragg Reflector
@@ -112,6 +132,9 @@ solver = Solver(Photonic1D(), geo, 128, LOBPCGMethod(); cutoff=20)
 
 ## 3D Photonic Crystals
 
+For 3D photonic crystals, `TransverseEM` is the recommended wave type. It uses a 2N×2N
+transverse basis that automatically satisfies ∇·H = 0, eliminating spurious longitudinal modes.
+
 ### FCC Lattice with Spheres
 
 Source: `examples/401_fcc_spheres.jl`
@@ -124,17 +147,13 @@ air = Dielectric(1.0)
 sphere = Dielectric(12.0)
 geo = Geometry(lat, air, [(Sphere([0.0, 0.0, 0.0], 0.25), sphere)])
 
-# 3D requires shift-and-invert to skip spurious longitudinal modes
-# Use cutoff≥7 for high-contrast materials (ε=12)
-solver = Solver(FullVectorEM(), geo, (12, 12, 12), KrylovKitMethod(shift=0.01); cutoff=7)
+# TransverseEM: recommended for 3D photonic crystals
+solver = Solver(TransverseEM(), geo, (16, 16, 16), DenseMethod(); cutoff=5)
 
 # Use 3D k-path
 kpath = simple_kpath_fcc(a=1.0, npoints=20)
 bands = compute_bands(solver, kpath; bands=1:6)
 ```
-
-**Note**: At Γ point (k=0), the lowest transverse modes also have ω→0,
-which can cause anomalous values in band structure plots.
 
 ---
 
@@ -146,8 +165,7 @@ Source: `examples/402_sc_spheres.jl`
 lat = cubic_lattice(1.0)
 geo = Geometry(lat, air, [(Sphere([0.0, 0.0, 0.0], 0.3), sphere)])
 
-# cutoff=7 recommended for ε=12 contrast
-solver = Solver(FullVectorEM(), geo, (12, 12, 12), KrylovKitMethod(shift=0.01); cutoff=7)
+solver = Solver(TransverseEM(), geo, (16, 16, 16), DenseMethod(); cutoff=5)
 kpath = simple_kpath_cubic(a=1.0, npoints=20)
 bands = compute_bands(solver, kpath; bands=1:6)
 ```
@@ -163,6 +181,8 @@ See the `examples/` directory in the repository for additional examples:
 | 2D Photonic | `104_honeycomb_rods.jl` | Honeycomb lattice |
 | 2D Photonic | `111_triangular_holes.jl` | Air holes in dielectric |
 | 2D Photonic | `121_subpixel_comparison.jl` | Convergence with subpixel averaging |
+| 2D Phononic | `207_solver_simple.jl` | Dense vs LOBPCG comparison |
+| 2D Phononic | `208_solver_comparison.jl` | Solver benchmark across sizes |
 | 1D Elastic | `302_elastic_superlattice.jl` | Elastic wave superlattice |
 | 3D Phononic | `403_sc_phononic.jl` | Simple cubic phononic |
 | Defect | `501_defect_mode.jl` | Defect states and LDOS |

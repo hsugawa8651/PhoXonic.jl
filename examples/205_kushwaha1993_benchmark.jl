@@ -11,6 +11,7 @@
 using PhoXonic
 using Printf
 using Plots
+default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
 
 println("=" ^ 60)
 println("Kushwaha 1993: Phononic Crystal")
@@ -172,29 +173,53 @@ dists = bands_sh_dense.distances
 label_positions = [dists[i] for (i, _) in bands_sh_dense.labels]
 label_names = [l for (_, l) in bands_sh_dense.labels]
 
-# Combined plot
-p = plot(;
+# SH plot
+p_sh = plot(;
     xlabel="Wave vector",
     ylabel="Normalized frequency (ωa/2πvₜ)",
-    title="Kushwaha 1993: Steel/Epoxy\nSH (blue) and P-SV (red)",
+    title="SH Bands (out-of-plane)",
     legend=false,
     grid=true,
     size=(700, 500),
 )
-
 for b in 1:size(freqs_sh_norm, 2)
-    plot!(p, dists, freqs_sh_norm[:, b]; linewidth=2, color=:blue)
+    plot!(p_sh, dists, freqs_sh_norm[:, b]; linewidth=2, color=:green)
 end
+vline!(p_sh, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
+xticks!(p_sh, label_positions, label_names)
+
+# PSV plot
+p_psv = plot(;
+    xlabel="Wave vector",
+    ylabel="Normalized frequency (ωa/2πvₜ)",
+    title="P-SV Bands (in-plane)",
+    legend=false,
+    grid=true,
+    size=(700, 500),
+)
 for b in 1:size(freqs_psv_norm, 2)
-    plot!(p, dists, freqs_psv_norm[:, b]; linewidth=2, color=:red, linestyle=:dash)
+    plot!(p_psv, dists, freqs_psv_norm[:, b]; linewidth=2, color=:orange)
 end
+vline!(p_psv, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
+xticks!(p_psv, label_positions, label_names)
 
-vline!(p, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
-xticks!(p, label_positions, label_names)
+# Combined plot (side by side)
+p_combined = plot(
+    p_sh,
+    p_psv;
+    layout=(1, 2),
+    size=(1200, 500),
+    plot_title="Kushwaha 1993: Steel/Epoxy Phononic Crystal",
+)
 
-savefig(p, joinpath(@__DIR__, "205_kushwaha1993_bands.png"))
-println("\nSaved: 205_kushwaha1993_bands.png")
+savefig(p_sh, joinpath(@__DIR__, "205_kushwaha1993_sh_bands.png"))
+savefig(p_psv, joinpath(@__DIR__, "205_kushwaha1993_psv_bands.png"))
+savefig(p_combined, joinpath(@__DIR__, "205_kushwaha1993_bands.png"))
 
-display(p)
+println("\nSaved: 205_kushwaha1993_sh_bands.png")
+println("Saved: 205_kushwaha1993_psv_bands.png")
+println("Saved: 205_kushwaha1993_bands.png")
+
+display(p_combined)
 
 println("\nDone!")

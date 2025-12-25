@@ -5,6 +5,7 @@
 
 using PhoXonic
 using Plots
+default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
 
 println("=== Honeycomb Lattice Photonic Crystal ===")
 println("Dielectric rods (ε=12) in air, r=0.14a")
@@ -133,32 +134,69 @@ dists = bands_tm.distances
 label_positions = [dists[i] for (i, _) in bands_tm.labels]
 label_names = [l for (_, l) in bands_tm.labels]
 
-# Combined plot
-p = plot(;
+ymax = max(maximum(bands_tm.frequencies), maximum(bands_te.frequencies)) * 1.05
+ylims_common = (0, ymax)
+
+# TM plot
+p_tm = plot(;
     xlabel="Wave vector",
     ylabel="Frequency (ωa/2πc)",
-    title="Honeycomb Lattice: TM (blue) and TE (red)",
+    title="TM Bands (ε=12 rods)",
     legend=false,
     grid=true,
-    size=(800, 500),
-    ylim=(0, 12),
+    size=(700, 500),
+    ylims=ylims_common,
+)
+for b in 1:size(bands_tm.frequencies, 2)
+    plot!(p_tm, dists, bands_tm.frequencies[:, b]; linewidth=2, color=:blue)
+end
+vline!(p_tm, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
+xticks!(p_tm, label_positions, label_names)
+
+# Highlight TM band gap (bands 2-3)
+gap_tm_2_3 = find_bandgap(bands_tm, 2, 3)
+if gap_tm_2_3.gap > 0
+    hspan!(p_tm, [gap_tm_2_3.max_lower, gap_tm_2_3.min_upper]; alpha=0.2, color=:blue, label="")
+end
+
+# TE plot
+p_te = plot(;
+    xlabel="Wave vector",
+    ylabel="Frequency (ωa/2πc)",
+    title="TE Bands (ε=12 rods)",
+    legend=false,
+    grid=true,
+    size=(700, 500),
+    ylims=ylims_common,
+)
+for b in 1:size(bands_te.frequencies, 2)
+    plot!(p_te, dists, bands_te.frequencies[:, b]; linewidth=2, color=:red)
+end
+vline!(p_te, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
+xticks!(p_te, label_positions, label_names)
+
+# Highlight TE band gap (bands 5-6)
+gap_te_5_6 = find_bandgap(bands_te, 5, 6)
+if gap_te_5_6.gap > 0
+    hspan!(p_te, [gap_te_5_6.max_lower, gap_te_5_6.min_upper]; alpha=0.2, color=:red, label="")
+end
+
+# Combined plot (side by side)
+p_combined = plot(
+    p_tm,
+    p_te;
+    layout=(1, 2),
+    size=(1200, 500),
+    plot_title="Honeycomb Lattice Photonic Crystal (r=0.14a)",
 )
 
-# Plot TM bands (blue solid)
-for b in 1:size(bands_tm.frequencies, 2)
-    plot!(p, dists, bands_tm.frequencies[:, b]; linewidth=2, color=:blue)
-end
+# Save plots
+savefig(p_tm, joinpath(@__DIR__, "104_honeycomb_tm_bands.png"))
+savefig(p_te, joinpath(@__DIR__, "104_honeycomb_te_bands.png"))
+savefig(p_combined, joinpath(@__DIR__, "104_honeycomb_bands.png"))
 
-# Plot TE bands (red dashed)
-for b in 1:size(bands_te.frequencies, 2)
-    plot!(p, dists, bands_te.frequencies[:, b]; linewidth=2, color=:red, linestyle=:dash)
-end
+println("\nSaved: 104_honeycomb_tm_bands.png")
+println("Saved: 104_honeycomb_te_bands.png")
+println("Saved: 104_honeycomb_bands.png")
 
-vline!(p, label_positions; color=:gray, linestyle=:dash, alpha=0.5)
-xticks!(p, label_positions, label_names)
-
-# Save plot
-savefig(p, joinpath(@__DIR__, "104_honeycomb_bands.png"))
-println("\nSaved: 104_honeycomb_bands.png")
-
-display(p)
+display(p_combined)

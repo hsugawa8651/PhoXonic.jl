@@ -10,6 +10,7 @@
 using PhoXonic
 using Printf
 using Plots
+default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
 
 println("=" ^ 60)
 println("Vasseur 2001: Steel/Epoxy Phononic Crystal")
@@ -267,6 +268,7 @@ p_sh = plot(;
     grid=true,
     size=(700, 500),
     ylims=ylims_common,
+    left_margin=5Plots.mm,
 )
 
 for b in 1:size(freqs_sh_norm, 2)

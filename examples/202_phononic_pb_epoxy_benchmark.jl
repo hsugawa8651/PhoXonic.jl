@@ -8,6 +8,7 @@
 
 using PhoXonic
 using Plots
+default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
 using Printf
 
 println("=" ^ 70)
@@ -286,6 +287,7 @@ p_sh = plot(;
     grid=true,
     size=(700, 500),
     ylims=ylims_common,
+    left_margin=5Plots.mm,
 )
 for b in 1:size(freqs_sh_norm, 2)
     plot!(p_sh, dists, freqs_sh_norm[:, b]; linewidth=2, color=:blue)

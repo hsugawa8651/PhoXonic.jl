@@ -4,6 +4,7 @@
 
 using PhoXonic
 using Plots
+default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
 using Statistics
 
 println("=== Discretization Method Comparison ===")
@@ -76,7 +77,7 @@ p1 = plot(
     title="Convergence: SimpleGrid vs SubpixelAverage",
     yscale=:log10,
     legend=:topright,
-    size=(600, 400),
+    size=(700, 500),
 )
 plot!(p1, resolutions, errors_subpix; label="SubpixelAverage", marker=:square, linewidth=2)
 
@@ -115,8 +116,9 @@ p_simple = plot(;
     title="SimpleGrid $(res_low)×$(res_low)",
     legend=false,
     grid=true,
-    size=(600, 450),
+    size=(700, 500),
     ylims=ylims_common,
+    left_margin=5Plots.mm,
 )
 
 # Reference (black dashed)
@@ -144,7 +146,7 @@ p_subpix = plot(;
     title="SubpixelAverage $(res_low)×$(res_low)",
     legend=false,
     grid=true,
-    size=(600, 450),
+    size=(700, 500),
     ylims=ylims_common,
 )
 
@@ -171,7 +173,7 @@ p2 = plot(
     p_simple,
     p_subpix;
     layout=(1, 2),
-    size=(1200, 450),
+    size=(1200, 500),
     plot_title="Discretization Comparison (black dashed = 128×128 reference)",
 )
 

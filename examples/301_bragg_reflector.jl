@@ -5,6 +5,7 @@
 
 using PhoXonic
 using Plots
+default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
 using Printf
 
 println("=== 1D Bragg Reflector ===")
@@ -128,7 +129,7 @@ p = plot(;
     title="1D Bragg Reflector (n=1/3 quarter-wave stack)",
     legend=false,
     grid=true,
-    size=(600, 450),
+    size=(700, 500),
 )
 
 k_norm = k_points ./ (π/a)  # Normalize to [0, 1]

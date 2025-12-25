@@ -5,6 +5,7 @@
 
 using PhoXonic
 using Plots
+default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
 using Printf
 using LinearAlgebra: PosDefException
 
@@ -140,8 +141,9 @@ p_tm = plot(;
     title="TM Bands (ε=11.56 rods)",
     legend=false,
     grid=true,
-    size=(700, 450),
+    size=(700, 500),
     ylims=ylims_common,
+    left_margin=5Plots.mm,
 )
 for b in 1:size(bands_tm.frequencies, 2)
     plot!(p_tm, dists, bands_tm.frequencies[:, b]; linewidth=2, color=:blue)
@@ -164,7 +166,7 @@ p_te = plot(;
     title="TE Bands (ε=11.56 rods)",
     legend=false,
     grid=true,
-    size=(700, 450),
+    size=(700, 500),
     ylims=ylims_common,
 )
 for b in 1:size(bands_te.frequencies, 2)
@@ -178,7 +180,7 @@ p_combined = plot(
     p_tm,
     p_te;
     layout=(1, 2),
-    size=(1200, 450),
+    size=(1200, 500),
     plot_title="Square Lattice Photonic Crystal (r=0.2a)",
 )
 

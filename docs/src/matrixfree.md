@@ -118,7 +118,7 @@ k = [0.5, 0.0]
 ω, modes = solve(solver, k; bands=1:5)
 ```
 
-For 3D calculations, shift-and-invert is typically needed:
+For 3D calculations with matrix-free methods, `FullVectorEM` with shift-and-invert is used:
 
 ```julia
 lat = cubic_lattice(1.0)
@@ -128,6 +128,10 @@ geo = Geometry(lat, Dielectric(1.0), [(Sphere([0.5,0.5,0.5], 0.3), Dielectric(12
 solver = Solver(FullVectorEM(), geo, (16, 16, 16), KrylovKitMethod(shift=0.01); cutoff=7)
 ω, modes = solve(solver, [0.1, 0.1, 0.1]; bands=1:6)
 ```
+
+**Note:** For most 3D photonic crystal calculations, `TransverseEM` with `DenseMethod()` is
+recommended as it eliminates spurious modes without requiring shift-and-invert. See
+[3D Calculations](@ref) for details.
 
 ## Unified Green's Function API
 

@@ -1,4 +1,4 @@
-# Last-Modified: 2025-12-22T23:00:00+09:00
+# Last-Modified: 2025-12-25T12:00:00+09:00
 
 #=
 Eigenvalue problem solver for photonic and phononic crystals.
@@ -283,6 +283,19 @@ function prepare_materials(
     (ε_inv=ε_inv, μ=μ)
 end
 
+# 3D Transverse EM (H-field formulation with transverse projection)
+# Same materials as FullVectorEM, but matrices are projected to transverse subspace
+function prepare_materials(
+    ::TransverseEM,
+    geometry::Geometry{Dim3},
+    resolution,
+    method::DiscretizationMethod=SimpleGrid(),
+)
+    ε_inv = discretize(geometry, resolution, :ε_inv, method)
+    μ = discretize(geometry, resolution, :μ, method)
+    (ε_inv=ε_inv, μ=μ)
+end
+
 # 3D Full Elastic
 # LHS = -∇·(C:∇), RHS = ρ
 function prepare_materials(
@@ -326,6 +339,99 @@ function wave_vector_diagonals(basis::PlaneWaveBasis{Dim3}, k::AbstractVector)
     Ky = Diagonal([k[2] + G[2] for G in basis.G])
     Kz = Diagonal([k[3] + G[3] for G in basis.G])
     return (Kx, Ky, Kz)
+end
+
+# ============================================================================
+# Transverse polarization vectors for 3D EM (TransverseEM)
+# ============================================================================
+
+"""
+    compute_polarization_vectors(K::SVector{3})
+
+Compute two orthonormal polarization vectors perpendicular to wave vector K.
+
+Returns (e₁, e₂) where:
+- e₁, e₂ are unit vectors
+- e₁ ⊥ K, e₂ ⊥ K
+- e₁ ⊥ e₂
+
+For K ≈ 0 (Γ point), returns (x̂, ŷ).
+For K ∥ ẑ, returns (x̂, ŷ) as a special case.
+Otherwise, e₁ = K × ẑ / |K × ẑ|, e₂ = K̂ × e₁.
+
+# Example
+```julia
+K = SVector(1.0, 0.0, 0.0)
+e1, e2 = compute_polarization_vectors(K)
+# e1 ≈ [0, 0, -1], e2 ≈ [0, 1, 0]
+```
+"""
+function compute_polarization_vectors(K::SVector{3,T}) where {T}
+    Knorm = norm(K)
+
+    if Knorm < 1e-10
+        # K ≈ 0: return arbitrary orthonormal pair
+        return SVector{3,T}(1, 0, 0), SVector{3,T}(0, 1, 0)
+    end
+
+    K_hat = K / Knorm
+    z_hat = SVector{3,T}(0, 0, 1)
+
+    # K × ẑ
+    cross_Kz = cross(K_hat, z_hat)
+    cross_norm = norm(cross_Kz)
+
+    if cross_norm < 1e-10
+        # K ∥ ẑ: special case
+        e1 = SVector{3,T}(1, 0, 0)
+        e2 = SVector{3,T}(0, 1, 0)
+    else
+        e1 = cross_Kz / cross_norm
+        e2 = cross(K_hat, e1)
+    end
+
+    return e1, e2
+end
+
+"""
+    build_polarization_basis(basis::PlaneWaveBasis{Dim3}, k::AbstractVector)
+
+Build the polarization basis matrix P (3N × 2N) for TransverseEM.
+
+Each column of P represents a transverse polarization mode.
+For plane wave G with index i:
+- Column 2i-1: e₁(G) in [Hx; Hy; Hz] order
+- Column 2i:   e₂(G) in [Hx; Hy; Hz] order
+
+The projection P' * M * P reduces a 3N×3N matrix to 2N×2N.
+
+# Example
+```julia
+P = build_polarization_basis(solver.basis, k)
+LHS_2N = P' * LHS_3N * P  # Project to transverse subspace
+```
+"""
+function build_polarization_basis(basis::PlaneWaveBasis{Dim3}, k::AbstractVector)
+    N = basis.num_pw
+    P = zeros(ComplexF64, 3N, 2N)
+
+    for (i, G) in enumerate(basis.G)
+        K = SVector{3,Float64}(k[1] + G[1], k[2] + G[2], k[3] + G[3])
+        e1, e2 = compute_polarization_vectors(K)
+
+        # Store in [Hx; Hy; Hz] order
+        # Column 2i-1: e₁ polarization
+        P[i, 2i - 1] = e1[1]         # Hx component of e₁
+        P[N + i, 2i - 1] = e1[2]       # Hy component of e₁
+        P[2N + i, 2i - 1] = e1[3]      # Hz component of e₁
+
+        # Column 2i: e₂ polarization
+        P[i, 2i] = e2[1]           # Hx component of e₂
+        P[N + i, 2i] = e2[2]         # Hy component of e₂
+        P[2N + i, 2i] = e2[3]        # Hz component of e₂
+    end
+
+    return P
 end
 
 """
@@ -477,6 +583,47 @@ function skew_matrix(k::AbstractVector)
 end
 
 """
+    _build_fullvector_3n_matrices(basis, mats, k)
+
+Internal helper: Build 3N×3N matrices for 3D photonic crystal (H-field formulation).
+
+Returns (LHS_3N, RHS_3N) where:
+- LHS_3N: curl × ε⁻¹ × curl operator (3N×3N)
+- RHS_3N: μ weight matrix (3N×3N block diagonal)
+
+This is shared between FullVectorEM and TransverseEM to avoid code duplication.
+"""
+function _build_fullvector_3n_matrices(basis, mats, k::AbstractVector{<:Real})
+    # Convolution matrices
+    ε_inv_c = convolution_matrix(mats.ε_inv, basis)
+    μ_c = convolution_matrix(mats.μ, basis)
+
+    Kx, Ky, Kz = wave_vector_diagonals(basis, k)
+
+    # Build LHS: 9 blocks L_ij where L_ij = curl_i × ε⁻¹ × curl_j
+    L_xx = Ky * ε_inv_c * Ky + Kz * ε_inv_c * Kz
+    L_yy = Kx * ε_inv_c * Kx + Kz * ε_inv_c * Kz
+    L_zz = Kx * ε_inv_c * Kx + Ky * ε_inv_c * Ky
+    L_xy = -Ky * ε_inv_c * Kx
+    L_xz = -Kz * ε_inv_c * Kx
+    L_yx = -Kx * ε_inv_c * Ky
+    L_yz = -Kz * ε_inv_c * Ky
+    L_zx = -Kx * ε_inv_c * Kz
+    L_zy = -Ky * ε_inv_c * Kz
+
+    LHS_3N = [
+        L_xx L_xy L_xz;
+        L_yx L_yy L_yz;
+        L_zx L_zy L_zz
+    ]
+
+    # RHS: block diagonal μ
+    RHS_3N = block_diagonal_weight(μ_c, 3)
+
+    return LHS_3N, RHS_3N
+end
+
+"""
     build_matrices(solver::Solver{Dim3, FullVectorEM}, k)
 
 Build 3N×3N matrices for 3D photonic crystal (H-field formulation).
@@ -486,45 +633,45 @@ Formulation: curl × ε⁻¹ × curl H = (ω²/c²) μ H
 Storage order: [H_x; H_y; H_z] (component-order for FFT efficiency)
 """
 function build_matrices(solver::Solver{Dim3,FullVectorEM}, k::AbstractVector{<:Real})
+    LHS, RHS = _build_fullvector_3n_matrices(solver.basis, solver.material_arrays, k)
+    return LHS, RHS
+end
+
+"""
+    build_matrices(solver::Solver{Dim3, TransverseEM}, k)
+
+Build 2N×2N matrices for 3D photonic crystal with transverse projection.
+
+This is the MPB-compatible formulation that enforces ∇·H = 0 by projecting
+the 3N×3N FullVectorEM matrices onto the 2N-dimensional transverse subspace.
+
+# Algorithm
+1. Build 3N×3N matrices (LHS_3N, RHS_3N) as in FullVectorEM
+2. Construct polarization basis P (3N × 2N) where each column is a
+   transverse polarization vector perpendicular to k+G
+3. Project: LHS = P' * LHS_3N * P, RHS = P' * RHS_3N * P
+
+# Advantages over FullVectorEM
+- Matrix size: 2N×2N (vs 3N×3N) → ~2.25× faster solve
+- No spurious longitudinal modes (ω ≈ 0)
+- Correct physical results matching MPB
+"""
+function build_matrices(solver::Solver{Dim3,TransverseEM}, k::AbstractVector{<:Real})
     basis = solver.basis
-    mats = solver.material_arrays
 
-    # Convolution matrix for LHS
-    ε_inv_c = convolution_matrix(mats.ε_inv, basis)
+    # 1. Build 3N×3N FullVectorEM matrices using shared helper
+    LHS_3N, RHS_3N = _build_fullvector_3n_matrices(basis, solver.material_arrays, k)
 
-    Kx, Ky, Kz = wave_vector_diagonals(basis, k)
+    # 2. Build polarization basis P (3N × 2N)
+    P = build_polarization_basis(basis, k)
 
-    # Build LHS: 9 blocks L_ij where L_ij = curl_i × ε⁻¹ × curl_j
-    # curl_i is the i-th row of the curl operator in Fourier space
-    # curl = i(k+G)× = i * skew_matrix(K)
-    # For component i of curl×(ε⁻¹×(curl×H)):
-    #   (curl × (ε⁻¹ × (curl × H)))_x = Ky*(ε⁻¹*(Kx*Hy - Ky*Hx)) - Kz*(ε⁻¹*(Kz*Hx - Kx*Hz))
-    #                                 = -Ky*ε⁻¹*Ky*Hx + Ky*ε⁻¹*Kx*Hy - Kz*ε⁻¹*Kz*Hx + Kz*ε⁻¹*Kx*Hz
-    #                                 = -(Ky*ε⁻¹*Ky + Kz*ε⁻¹*Kz)*Hx + Ky*ε⁻¹*Kx*Hy + Kz*ε⁻¹*Kx*Hz
+    # 3. Project to transverse subspace: 2N × 2N
+    LHS_proj = P' * LHS_3N * P
+    RHS_proj = P' * RHS_3N * P
 
-    # L_xx = -(Ky² + Kz²)*ε⁻¹ (but with convolution in between)
-    # More precisely: L_xx = Ky*ε⁻¹*Ky + Kz*ε⁻¹*Kz
-    L_xx = Ky * ε_inv_c * Ky + Kz * ε_inv_c * Kz
-    L_yy = Kx * ε_inv_c * Kx + Kz * ε_inv_c * Kz
-    L_zz = Kx * ε_inv_c * Kx + Ky * ε_inv_c * Ky
-
-    # Off-diagonal blocks
-    L_xy = -Ky * ε_inv_c * Kx
-    L_xz = -Kz * ε_inv_c * Kx
-    L_yx = -Kx * ε_inv_c * Ky
-    L_yz = -Kz * ε_inv_c * Ky
-    L_zx = -Kx * ε_inv_c * Kz
-    L_zy = -Ky * ε_inv_c * Kz
-
-    # Assemble 3N × 3N block matrix
-    LHS = [
-        L_xx L_xy L_xz;
-        L_yx L_yy L_yz;
-        L_zx L_zy L_zz
-    ]
-
-    # RHS = W (weight matrix)
-    RHS = get_weight_matrix(solver)
+    # 4. Symmetrize to ensure exact Hermiticity (numerical precision)
+    LHS = (LHS_proj + LHS_proj') / 2
+    RHS = (RHS_proj + RHS_proj') / 2
 
     return LHS, RHS
 end
@@ -661,6 +808,34 @@ function get_weight_matrix(solver::Solver{Dim3,FullVectorEM})
     # 3D EM: W = diag(μ, μ, μ) (consistent with RHS in build_matrices)
     μ_c = convolution_matrix(solver.material_arrays.μ, solver.basis)
     return block_diagonal_weight(μ_c, 3)
+end
+
+"""
+    get_weight_matrix(solver::Solver{Dim3, TransverseEM})
+
+Not directly available for TransverseEM due to k-dependency.
+
+The weight matrix for TransverseEM is the projected μ matrix: W = P' * μ_3N * P,
+where P is the polarization basis that depends on k. Since this varies with each
+k-point, a single k-independent weight matrix cannot be provided.
+
+# Alternative
+Use the RHS matrix returned by `build_matrices(solver, k)` instead:
+
+```julia
+LHS, RHS = build_matrices(solver, k)
+# RHS is the 2N×2N projected weight matrix for this k-point
+```
+
+# See also
+- [`build_matrices`](@ref): Returns both LHS and RHS (weight) matrices
+- [`solve_at_k_with_vectors`](@ref): Returns eigenvectors in the 2N transverse basis
+"""
+function get_weight_matrix(solver::Solver{Dim3,TransverseEM})
+    error(
+        "get_weight_matrix for TransverseEM is k-dependent. " *
+        "Use the RHS matrix from build_matrices(solver, k) instead.",
+    )
 end
 
 function get_weight_matrix(solver::Solver{Dim3,FullElastic})
@@ -1458,6 +1633,11 @@ end
     _solve_lobpcg_standard(solver, k, method; bands)
 
 Standard LOBPCG solver without shift-and-invert.
+
+Note: For phononic crystals with cold start (random initial vectors), LOBPCG
+may not converge to the correct eigenvalues. Use `warm_start=true` (default)
+with `compute_bands` for reliable results. The preconditioner is NOT used
+in this function to avoid convergence to wrong eigenvalues.
 """
 function _solve_lobpcg_standard(solver::Solver, k, method::LOBPCGMethod; bands=1:10)
     # Build dense matrices
@@ -1468,6 +1648,10 @@ function _solve_lobpcg_standard(solver::Solver, k, method::LOBPCGMethod; bands=1
     nev = _nev(bands, dim)
 
     # Ensure matrices are Hermitian (required by LOBPCG)
+    # Note: We do NOT apply scaling or preconditioner here for cold start.
+    # For phononic problems, the diagonal preconditioner can cause LOBPCG
+    # to converge to wrong eigenvalues. Scaling can also hurt more than help.
+    # Use warm_start=true (via compute_bands) for reliable results.
     A = Hermitian(LHS)
     B = Hermitian(RHS)
 
@@ -1476,7 +1660,7 @@ function _solve_lobpcg_standard(solver::Solver, k, method::LOBPCGMethod; bands=1
     X0, _ = qr(X0)
     X0 = Matrix(X0)
 
-    # Solve using LOBPCG
+    # Solve using LOBPCG (no preconditioner for cold start)
     # IterativeSolvers.lobpcg solves A x = λ B x for smallest eigenvalues
     results = IterativeSolvers.lobpcg(
         A, B, false, X0; tol=method.tol, maxiter=method.maxiter

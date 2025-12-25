@@ -7,6 +7,7 @@ using LinearAlgebra
 using IterativeSolvers
 using Printf
 using Plots
+default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
 using Statistics
 
 println("=== LOBPCG Warm Start Benchmark ===")
@@ -288,46 +289,52 @@ p1 = plot(;
     ylabel="Iterations",
     title="LOBPCG Iterations per k-point",
     legend=:topright,
-    size=(600, 400),
+    size=(600, 500),
 )
 
 plot!(p1, 1:n_kpts, iters_random; label="Random init", marker=:circle, markersize=3)
 plot!(p1, 1:n_kpts, iters_warmstart; label="Warm start", marker=:square, markersize=3)
 
 # ============================================================================
-# Plot: Band structure comparison
+# Plot: Band structures (separate panels)
 # ============================================================================
 dists = kpath.distances
 
+# Dense band structure
 p2 = plot(;
     xlabel="Wave Vector",
     ylabel="ω (rad/s)",
-    title="Band Structure Comparison",
-    legend=:topright,
-    size=(600, 400),
+    title="Dense (reference)",
+    legend=false,
+    size=(600, 500),
 )
-
 for b in 1:nbands
-    if b == 1
-        plot!(p2, dists, freqs_dense[:, b]; color=:black, linewidth=2, label="Dense")
-        plot!(
-            p2,
-            dists,
-            freqs_warmstart[:, b];
-            color=:red,
-            linestyle=:dash,
-            label="Warm start",
-        )
-    else
-        plot!(p2, dists, freqs_dense[:, b]; color=:black, linewidth=2, label="")
-        plot!(p2, dists, freqs_warmstart[:, b]; color=:red, linestyle=:dash, label="")
-    end
+    plot!(p2, dists, freqs_dense[:, b]; color=:blue, linewidth=2)
+end
+
+# Warm start band structure
+p3 = plot(;
+    xlabel="Wave Vector",
+    ylabel="ω (rad/s)",
+    title="LOBPCG (warm start)",
+    legend=false,
+    size=(600, 500),
+)
+for b in 1:nbands
+    plot!(p3, dists, freqs_warmstart[:, b]; color=:red, linewidth=2)
 end
 
 # ============================================================================
-# Combined plot
+# Combined plot (3 panels)
 # ============================================================================
-p_combined = plot(p1, p2; layout=(1, 2), size=(1100, 400))
+p_combined = plot(
+    p1,
+    p2,
+    p3;
+    layout=(1, 3),
+    size=(1500, 500),
+    plot_title="LOBPCG Warm Start: Steel/Epoxy Hexagonal, PSV Wave",
+)
 
 savefig(p_combined, joinpath(@__DIR__, "209_warmstart_benchmark.png"))
 println("\nSaved: 209_warmstart_benchmark.png")
