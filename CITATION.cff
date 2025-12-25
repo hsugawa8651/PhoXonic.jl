@@ -11,6 +11,7 @@ authors:
     email: hsugawa@tmu.ac.jp
 repository-code: "https://github.com/hsugawa8651/PhoXonic.jl"
 url: "https://github.com/hsugawa8651/PhoXonic.jl"
+doi: "10.5281/zenodo.18055171"
 license: MIT
 version: 0.1.0
 date-released: 2025-12-25
