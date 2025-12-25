@@ -1,4 +1,4 @@
-# 211_tanaka2000_vacuum_al.jl
+# 213_tanaka2000_vacuum_al.jl
 # Reproduce Tanaka et al. 2000, Phys. Rev. B 62, 7387
 # DOI: https://doi.org/10.1103/PhysRevB.62.7387
 # Figure 4: Vacuum cylinders in Al, square lattice, f=0.55
@@ -11,6 +11,7 @@ Pkg.activate(joinpath(@__DIR__, ".."))
 
 using PhoXonic
 using Plots
+default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
 
 println("=" ^ 60)
 println("Tanaka et al. 2000 - Vacuum/Al Square Lattice")
@@ -138,13 +139,13 @@ p = plot(
     p1,
     p2;
     layout=(1, 2),
-    size=(1100, 450),
+    size=(1200, 500),
     plot_title="Tanaka 2000 Fig.4: Vacuum/Al (f=0.55)",
     left_margin=10Plots.mm,
 )
 
-savefig(p, joinpath(@__DIR__, "211_tanaka2000_vacuum_al.png"))
-println("\nSaved: 211_tanaka2000_vacuum_al.png")
+savefig(p, joinpath(@__DIR__, "213_tanaka2000_vacuum_al.png"))
+println("\nSaved: 213_tanaka2000_vacuum_al.png")
 
 println("\n" * "=" ^ 60)
 println("Reference: Tanaka et al., Phys. Rev. B 62, 7387 (2000)")

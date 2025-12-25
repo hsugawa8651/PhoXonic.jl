@@ -1,4 +1,4 @@
-# 212_maldovan2006_phoxonic.jl
+# 214_maldovan2006_phoxonic.jl
 # Simultaneous photonic and phononic band gaps in the same structure
 #
 # Reference: Maldovan & Thomas, Appl. Phys. B 83, 595 (2006)
@@ -13,6 +13,7 @@ Pkg.activate(joinpath(@__DIR__, ".."))
 
 using PhoXonic
 using Plots
+default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
 
 println("=" ^ 70)
 println("Maldovan 2006: Simultaneous Photonic-Phononic Band Gaps")
@@ -318,14 +319,14 @@ p = plot(
     p3,
     p4;
     layout=lay,
-    size=(1400, 700),
+    size=(1400, 800),
     plot_title="Maldovan 2006: PhoXonic Crystal - Si with Air Holes (r/a=0.46)",
     left_margin=5Plots.mm,
     bottom_margin=5Plots.mm,
 )
 
-savefig(p, joinpath(@__DIR__, "212_maldovan2006_phoxonic.png"))
-println("\nSaved: 212_maldovan2006_phoxonic.png")
+savefig(p, joinpath(@__DIR__, "214_maldovan2006_phoxonic.png"))
+println("\nSaved: 214_maldovan2006_phoxonic.png")
 
 println("\n" * "=" ^ 70)
 println("This structure is 'deaf and blind' - it has simultaneous")
