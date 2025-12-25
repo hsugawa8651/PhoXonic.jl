@@ -8,6 +8,8 @@ tags:
   - plane wave expansion
   - transfer matrix method
   - band structure
+  - computational physics
+  - wave propagation
 authors:
   - name: Hiroharu Sugawara
     orcid: 0000-0002-0071-2396
@@ -29,7 +31,7 @@ Photonic and phononic crystals are periodic structures that exhibit band gaps—
 
 # Statement of Need
 
-Several tools exist for photonic crystal simulations, including MIT Photonic Bands (MPB) [@johnson2001block] and Peacock.jl [@palmer2020peacock]. However, these packages focus exclusively on electromagnetic waves. For phononic crystals, researchers typically rely on commercial finite element method (FEM) software such as COMSOL Multiphysics, or custom implementations. No open-source package provides a unified framework for both photonic and phononic crystals within a single, consistent API using the plane wave expansion method.
+Several tools exist for photonic crystal simulations, including MIT Photonic Bands (MPB) [@johnson2001block] and Peacock.jl [@palmer2020peacock]. However, these packages focus exclusively on electromagnetic waves. MPB, while powerful, requires compilation from C/C++ source code and uses Scheme for its scripting interface, which can be a barrier for researchers unfamiliar with these tools. For phononic crystals, researchers typically rely on commercial finite element method (FEM) software such as COMSOL Multiphysics, or custom implementations. No open-source package provides a unified framework for both photonic and phononic crystals within a single, consistent API using the plane wave expansion method.
 
 `PhoXonic.jl` addresses this gap by offering:
 
@@ -99,8 +101,8 @@ lat = fcc_lattice(1.0)
 geo = Geometry(lat, Dielectric(1.0),
     [(Sphere([0.0, 0.0, 0.0], 0.25), Dielectric(12.0))])
 
-solver = Solver(FullVectorEM(), geo, (12, 12, 12),
-    KrylovKitMethod(shift=0.01); cutoff=3)
+solver = Solver(TransverseEM(), geo, (16, 16, 16),
+    DenseMethod(); cutoff=5)
 bands = compute_bands(solver, simple_kpath_fcc(); bands=1:10)
 ```
 
@@ -111,12 +113,12 @@ bands = compute_bands(solver, simple_kpath_fcc(); bands=1:10)
 - MIT Photonic Bands (MPB) for 3D FCC structures
 - Published results from Kushwaha et al. [@kushwaha1993acoustic] for phononic crystals
 - Tanaka et al. [@tanaka2000band] for phononic crystals with void inclusions
-- Maldovan & Thomas [@maldovan2006simultaneous] for phoxonic crystals (\autoref{fig:phoxonic})
+- Maldovan & Thomas [@maldovan2006simultaneous] for phoxonic crystals (Figure 1)
 - Textbook examples from Joannopoulos et al. [@joannopoulos2008photonic]
 
-![Phoxonic crystal band structure for Si with air holes (r/a=0.46), reproducing Maldovan & Thomas [@maldovan2006simultaneous]. Left: unit cell structure. Right: photonic (TE, TM) and phononic (SH, PSV) dispersion relations. Frequencies are normalized by the speed of light c (photonic) and the transverse wave velocity cT in silicon (phononic). Shaded regions indicate the complete band gaps reported in the original paper.\label{fig:phoxonic}](212_maldovan2006_phoxonic.png)
+![Phoxonic crystal band structure for Si with air holes (r/a=0.46), reproducing Maldovan & Thomas [@maldovan2006simultaneous]. Left: unit cell structure. Right: photonic (TE, TM) and phononic (SH, PSV) dispersion relations. Frequencies are normalized by the speed of light c (photonic) and the transverse wave velocity cT in silicon (phononic). Shaded regions indicate the complete band gaps reported in the original paper.](214_maldovan2006_phoxonic.png)
 
-The package includes over 1,400 unit tests and 32 example scripts demonstrating various use cases.
+The package includes over 1,470 unit tests and 37 example scripts demonstrating various use cases.
 
 # Acknowledgements
 
