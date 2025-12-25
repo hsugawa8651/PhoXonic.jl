@@ -205,12 +205,14 @@ solver = Solver(FullElastic(), geo, (16, 16, 16), KrylovKitMethod(shift=0.01); c
 
 3D phononic calculations are more difficult than 3D photonic calculations for several reasons:
 
-1. **Large contrast in elastic moduli**: Real materials have high elastic moduli contrast
-   (e.g., C_steel / C_epoxy ~ 50), which causes numerical challenges regardless of the unit system.
-
-2. **No transverse basis**: Unlike `TransverseEM` for photonic crystals, there is no
+1. **No transverse basis**: Unlike `TransverseEM` for photonic crystals, there is no
    established transverse basis for elastic waves that eliminates spurious modes.
-   The shift parameter must be carefully chosen.
+   Electromagnetic waves satisfy ∇·**D** = 0 (transverse condition), allowing a 2-component
+   basis that automatically excludes spurious longitudinal modes. Elastic waves have both
+   longitudinal (P) and transverse (S) components with no such simplification.
+
+2. **Large contrast in elastic moduli**: Real materials have high elastic moduli contrast
+   (e.g., C_steel / C_epoxy ~ 50), which causes numerical challenges regardless of the unit system.
 
 3. **Shift parameter sensitivity**: Too small a shift fails to filter spurious modes;
    too large a shift may miss physical low-frequency modes. The optimal value depends
