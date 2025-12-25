@@ -7,8 +7,8 @@ A Julia package for computing band structures of photonic and phononic crystals
 using the plane wave expansion (PWE) method.
 
 Supports 1D, 2D, and 3D periodic structures with various wave types:
-- Photonic: TE, TM (2D), full vector (3D)
-- Phononic: SH, P-SV (2D), full elastic (3D)
+- Photonic: 1D, TE/TM (2D), TransverseEM (3D)
+- Phononic: 1D, SH/P-SV (2D), FullElastic (3D, experimental)
 """
 module PhoXonic
 
