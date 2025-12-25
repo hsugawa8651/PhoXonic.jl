@@ -19,7 +19,7 @@ authors:
 affiliations:
   - name: Graduate School of Systems Design, Tokyo Metropolitan University, Japan
     index: 1
-date: 19 December 2025
+date: 25 December 2025
 bibliography: paper.bib
 ---
 
