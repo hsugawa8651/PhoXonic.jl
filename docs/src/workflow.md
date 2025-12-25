@@ -136,7 +136,7 @@ solver = Solver(TMWave(), geo, (64, 64);
 )
 ```
 
-For 3D photonic/phononic crystals (FullVectorEM, FullElastic), see [3D Calculations](@ref).
+For 3D photonic/phononic crystals (TransverseEM, FullVectorEM, FullElastic), see [3D Calculations](@ref).
 
 For solver methods (DenseMethod, KrylovKitMethod, LOBPCGMethod), see [Solver Methods](@ref).
 

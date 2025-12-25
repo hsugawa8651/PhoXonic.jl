@@ -9,6 +9,7 @@ using PhoXonic
 using LinearAlgebra
 using StaticArrays
 using Plots
+default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
 
 println("=== Defect Mode in 2D Photonic Crystal ===")
 println("Supercell approach with LDOS calculation")
@@ -166,7 +167,8 @@ p_bands = plot(;
     title="Perfect Crystal TM Bands",
     legend=false,
     grid=true,
-    size=(500, 400),
+    size=(600, 500),
+    left_margin=5Plots.mm,
 )
 
 dists = bands_perfect.distances
@@ -204,7 +206,7 @@ p_ldos = plot(
     color=:red,
     legend=false,
     grid=true,
-    size=(500, 400),
+    size=(600, 500),
 )
 
 # Mark the gap region
@@ -219,7 +221,7 @@ annotate!(
 )
 
 # Combined plot
-p_combined = plot(p_bands, p_ldos; layout=(1, 2), size=(1000, 400))
+p_combined = plot(p_bands, p_ldos; layout=(1, 2), size=(1100, 500))
 
 # Save plots
 savefig(p_bands, joinpath(@__DIR__, "501_defect_bands.png"))
@@ -247,7 +249,7 @@ p_comparison = plot(;
     title="LDOS Comparison: Defect vs Bulk",
     legend=:topright,
     grid=true,
-    size=(600, 400),
+    size=(700, 500),
 )
 
 plot!(

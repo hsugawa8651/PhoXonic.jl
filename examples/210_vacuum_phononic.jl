@@ -10,6 +10,7 @@ Pkg.activate(joinpath(@__DIR__, ".."))
 
 using PhoXonic
 using Plots
+default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
 
 println("=" ^ 60)
 println("Phononic Crystal with Vacuum Holes (ElasticVoid)")
@@ -143,7 +144,7 @@ p = plot(
     p1,
     p2;
     layout=(1, 2),
-    size=(1100, 450),
+    size=(1200, 500),
     plot_title="Maldovan 2006: Vacuum/Si (r/a=0.46)",
     left_margin=10Plots.mm,
 )

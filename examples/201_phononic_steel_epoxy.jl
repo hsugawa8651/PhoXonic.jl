@@ -6,6 +6,7 @@
 
 using PhoXonic
 using Plots
+default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
 using Printf
 using LinearAlgebra: PosDefException
 
@@ -182,8 +183,9 @@ p_sh = plot(;
     title="SH Bands (out-of-plane)",
     legend=false,
     grid=true,
-    size=(600, 450),
+    size=(700, 500),
     ylims=ylims_common,
+    left_margin=5Plots.mm,
 )
 for b in 1:size(freqs_sh_norm, 2)
     plot!(p_sh, dists, freqs_sh_norm[:, b]; linewidth=2, color=:blue)
@@ -198,7 +200,7 @@ p_psv = plot(;
     title="P-SV Bands (in-plane)",
     legend=false,
     grid=true,
-    size=(600, 450),
+    size=(700, 500),
     ylims=ylims_common,
 )
 for b in 1:size(freqs_psv_norm, 2)
@@ -209,7 +211,7 @@ xticks!(p_psv, label_positions, label_names)
 
 # Combined plot (side by side)
 p_combined = plot(
-    p_sh, p_psv; layout=(1, 2), size=(1200, 450), plot_title="Steel/Epoxy Phononic Crystal"
+    p_sh, p_psv; layout=(1, 2), size=(1200, 500), plot_title="Steel/Epoxy Phononic Crystal"
 )
 
 # Save plots
