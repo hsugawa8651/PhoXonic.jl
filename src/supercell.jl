@@ -8,11 +8,11 @@ Supercell construction for defect mode calculations.
 # Helper functions
 # ============================================================================
 
-"""
+#=
     _supercell_lattice(lat::Lattice{D}, size::NTuple{D,Int}) -> Lattice{D}
 
 Create a supercell lattice by scaling the original lattice vectors.
-"""
+=#
 function _supercell_lattice(lat::Lattice{Dim1}, size::Tuple{Int})
     Nx = size[1]
     a1 = lat.vectors[1][1]  # Extract scalar from Vec1
@@ -31,11 +31,11 @@ function _supercell_lattice(lat::Lattice{Dim3}, size::NTuple{3,Int})
     Lattice(Nx * a1, Ny * a2, Nz * a3)
 end
 
-"""
+#=
     _replicate_inclusions(inclusions, lat, size; skip_positions=[]) -> Vector{Inclusion}
 
 Replicate inclusions over the supercell, optionally skipping certain positions.
-"""
+=#
 function _replicate_inclusions(
     inclusions::Vector{<:Tuple{Shape{Dim1},Material}},
     lat::Lattice{Dim1},

@@ -139,11 +139,11 @@ Compute number of eigenvalues to request from iterative solver.
 _nev(::Colon, dim; default_max::Int=20) = min(dim, default_max)
 _nev(bands, dim; default_max::Int=20) = maximum(bands)
 
-"""
+#=
     _select_bands(frequencies, eigenvectors, bands)
 
 Select requested bands from computed results.
-"""
+=#
 _select_bands(frequencies, eigenvectors, ::Colon) = (frequencies, eigenvectors)
 function _select_bands(frequencies, eigenvectors, bands)
     (frequencies[bands], eigenvectors[:, bands])
@@ -582,7 +582,7 @@ function skew_matrix(k::AbstractVector)
     ]
 end
 
-"""
+#=
     _build_fullvector_3n_matrices(basis, mats, k)
 
 Internal helper: Build 3N×3N matrices for 3D photonic crystal (H-field formulation).
@@ -592,7 +592,7 @@ Returns (LHS_3N, RHS_3N) where:
 - RHS_3N: μ weight matrix (3N×3N block diagonal)
 
 This is shared between FullVectorEM and TransverseEM to avoid code duplication.
-"""
+=#
 function _build_fullvector_3n_matrices(basis, mats, k::AbstractVector{<:Real})
     # Convolution matrices
     ε_inv_c = convolution_matrix(mats.ε_inv, basis)
@@ -1043,7 +1043,7 @@ end
 # Dense solver core (type-stable inner function)
 # ============================================================================
 
-"""
+#=
     _solve_dense(LHS, RHS, bands, shift=0.0)
 
 Core dense eigenvalue solver. Type-stable implementation.
@@ -1053,7 +1053,7 @@ Core dense eigenvalue solver. Type-stable implementation.
 - `RHS`: Right-hand side matrix (mass-like)
 - `bands`: Range of bands to return
 - `shift`: Minimum eigenvalue cutoff (eigenvalues with ω² < shift are filtered out)
-"""
+=#
 function _solve_dense(LHS::AbstractMatrix, RHS::AbstractMatrix, bands, shift::Real=0.0)
     # Solve generalized eigenvalue problem
     # Handle potential singularity at Γ point
@@ -1126,7 +1126,7 @@ end
 # KrylovKit solver core
 # ============================================================================
 
-"""
+#=
     _solve_krylovkit(solver, k, method, bands)
 
 Core iterative eigenvalue solver using KrylovKit.jl.
@@ -1138,7 +1138,7 @@ When `method.shift > 0`, uses shift-and-invert spectral transformation:
 This finds eigenvalues closest to σ, which is useful for:
 - Skipping spurious longitudinal modes in 3D H-field formulation
 - Targeting specific frequency ranges
-"""
+=#
 function _solve_krylovkit(
     solver::Solver{D,W}, k::Vector{Float64}, method::KrylovKitMethod, bands
 ) where {D,W}
@@ -1158,7 +1158,7 @@ function _solve_krylovkit(
     end
 end
 
-"""
+#=
     _solve_krylovkit_standard(solver, k, method, bands)
 
 Standard generalized eigenvalue solver (no shift).
@@ -1166,7 +1166,7 @@ Uses matrix-free operators for memory efficiency.
 
 For phononic problems, applies scaling to normalize eigenvalues to O(1),
 which improves numerical stability in KrylovKit.geneigsolve.
-"""
+=#
 function _solve_krylovkit_standard(
     solver::Solver{D,W}, k::Vector{Float64}, method::KrylovKitMethod, bands
 ) where {D,W}
@@ -1240,7 +1240,7 @@ function _solve_krylovkit_standard(
     return _select_bands(frequencies, eigenvectors, bands)
 end
 
-"""
+#=
     _estimate_eigenvalue_scale(solver, k)
 
 Estimate a characteristic scale for eigenvalues to normalize them to O(1).
@@ -1248,7 +1248,7 @@ This improves numerical stability in iterative eigensolvers.
 
 For photonic: ω² ~ (c/a)² ~ 1 (already normalized)
 For phononic: ω² ~ (c_s * k)² where c_s is shear wave speed
-"""
+=#
 function _estimate_eigenvalue_scale(solver::Solver{D,W}, k::Vector{Float64}) where {D,W}
     _estimate_eigenvalue_scale(solver.wave, solver, k)
 end
@@ -1273,7 +1273,7 @@ end
 # Fallback for other material types
 _eigenvalue_scale_from_material(::Material, k) = 1.0
 
-"""
+#=
     _solve_krylovkit_shifted(solver, k, method, bands)
 
 Shift-and-invert eigenvalue solver.
@@ -1297,7 +1297,7 @@ above the shift are returned. This provides robustness when:
 # Note
 The shift σ acts as a lower bound: only eigenvalues λ > σ are returned.
 For 3D photonic crystals, σ = 0.01 effectively skips longitudinal modes (λ ≈ 0).
-"""
+=#
 function _solve_krylovkit_shifted(
     solver::Solver{D,W}, k::Vector{Float64}, method::KrylovKitMethod, bands
 ) where {D,W}
@@ -1377,7 +1377,7 @@ function _solve_krylovkit_shifted(
     return _select_first_bands(frequencies, eigenvectors, bands)
 end
 
-"""
+#=
     _solve_krylovkit_shifted_matrixfree(solver, k, method, bands)
 
 Matrix-free shift-and-invert eigenvalue solver.
@@ -1405,7 +1405,7 @@ becomes prohibitive.
 | Shifted   | O(N²) | O(N)        |
 | LU factor | O(N²) | N/A         |
 | Total     | ~3N²  | ~4N         |
-"""
+=#
 function _solve_krylovkit_shifted_matrixfree(
     solver::Solver{D,W}, k::Vector{Float64}, method::KrylovKitMethod, bands
 ) where {D,W}
@@ -1508,8 +1508,8 @@ end
 # LOBPCG method implementation
 # ============================================================================
 
-"""
-    solve_impl(solver::Solver, k, method::LOBPCGMethod; bands=1:10)
+#=
+    _solve_lobpcg(solver, k, method; bands=1:10)
 
 Solve eigenvalue problem using LOBPCG (Locally Optimal Block Preconditioned
 Conjugate Gradient) method from IterativeSolvers.jl.
@@ -1528,7 +1528,7 @@ When `method.shift > 0`, uses shift-and-invert spectral transformation:
 - Original: `A x = λ B x`
 - Transformed: `(A - σB)⁻¹ B x = μ x` where `μ = 1/(λ - σ)`
 - LOBPCG finds largest μ, corresponding to smallest λ > σ
-"""
+=#
 function _solve_lobpcg(solver::Solver, k, method::LOBPCGMethod; bands=1:10)
     σ = method.shift
 
@@ -1539,7 +1539,7 @@ function _solve_lobpcg(solver::Solver, k, method::LOBPCGMethod; bands=1:10)
     end
 end
 
-"""
+#=
     _solve_lobpcg_at_k(solver, k, method; bands, X0, P)
 
 LOBPCG solver with explicit initial vectors and preconditioner support.
@@ -1549,7 +1549,7 @@ Supports:
 - X0: Initial eigenvector guess (warm start)
 - P: Custom preconditioner (overrides method.preconditioner)
 - scale: Matrix scaling for better conditioning
-"""
+=#
 function _solve_lobpcg_at_k(
     solver::Solver, k, method::LOBPCGMethod; bands=1:10, X0=nothing, P=nothing
 )
@@ -1629,7 +1629,7 @@ function _solve_lobpcg_at_k(
     return _select_bands(frequencies, eigenvectors, bands)
 end
 
-"""
+#=
     _solve_lobpcg_standard(solver, k, method; bands)
 
 Standard LOBPCG solver without shift-and-invert.
@@ -1638,7 +1638,7 @@ Note: For phononic crystals with cold start (random initial vectors), LOBPCG
 may not converge to the correct eigenvalues. Use `warm_start=true` (default)
 with `compute_bands` for reliable results. The preconditioner is NOT used
 in this function to avoid convergence to wrong eigenvalues.
-"""
+=#
 function _solve_lobpcg_standard(solver::Solver, k, method::LOBPCGMethod; bands=1:10)
     # Build dense matrices
     LHS, RHS = build_matrices(solver, k)
@@ -1684,7 +1684,7 @@ function _solve_lobpcg_standard(solver::Solver, k, method::LOBPCGMethod; bands=1
     return _select_bands(frequencies, eigenvectors, bands)
 end
 
-"""
+#=
     _solve_lobpcg_shifted(solver, k, method; bands)
 
 Shift-and-invert solver for LOBPCGMethod with shift > 0.
@@ -1705,7 +1705,7 @@ The shifted matrix (A - σB) is not positive definite, which violates LOBPCG's
 requirements. Instead, this function builds the dense transformed operator
 T = (A - σB)⁻¹ B and uses standard `eigen(T)`. This loses LOBPCG's memory
 efficiency but provides correct results.
-"""
+=#
 function _solve_lobpcg_shifted(solver::Solver, k, method::LOBPCGMethod; bands=1:10)
     σ = method.shift
 
