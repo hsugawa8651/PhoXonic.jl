@@ -11,9 +11,9 @@ authors:
     email: hsugawa@tmu.ac.jp
 repository-code: "https://github.com/hsugawa8651/PhoXonic.jl"
 url: "https://github.com/hsugawa8651/PhoXonic.jl"
-doi: "10.5281/zenodo.18055171"
+doi: "10.5281/zenodo.18055242"
 license: MIT
-version: 0.1.0
+version: 0.1.1
 date-released: 2025-12-25
 keywords:
   - photonic crystals
