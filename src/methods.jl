@@ -1,4 +1,4 @@
-# Last-Modified: 2025-12-12T22:18:28+09:00
+# Last-Modified: 2025-12-25T12:30:00+09:00
 
 #=
 Solver methods for eigenvalue problems.
@@ -207,40 +207,38 @@ Based on Knyazev (2001), SIAM J. Sci. Comput. Vol.23, No.2, pp.517-541.
 Solves the symmetric generalized eigenvalue problem `A x = λ B x` where
 both A and B are Hermitian and B is positive definite. This method is
 particularly effective for:
-- Large-scale problems with many eigenvalues
-- Problems where good preconditioners are available
-- Phononic crystal calculations where eigenvalue scaling may be an issue
+- Large-scale band structure calculations with `compute_bands`
+- Phononic crystal calculations (steel/epoxy, silicon/air, etc.)
 
-With warm start enabled (default), LOBPCG can be up to 38x faster than Dense
-for large problems by reusing eigenvectors from previous k-points.
+With warm start enabled (default), LOBPCG reuses eigenvectors from previous
+k-points as initial guesses, achieving significant speedup while maintaining
+accuracy. The first k-point uses Dense (if first_dense=true) to provide
+accurate initial eigenvectors.
 
 # Fields
-- `tol::Float64`: Convergence tolerance (default: 1e-4)
-- `maxiter::Int`: Maximum iterations (default: 200)
+- `tol::Float64`: Convergence tolerance (default: 1e-3)
+- `maxiter::Int`: Maximum iterations (default: 100)
 - `shift::Float64`: Spectral shift for shift-and-invert transformation (default: 0.0)
 - `warm_start::Bool`: Use previous eigenvectors as initial guess (default: true)
-- `scale::Bool`: Scale matrix A by max|A| for better conditioning (default: true)
+- `scale::Bool`: Scale matrix A by max|A| (default: false, scaling can hurt phononic problems)
 - `first_dense::Bool`: Solve first k-point with Dense for accurate warm start (default: true)
-- `preconditioner`: Preconditioner type (:none, :diagonal, or custom) (default: :diagonal)
+- `preconditioner`: Preconditioner type (default: :none)
 
 # Notes
 - Requires symmetric/Hermitian matrices A and B
 - B must be positive definite
 - Works directly with dense matrices (no matrix-free support yet)
 - Block method: computes multiple eigenvalues simultaneously
+- For phononic problems, leave scale=false and preconditioner=:none (defaults)
 - When shift > 0, uses shift-and-invert to skip eigenvalues near zero
   (useful for 3D H-field formulation where spurious modes exist at λ ≈ 0)
 - **Note**: With shift > 0, the method falls back to dense `eigen` solver internally
   because the shifted matrix (A - σB) is not positive definite as required by LOBPCG.
-  This means the memory efficiency advantage of LOBPCG is lost in shifted mode.
 
 # Example
 ```julia
-# Default with warm start (recommended)
+# Default with warm start (recommended for band structure)
 solver = Solver(PSVWave(), geo, (64, 64), LOBPCGMethod(); cutoff=20)
-
-# Disable warm start (traditional behavior)
-method = LOBPCGMethod(warm_start=false, scale=false, first_dense=false)
 
 # For 3D FullVectorEM (skip spurious modes at λ ≈ 0)
 method = LOBPCGMethod(shift=0.01)
@@ -259,45 +257,45 @@ struct LOBPCGMethod <: IterativeMethod
 end
 
 """
-    LOBPCGMethod(; tol=1e-4, maxiter=200, shift=0.0, warm_start=true, scale=true, first_dense=true, preconditioner=:diagonal)
+    LOBPCGMethod(; tol=1e-3, maxiter=100, shift=0.0, warm_start=true, scale=false, first_dense=true, preconditioner=:none)
 
 Create a LOBPCG-based iterative eigenvalue solver.
 
 # Keyword Arguments
-- `tol`: Convergence tolerance (default: 1e-4)
-- `maxiter`: Maximum number of iterations (default: 200)
+- `tol`: Convergence tolerance (default: 1e-3)
+- `maxiter`: Maximum number of iterations (default: 100)
 - `shift`: Spectral shift σ for shift-and-invert (default: 0.0)
   - When shift > 0, transforms `A x = λ B x` to `(A - σB)⁻¹ B x = μ x`
   - Only eigenvalues λ > σ are returned
   - Useful for 3D FullVectorEM to skip spurious longitudinal modes at λ ≈ 0
 - `warm_start`: Use previous k-point's eigenvectors as initial guess (default: true)
-- `scale`: Scale matrix A by max|A| to improve condition number (default: true)
+- `scale`: Scale matrix A by max|A| (default: false)
+  - For phononic problems, scaling can hurt convergence; leave as false
+  - For photonic problems with normalized units, scaling may help
 - `first_dense`: Solve first k-point with Dense for accurate initial eigenvectors (default: true)
-- `preconditioner`: Preconditioner type (default: :diagonal)
-  - `:none`: No preconditioner
+- `preconditioner`: Preconditioner type (default: :none)
+  - `:none`: No preconditioner (recommended for phononic problems)
   - `:diagonal`: Diagonal preconditioner using diag(A)^{-1}
   - Custom object: Any object implementing `ldiv!(y, P, x)`
+  - Note: diagonal preconditioner may cause convergence issues for phononic problems
 
 # Example
 ```julia
-# Default (warm start enabled)
+# Default (warm start enabled, recommended for band structure)
 solver = Solver(PSVWave(), geo, (64, 64), LOBPCGMethod(); cutoff=20)
-
-# Traditional behavior (no warm start)
-method = LOBPCGMethod(warm_start=false, scale=false, first_dense=false, tol=1e-8)
 
 # For 3D with shift-and-invert
 solver = Solver(FullVectorEM(), geo, (16, 16, 16), LOBPCGMethod(shift=0.01); cutoff=3)
 ```
 """
 function LOBPCGMethod(;
-    tol::Real=1e-4,
-    maxiter::Int=200,
+    tol::Real=1e-3,
+    maxiter::Int=100,
     shift::Real=0.0,
     warm_start::Bool=true,
-    scale::Bool=true,
+    scale::Bool=false,
     first_dense::Bool=true,
-    preconditioner=:diagonal,
+    preconditioner=:none,
 )
     LOBPCGMethod(
         Float64(tol),
