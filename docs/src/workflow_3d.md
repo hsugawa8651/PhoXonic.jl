@@ -9,8 +9,24 @@ due to the vector nature of the fields and the presence of spurious modes.
 
 | Wave Type | Field Components | Description |
 |-----------|-----------------|-------------|
-| `FullVectorEM` | H_x, H_y, H_z | Full vector H-field (2 transverse modes per k) |
+| `TransverseEM` | H_⊥ (2N basis) | **Recommended** for 3D photonic crystals |
+| `FullVectorEM` | H_x, H_y, H_z | Full vector H-field (3N basis, includes spurious modes) |
 | `FullElastic` | u_x, u_y, u_z | Full elastic (1 P + 2 S modes per k) |
+
+### TransverseEM vs FullVectorEM
+
+For 3D photonic crystal calculations, `TransverseEM` is **strongly recommended** over `FullVectorEM`:
+
+| Feature | TransverseEM | FullVectorEM |
+|---------|--------------|--------------|
+| Matrix size | 2N × 2N | 3N × 3N |
+| Spurious modes | None (∇·H = 0 enforced) | N longitudinal modes at ω ≈ 0 |
+| Shift required | No | Yes (to filter spurious modes) |
+| Memory usage | ~44% less | Full |
+
+`TransverseEM` expands the H-field in a transverse polarization basis where each plane wave
+has two orthonormal polarization vectors e₁, e₂ perpendicular to (k+G). This automatically
+satisfies the transversality constraint ∇·H = 0, eliminating spurious longitudinal modes.
 
 ## 3D Photonic Crystals
 
@@ -18,20 +34,21 @@ due to the vector nature of the fields and the presence of spurious modes.
 
 ```julia
 lat = fcc_lattice(1.0)
-air = Dielectric(1.0, 1.0)
-rod = Dielectric(12.0, 1.0)
-geo = Geometry(lat, air, [(Sphere([0.0, 0.0, 0.0], 0.2), rod)])
+air = Dielectric(1.0)
+dielectric = Dielectric(12.0)
+geo = Geometry(lat, air, [(Sphere([0.0, 0.0, 0.0], 0.25), dielectric)])
 
-solver = Solver(FullVectorEM(), geo, (16, 16, 16); cutoff=7)
+# TransverseEM: recommended for 3D photonic crystals
+solver = Solver(TransverseEM(), geo, (16, 16, 16), DenseMethod(); cutoff=5)
 ```
 
 ### Simple Cubic Lattice
 
 ```julia
 lat = cubic_lattice(1.0)
-geo = Geometry(lat, air, [(Sphere([0.0, 0.0, 0.0], 0.3), rod)])
+geo = Geometry(lat, air, [(Sphere([0.0, 0.0, 0.0], 0.3), dielectric)])
 
-solver = Solver(FullVectorEM(), geo, (16, 16, 16); cutoff=7)
+solver = Solver(TransverseEM(), geo, (16, 16, 16), DenseMethod(); cutoff=5)
 kpath = simple_kpath_cubic(a=1.0, npoints=20)
 bands = compute_bands(solver, kpath; bands=1:6)
 ```
@@ -44,15 +61,29 @@ The 3D implementation uses the H-field formulation:
 ∇ × (ε⁻¹ ∇ × H) = (ω/c)² μ H
 ```
 
-This produces:
+### TransverseEM (Recommended)
+
+`TransverseEM` expands the H-field in a transverse polarization basis:
+
+```
+H_G = h₁(G) e₁(k+G) + h₂(G) e₂(k+G)
+```
+
+where e₁ and e₂ are orthonormal vectors perpendicular to (k+G). This construction
+automatically satisfies ∇·H = 0, eliminating all spurious longitudinal modes.
+
+```julia
+# TransverseEM: no spurious modes, no shift needed
+solver = Solver(TransverseEM(), geo, (16, 16, 16), DenseMethod(); cutoff=5)
+```
+
+### FullVectorEM (Legacy)
+
+`FullVectorEM` uses Cartesian components (Hx, Hy, Hz), producing:
 - **N longitudinal modes** with ω ≈ 0 (unphysical, violate ∇·H = 0)
-- **2N transverse modes** with physical frequencies (electromagnetic waves)
+- **2N transverse modes** with physical frequencies
 
-For homogeneous medium, transverse modes satisfy ω = c|k|.
-
-### Handling Longitudinal Modes
-
-Use `shift > 0` in solver methods to filter out spurious longitudinal modes:
+When using `FullVectorEM`, use `shift > 0` to filter out spurious modes:
 
 ```julia
 # DenseMethod: post-hoc filtering
@@ -60,9 +91,6 @@ solver = Solver(FullVectorEM(), geo, (12, 12, 12), DenseMethod(shift=0.01); cuto
 
 # KrylovKitMethod: shift-and-invert
 solver = Solver(FullVectorEM(), geo, (16, 16, 16), KrylovKitMethod(shift=0.01); cutoff=7)
-
-# LOBPCGMethod: shift-and-invert
-solver = Solver(FullVectorEM(), geo, (16, 16, 16), LOBPCGMethod(shift=0.01); cutoff=7)
 ```
 
 See [Solver Methods](@ref) for details on shift-and-invert.
@@ -94,14 +122,13 @@ are required for accurate band structure calculation.
 
 ```julia
 for cutoff in [3, 5, 7]
-    solver = Solver(FullVectorEM(), geo, (16,16,16); cutoff=cutoff)
+    solver = Solver(TransverseEM(), geo, (16,16,16), DenseMethod(); cutoff=cutoff)
     bands = compute_bands(solver, kpath; bands=1:6)
     println("cutoff=$cutoff: ω₁ = $(bands.frequencies[1,1])")
 end
 ```
 
 **Note:** Higher cutoff increases computation time significantly.
-Use iterative methods ([`KrylovKitMethod`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod`](api-solver.md#PhoXonic.LOBPCGMethod)) for cutoff ≥ 7.
 
 ## 3D Phononic Crystals
 
@@ -146,27 +173,19 @@ For SC lattice with ε=12 sphere (r=0.3):
 **Recommended settings for SC:**
 ```julia
 resolution = (16, 16, 16)
-cutoff = 7
-solver = Solver(FullVectorEM(), geo, resolution, KrylovKitMethod(shift=0.01); cutoff=cutoff)
+cutoff = 5
+solver = Solver(TransverseEM(), geo, resolution, DenseMethod(); cutoff=cutoff)
 ```
 
 ### FCC Lattice
 
 For FCC lattice with ε=12 sphere (r=0.25):
 
-| Resolution | cutoff | Error vs MPB |
-|------------|--------|--------------|
-| 12×12×12 | 6 | **~4%** |
-| 16×16×16 | 6 | ~10% |
-| 12×12×12 | 7 | Complex* |
-
-*At cutoff≥7, additional modes from light-cone band folding appear, complicating band identification.
-
 **Recommended settings for FCC:**
 ```julia
-resolution = (12, 12, 12)
-cutoff = 6
-solver = Solver(FullVectorEM(), geo, resolution, KrylovKitMethod(shift=0.01); cutoff=cutoff)
+resolution = (16, 16, 16)
+cutoff = 5
+solver = Solver(TransverseEM(), geo, resolution, DenseMethod(); cutoff=cutoff)
 ```
 
 ### Important Notes on MPB Comparison
@@ -201,5 +220,5 @@ For large 3D systems, use matrix-free methods. See [Matrix-Free Methods](@ref).
 
 ## API Reference
 
-- [Solver API](api-solver.md) - FullVectorEM, FullElastic, Solver methods
+- [Solver API](api-solver.md) - TransverseEM, FullVectorEM, FullElastic, Solver methods
 - [Advanced API](api-advanced.md) - Matrix-free operators

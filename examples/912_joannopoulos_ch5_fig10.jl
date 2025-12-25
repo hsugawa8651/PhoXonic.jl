@@ -20,6 +20,7 @@
 using PhoXonic
 using Printf
 using Plots
+default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
 
 println("=" ^ 70)
 println("Joannopoulos Book - Chapter 5, Figure 10")
@@ -203,52 +204,62 @@ println("-" ^ 70)
 
 # Get distances for x-axis
 distances = bands_tm.distances
-
-# Create plot
-p = plot(;
-    size=(700, 500),
-    legend=:topright,
-    xlabel="Wave vector",
-    ylabel="Frequency ωa/2πc",
-    title="Joannopoulos Ch.5 Fig.10 - Triangular Lattice Air Holes (ε=13)",
-)
-
-# Plot TM bands (blue)
-for band in 1:nbands
-    plot!(
-        p, distances, freqs_tm[:, band]; color=:blue, lw=1.5, label=(band == 1 ? "TM" : "")
-    )
-end
-
-# Plot TE bands (red)
-for band in 1:nbands
-    plot!(
-        p, distances, freqs_te[:, band]; color=:red, lw=1.5, label=(band == 1 ? "TE" : "")
-    )
-end
-
-# Add complete gap shading if exists
-if complete_upper > complete_lower
-    hspan!(
-        p, [complete_lower, complete_upper]; alpha=0.3, color=:yellow, label="Complete gap"
-    )
-end
-
-# Set axis limits
-ylims!(p, 0, 0.8)
-
-# Add high-symmetry point labels
 labels = bands_tm.labels
 xticks_pos = [distances[idx] for (idx, _) in labels]
 xticks_labels = [lbl for (_, lbl) in labels]
-xticks!(p, xticks_pos, xticks_labels)
 
-# Add vertical lines at high-symmetry points
-for (idx, _) in labels
-    vline!(p, [distances[idx]]; color=:gray, lw=0.5, label="")
+# TM plot
+p_tm = plot(;
+    size=(700, 500),
+    legend=false,
+    xlabel="Wave vector",
+    ylabel="Frequency ωa/2πc",
+    title="TM Bands",
+    ylims=(0, 0.8),
+)
+for band in 1:nbands
+    plot!(p_tm, distances, freqs_tm[:, band]; color=:blue, lw=1.5)
 end
+if !isempty(gaps_tm)
+    gap = gaps_tm[1]
+    lower = gap.max_lower / (2π)
+    upper = gap.min_upper / (2π)
+    hspan!(p_tm, [lower, upper]; alpha=0.2, color=:blue, label="")
+end
+xticks!(p_tm, xticks_pos, xticks_labels)
+vline!(p_tm, xticks_pos; color=:gray, lw=0.5, label="")
 
-savefig(p, "examples/912_joannopoulos_ch5_fig10.png")
+# TE plot
+p_te = plot(;
+    size=(700, 500),
+    legend=false,
+    xlabel="Wave vector",
+    ylabel="Frequency ωa/2πc",
+    title="TE Bands",
+    ylims=(0, 0.8),
+)
+for band in 1:nbands
+    plot!(p_te, distances, freqs_te[:, band]; color=:red, lw=1.5)
+end
+if !isempty(gaps_te)
+    gap = gaps_te[1]
+    lower = gap.max_lower / (2π)
+    upper = gap.min_upper / (2π)
+    hspan!(p_te, [lower, upper]; alpha=0.2, color=:red, label="")
+end
+xticks!(p_te, xticks_pos, xticks_labels)
+vline!(p_te, xticks_pos; color=:gray, lw=0.5, label="")
+
+# Combined plot
+p_combined = plot(
+    p_tm,
+    p_te;
+    layout=(1, 2),
+    size=(1200, 500),
+    plot_title="Joannopoulos Ch.5 Fig.10 - Triangular Lattice Air Holes (ε=13)",
+)
+
+savefig(p_combined, "examples/912_joannopoulos_ch5_fig10.png")
 println("Saved: examples/912_joannopoulos_ch5_fig10.png")
 
 # ============================================================================

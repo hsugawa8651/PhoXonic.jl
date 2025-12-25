@@ -29,6 +29,7 @@ Longitudinal1D
 ### 3D Wave Types
 
 ```@docs
+TransverseEM
 FullVectorEM
 FullElastic
 ```

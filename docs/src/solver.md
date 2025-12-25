@@ -33,10 +33,15 @@ For large-scale calculations with N > 10,000, see [Matrix-Free Methods](@ref).
 | 2D | TE/TM/SH | 1,000–10,000 | [`KrylovKitMethod()`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod()`](api-solver.md#PhoXonic.LOBPCGMethod) |
 | 2D | [`PSVWave`](api-solver.md#PhoXonic.PSVWave) | 200–2,000 | [`DenseMethod()`](api-solver.md#PhoXonic.DenseMethod) |
 | 2D | PSVWave | > 2,000 | [`KrylovKitMethod()`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod()`](api-solver.md#PhoXonic.LOBPCGMethod) |
+| 3D | [`TransverseEM`](api-solver.md#PhoXonic.TransverseEM) | < 2,000 | [`DenseMethod()`](api-solver.md#PhoXonic.DenseMethod) **(recommended)** |
 | 3D | [`FullVectorEM`](api-solver.md#PhoXonic.FullVectorEM) | < 500 | [`DenseMethod(shift=0.01)`](api-solver.md#PhoXonic.DenseMethod) |
 | 3D | FullVectorEM | 500–5,000 | [`KrylovKitMethod(shift=0.01)`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod(shift=0.01)`](api-solver.md#PhoXonic.LOBPCGMethod) |
 | 3D | [`FullElastic`](api-solver.md#PhoXonic.FullElastic) | < 500 | [`DenseMethod(shift=0.01)`](api-solver.md#PhoXonic.DenseMethod) |
 | 3D | FullElastic | 500–5,000 | [`KrylovKitMethod(shift=0.01)`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod(shift=0.01)`](api-solver.md#PhoXonic.LOBPCGMethod) |
+
+**Note:** For 3D photonic crystals, `TransverseEM` is strongly recommended over `FullVectorEM`.
+TransverseEM uses a 2N×2N transverse basis that automatically satisfies ∇·H = 0, eliminating
+spurious longitudinal modes without requiring shift-and-invert.
 
 ## DenseMethod
 
@@ -217,26 +222,39 @@ Use `matrix_free=true` when memory becomes the limiting factor.
 
 ## LOBPCGMethod
 
-LOBPCG (Locally Optimal Block Preconditioned Conjugate Gradient) is an alternative
-iterative solver. A. V. Knyazev, SIAM J. Sci. Comput. 23, 517 (2001). [DOI:10.1137/S1064827500366124](https://doi.org/10.1137/S1064827500366124)
+LOBPCG (Locally Optimal Block Preconditioned Conjugate Gradient) is an iterative
+eigenvalue solver. A. V. Knyazev, SIAM J. Sci. Comput. 23, 517 (2001). [DOI:10.1137/S1064827500366124](https://doi.org/10.1137/S1064827500366124)
 
 ### When to Use LOBPCG
 
-LOBPCG is particularly effective for:
+LOBPCG is effective for:
+- Large-scale band structure calculations (cutoff ≥ 12)
 - Symmetric generalized eigenvalue problems A x = λ B x
-- Problems where B is positive definite (mass matrix)
 - Computing multiple eigenvalues simultaneously (block method)
-- Phononic calculations (no eigenvalue scaling required)
+
+**Performance comparison (2D PSV wave, Steel/Epoxy):**
+
+| Cutoff | Matrix Size | Dense | LOBPCG | Speedup | Error |
+|--------|-------------|-------|--------|---------|-------|
+| 8 | 394 | 4.4 s | 11.8 s | 0.37x* | 8.5 rad/s |
+| 10 | 634 | 10.1 s | 12.8 s | 0.79x* | 16.2 rad/s |
+| 12 | 882 | 21.5 s | 19.8 s | **1.09x** | 15.8 rad/s |
+| 15 | 1418 | 105.3 s | 50.4 s | **2.09x** | 30.2 rad/s |
+
+*Speedup < 1 means Dense is faster
+
+**Recommendation:**
+- cutoff < 10: Use Dense (faster due to BLAS optimization)
+- cutoff ≥ 12: Use LOBPCG (speedup increases with problem size)
 
 ### Basic Usage
 
 ```julia
 # 2D photonic
-solver = Solver(TEWave(), geo, (64, 64), LOBPCGMethod())
+solver = Solver(TEWave(), geo, (64, 64), LOBPCGMethod(); cutoff=12)
 
-# 2D phononic
-solver = Solver(SHWave(), geo, (64, 64), LOBPCGMethod())
-solver = Solver(PSVWave(), geo, (64, 64), LOBPCGMethod())
+# 2D phononic (LOBPCG effective for large problems)
+solver = Solver(PSVWave(), geo, (64, 64), LOBPCGMethod(); cutoff=15)
 ```
 
 ### Shift-and-Invert for 3D
@@ -263,77 +281,39 @@ returns eigenvalues λ > σ, effectively filtering out the spurious modes.
 
 ```julia
 method = LOBPCGMethod(
-    tol = 1e-4,              # Convergence tolerance
-    maxiter = 200,           # Maximum iterations
-    shift = 0.0,             # Spectral shift (0 = no shift, required for 3D)
+    tol = 1e-3,              # Convergence tolerance (default)
+    maxiter = 100,           # Maximum iterations (default)
+    shift = 0.0,             # Spectral shift (required for 3D)
     warm_start = true,       # Use previous eigenvectors as initial guess
-    scale = true,            # Scale matrix A for better conditioning
     first_dense = true,      # Solve first k-point with Dense
-    preconditioner = :diagonal  # Preconditioner (:none, :diagonal, or custom)
 )
 ```
 
 ### Warm Start for Band Structure Calculations
 
-When computing band structures with `compute_bands`, LOBPCG can use **warm start**
-to significantly speed up calculations. This uses the eigenvectors from the previous
-k-point as the initial guess for the next k-point.
+When computing band structures with `compute_bands`, LOBPCG uses **warm start**
+to speed up calculations. The eigenvectors from the previous k-point serve as
+the initial guess for the next k-point.
 
 **How it works:**
 
-1. First k-point is solved with `DenseMethod` for accurate eigenvectors (when `first_dense=true`)
-2. Matrix A is scaled by `max|A|` for better conditioning (when `scale=true`)
-3. Subsequent k-points use previous eigenvectors as initial guess
-4. Diagonal preconditioner `P = diag(A)⁻¹` accelerates convergence
-
-**Performance:**
-
-For large problems, warm start achieves dramatic speedups:
-
-| Cutoff | Matrix Size | Dense | LOBPCG (warm start) | Speedup |
-|--------|-------------|-------|---------------------|---------|
-| 12 | 882×882 | 33 s | 4.5 s | **7.5x** |
-| 20 | 2514×2514 | 1055 s | 27 s | **38x** |
+1. First k-point is solved with `DenseMethod` (when `first_dense=true`)
+2. Subsequent k-points use previous eigenvectors as initial guess
+3. Since eigenvectors vary smoothly along k-path, LOBPCG converges quickly
 
 **Usage:**
 
 ```julia
 # Automatic warm start (default)
-solver = Solver(PSVWave(), geo, (64, 64), LOBPCGMethod(); cutoff=20)
-bands = compute_bands(solver, kpath; bands=1:20)
-
-# Disable warm start (traditional behavior)
-method = LOBPCGMethod(warm_start=false, scale=false, first_dense=false)
-solver = Solver(PSVWave(), geo, (64, 64), method; cutoff=20)
-```
-
-**Manual control with solve_at_k:**
-
-For fine-grained control, use `solve_at_k` directly:
-
-```julia
-solver = Solver(PSVWave(), geo, (64, 64); cutoff=20)
-
-# Get matrix dimension for X0
-dim = matrix_dimension(solver)  # 2514 for cutoff=20
-
-# First k-point with Dense
-freqs1, vecs1 = solve_at_k_with_vectors(solver, k_points[1], DenseMethod();
-                                        bands=1:20)
-
-# Subsequent k-points with warm start
-for k in k_points[2:end]
-    freqs, vecs = solve_at_k_with_vectors(solver, k, LOBPCGMethod();
-                                          bands=1:20, X0=vecs)
-    vecs1 = vecs  # Update for next iteration
-end
+solver = Solver(PSVWave(), geo, (64, 64), LOBPCGMethod(); cutoff=15)
+bands = compute_bands(solver, kpath; bands=1:10)
 ```
 
 ### Limitations
 
-- Warm start works best for photonic problems (TE/TM waves)
-- Phononic problems with band crossings at Γ point may require additional band tracking
-- For small problems (N < 1000), Dense is often faster due to BLAS optimization
+- For small problems (cutoff < 10), Dense is faster due to BLAS optimization
+- Phononic problems with band crossings at Γ point may require additional care
+- Accuracy is typically 10-100 rad/s compared to Dense (0.1-1% relative error)
 
 ### LOBPCG vs KrylovKit
 
