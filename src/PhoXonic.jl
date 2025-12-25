@@ -117,7 +117,7 @@ export RHSInvMethod, ApproximateRHSInv, CGRHSInv
 
 # Exports - K-path
 export SimpleKPath, simple_kpath_square, simple_kpath_hexagonal
-export simple_kpath_cubic, simple_kpath_fcc, simple_kpath_bcc
+export simple_kpath_cubic, simple_kpath_fcc, simple_kpath_bcc, kpath_fcc_joannopoulos
 export kpath_from_brillouin, kpath_square, kpath_hexagonal
 export kpath_cubic, kpath_fcc, kpath_bcc
 

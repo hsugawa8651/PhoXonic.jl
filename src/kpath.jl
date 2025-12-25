@@ -373,6 +373,42 @@ function simple_kpath_fcc(; a::Real=1.0, npoints::Int=50)
 end
 
 """
+    kpath_fcc_joannopoulos(; a=1.0, npoints=15)
+
+Create a k-path for FCC lattice following Joannopoulos et al., "Photonic Crystals" 2nd ed.
+
+Path: X → U|K → Γ → X → W → K
+
+Note: U and K are equivalent points on the FCC BZ boundary.
+
+High-symmetry points (in Cartesian coordinates, scaled by 2π/a):
+- Γ = (0, 0, 0)
+- X = (1, 0, 0)
+- U = (1, 1/4, 1/4) ≡ K = (3/4, 3/4, 0)
+- W = (1, 1/2, 0)
+- L = (1/2, 1/2, 1/2)
+
+# Arguments
+- `a`: Conventional lattice constant (default: 1.0)
+- `npoints`: Number of points per segment (default: 15)
+
+# Returns
+A `SimpleKPath{3}` object that can be passed to `compute_bands`.
+"""
+function kpath_fcc_joannopoulos(; a::Real=1.0, npoints::Int=15)
+    scale = 2π / a
+    Γ = [0.0, 0.0, 0.0]
+    X = [1.0 * scale, 0.0, 0.0]                  # (1, 0, 0) × 2π/a
+    U = [1.0 * scale, 0.25 * scale, 0.25 * scale] # (1, 1/4, 1/4) × 2π/a (equiv to K)
+    W = [1.0 * scale, 0.5 * scale, 0.0]          # (1, 1/2, 0) × 2π/a
+    K = [0.75 * scale, 0.75 * scale, 0.0]        # (3/4, 3/4, 0) × 2π/a
+    L = [0.5 * scale, 0.5 * scale, 0.5 * scale]  # (1/2, 1/2, 1/2) × 2π/a
+
+    # Path: X → U|K → Γ → X → W → K (Joannopoulos style)
+    SimpleKPath([X, U, Γ, X, W, K], ["X", "U|K", "Γ", "X", "W", "K"]; npoints=npoints)
+end
+
+"""
     simple_kpath_bcc(; a=1.0, npoints=50)
 
 Create a simple k-path for body-centered cubic (BCC) lattice.
