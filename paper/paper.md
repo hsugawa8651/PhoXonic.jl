@@ -37,6 +37,7 @@ Several tools exist for photonic crystal simulations, including MIT Photonic Ban
 
 - **Unified API**: The same workflow for photonic and phononic crystals—define materials, geometry, and wave type, then compute band structures.
 - **Full dimension support**: 1D, 2D, and 3D simulations, unlike Peacock.jl which is limited to 2D.
+- **3D photonic crystals**: Fully supported with `TransverseEM`. 3D phononic crystals (`FullElastic`) are experimental due to the large contrast in elastic moduli of real materials.
 - **Multiple solver backends**: Dense eigensolvers for small systems, Krylov methods for large-scale problems, and LOBPCG with warm-start acceleration for efficient band structure sweeps.
 - **Green's function methods**: Density of states (DOS) and local density of states (LDOS) calculations for defect mode analysis.
 - **Supercell support**: Point and line defect simulations via supercell construction.

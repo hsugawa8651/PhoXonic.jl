@@ -178,11 +178,33 @@ See the `examples/` directory in the repository for additional examples:
 
 | Category | File | Description |
 |----------|------|-------------|
+| 2D Photonic | [`102_triangular_rods_plot.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/102_triangular_rods_plot.jl) | Triangular lattice with plotting |
 | 2D Photonic | [`104_honeycomb_rods.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/104_honeycomb_rods.jl) | Honeycomb lattice |
 | 2D Photonic | [`111_triangular_holes.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/111_triangular_holes.jl) | Air holes in dielectric |
 | 2D Photonic | [`121_subpixel_comparison.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/121_subpixel_comparison.jl) | Convergence with subpixel averaging |
+| 2D Photonic | [`911_joannopoulos_ch5_fig2.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/911_joannopoulos_ch5_fig2.jl) | Joannopoulos Ch5 Fig2 benchmark |
+| 2D Photonic | [`912_joannopoulos_ch5_fig10.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/912_joannopoulos_ch5_fig10.jl) | Joannopoulos Ch5 Fig10 benchmark |
+| 2D Phononic | [`202_phononic_pb_epoxy_benchmark.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/202_phononic_pb_epoxy_benchmark.jl) | Pb/Epoxy benchmark |
+| 2D Phononic | [`203_vasseur2001_benchmark.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/203_vasseur2001_benchmark.jl) | Vasseur 2001 benchmark |
+| 2D Phononic | [`205_kushwaha1993_benchmark.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/205_kushwaha1993_benchmark.jl) | Kushwaha 1993 benchmark |
 | 2D Phononic | [`207_solver_simple.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/207_solver_simple.jl) | Dense vs LOBPCG comparison |
 | 2D Phononic | [`208_solver_comparison.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/208_solver_comparison.jl) | Solver benchmark across sizes |
+| 2D Phononic | [`209_warmstart_benchmark.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/209_warmstart_benchmark.jl) | Warm start performance |
+| 2D Phononic | [`210_vacuum_phononic.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/210_vacuum_phononic.jl) | Vacuum holes (ElasticVoid) |
+| 2D Phononic | [`211_kushwaha1993_fig1.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/211_kushwaha1993_fig1.jl) | Kushwaha 1993 Fig1 |
+| 2D Phononic | [`212_kushwaha1993_fig2.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/212_kushwaha1993_fig2.jl) | Kushwaha 1993 Fig2 |
+| 2D Phononic | [`213_tanaka2000_vacuum_al.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/213_tanaka2000_vacuum_al.jl) | Tanaka 2000 Al/vacuum |
+| 2D Phononic | [`214_maldovan2006_phoxonic.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/214_maldovan2006_phoxonic.jl) | Maldovan 2006 phoxonic |
+| 1D Photonic | [`311_joannopoulos_ch4_fig2.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/311_joannopoulos_ch4_fig2.jl) | Joannopoulos Ch4 Fig2 |
 | 1D Elastic | [`302_elastic_superlattice.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/302_elastic_superlattice.jl) | Elastic wave superlattice |
+| 3D Photonic | [`411_joannopoulos_ch6_fig3.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/411_joannopoulos_ch6_fig3.jl) | FCC lattice benchmark |
+| 3D Photonic | [`412_joannopoulos_ch6_fig8.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/412_joannopoulos_ch6_fig8.jl) | Diamond lattice |
+| 3D Photonic | [`413_mpb_diamond.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/413_mpb_diamond.jl) | MPB diamond comparison |
+| 3D Photonic | [`901_mpb_benchmark.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/901_mpb_benchmark.jl) | MPB benchmark |
 | Defect | [`501_defect_mode.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/501_defect_mode.jl) | Defect states and LDOS |
-| TMM | [`601_tmm_bragg_mirror.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/601_tmm_bragg_mirror.jl) | Transfer matrix method |
+| Defect | [`511_supercell_study.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/511_supercell_study.jl) | Supercell size study |
+| TMM | [`601_tmm_bragg_mirror.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/601_tmm_bragg_mirror.jl) | Bragg mirror spectrum |
+| TMM | [`602_tmm_fabry_perot.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/602_tmm_fabry_perot.jl) | Fabry-Pérot cavity |
+| TMM | [`603_tmm_phononic.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/603_tmm_phononic.jl) | Phononic superlattice |
+| TMM | [`604_tmm_vs_pwe.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/604_tmm_vs_pwe.jl) | TMM vs PWE comparison |
+| Utility | [`801_plot_structures.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/801_plot_structures.jl) | Structure visualization |

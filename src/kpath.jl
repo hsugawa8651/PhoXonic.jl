@@ -190,7 +190,7 @@ Base.iterate(kp::SimpleKPath, state) = iterate(kp.points, state)
 """
     kpath_cubic(; a=1.0, N=100)
 
-Create a k-path for simple cubic (SC) lattice using Brillouin.jl.
+Create a k-path for simple cubic (SC) lattice using [Brillouin.jl](https://thchr.github.io/Brillouin.jl/stable/).
 
 Path: Γ → X → M → Γ → R → X | R → M
 
@@ -212,7 +212,9 @@ kpath = kpath_cubic(a=1.0, N=100)
 bands = compute_bands(solver, kpath; bands=1:6)
 ```
 
-Reference: Setyawan & Curtarolo, Comp. Mat. Sci. 49, 299 (2010). DOI:10.1016/j.commatsci.2010.05.010
+Reference: Setyawan & Curtarolo, Comp. Mat. Sci. 49, 299 (2010). [DOI:10.1016/j.commatsci.2010.05.010](https://doi.org/10.1016/j.commatsci.2010.05.010)
+
+See also: [Brillouin.jl `irrfbz_path`](https://thchr.github.io/Brillouin.jl/stable/api/#Brillouin.irrfbz_path)
 """
 function kpath_cubic(; a::Real=1.0, N::Int=100)
     Rs = [[a, 0.0, 0.0], [0.0, a, 0.0], [0.0, 0.0, a]]
@@ -224,7 +226,7 @@ end
 """
     kpath_fcc(; a=1.0, N=100)
 
-Create a k-path for face-centered cubic (FCC) lattice using Brillouin.jl.
+Create a k-path for face-centered cubic (FCC) lattice using [Brillouin.jl](https://thchr.github.io/Brillouin.jl/stable/).
 
 Path: Γ → X → U | K → Γ → L → W → X
 
@@ -246,7 +248,9 @@ kpath = kpath_fcc(a=1.0, N=100)
 bands = compute_bands(solver, kpath; bands=1:6)
 ```
 
-Reference: Setyawan & Curtarolo, Comp. Mat. Sci. 49, 299 (2010). DOI:10.1016/j.commatsci.2010.05.010
+Reference: Setyawan & Curtarolo, Comp. Mat. Sci. 49, 299 (2010). [DOI:10.1016/j.commatsci.2010.05.010](https://doi.org/10.1016/j.commatsci.2010.05.010)
+
+See also: [Brillouin.jl `irrfbz_path`](https://thchr.github.io/Brillouin.jl/stable/api/#Brillouin.irrfbz_path)
 """
 function kpath_fcc(; a::Real=1.0, N::Int=100)
     # FCC primitive vectors
@@ -259,7 +263,7 @@ end
 """
     kpath_bcc(; a=1.0, N=100)
 
-Create a k-path for body-centered cubic (BCC) lattice using Brillouin.jl.
+Create a k-path for body-centered cubic (BCC) lattice using [Brillouin.jl](https://thchr.github.io/Brillouin.jl/stable/).
 
 Path: Γ → H → N → Γ → P → H | P → N
 
@@ -278,7 +282,9 @@ kpath = kpath_bcc(a=1.0, N=100)
 bands = compute_bands(solver, kpath; bands=1:6)
 ```
 
-Reference: Setyawan & Curtarolo, Comp. Mat. Sci. 49, 299 (2010). DOI:10.1016/j.commatsci.2010.05.010
+Reference: Setyawan & Curtarolo, Comp. Mat. Sci. 49, 299 (2010). [DOI:10.1016/j.commatsci.2010.05.010](https://doi.org/10.1016/j.commatsci.2010.05.010)
+
+See also: [Brillouin.jl `irrfbz_path`](https://thchr.github.io/Brillouin.jl/stable/api/#Brillouin.irrfbz_path)
 """
 function kpath_bcc(; a::Real=1.0, N::Int=100)
     # BCC primitive vectors
@@ -320,6 +326,9 @@ solver = Solver(FullVectorEM(), geo, (12,12,12), KrylovKitMethod(shift=0.01); cu
 kpath = simple_kpath_cubic(a=1.0, npoints=30)
 bands = compute_bands(solver, kpath; bands=1:6)
 ```
+
+See also: [`kpath_cubic`](@ref) for Brillouin.jl-based k-path,
+[Brillouin.jl documentation](https://thchr.github.io/Brillouin.jl/stable/)
 """
 function simple_kpath_cubic(; a::Real=1.0, npoints::Int=50)
     scale = 2π / a
@@ -360,6 +369,9 @@ solver = Solver(FullVectorEM(), geo, (12,12,12), KrylovKitMethod(shift=0.01); cu
 kpath = simple_kpath_fcc(a=1.0, npoints=30)
 bands = compute_bands(solver, kpath; bands=1:6)
 ```
+
+See also: [`kpath_fcc`](@ref) for Brillouin.jl-based k-path,
+[Brillouin.jl documentation](https://thchr.github.io/Brillouin.jl/stable/)
 """
 function simple_kpath_fcc(; a::Real=1.0, npoints::Int=50)
     scale = 2π / a
@@ -433,6 +445,9 @@ A `SimpleKPath{3}` object that can be passed to `compute_bands`.
 kpath = simple_kpath_bcc(a=1.0, npoints=30)
 bands = compute_bands(solver, kpath; bands=1:6)
 ```
+
+See also: [`kpath_bcc`](@ref) for Brillouin.jl-based k-path,
+[Brillouin.jl documentation](https://thchr.github.io/Brillouin.jl/stable/)
 """
 function simple_kpath_bcc(; a::Real=1.0, npoints::Int=50)
     scale = 2π / a

@@ -17,6 +17,8 @@ TMM is particularly useful for:
 
 ### Photonic Bragg Mirror
 
+See also: [`examples/601_tmm_bragg_mirror.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/601_tmm_bragg_mirror.jl)
+
 ```julia
 using PhoXonic
 
@@ -44,6 +46,8 @@ R, T = tmm_spectrum(solver, collect(λ_values))
 ```
 
 ### Phononic Superlattice
+
+See also: [`examples/603_tmm_phononic.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/603_tmm_phononic.jl)
 
 ```julia
 using PhoXonic
@@ -177,7 +181,7 @@ Note: `LossyDielectric` is only supported for TMM, not PWE.
 
 ### Bragg Mirror
 
-Source: `examples/601_tmm_bragg_mirror.jl`
+See also: [`examples/601_tmm_bragg_mirror.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/601_tmm_bragg_mirror.jl)
 
 Transmission spectrum of a dielectric Bragg mirror with varying number of layer pairs.
 
@@ -196,7 +200,7 @@ R, T = tmm_spectrum(solver, collect(λ_values))
 
 ### Fabry-Pérot Cavity
 
-Source: `examples/602_tmm_fabry_perot.jl`
+See also: [`examples/602_tmm_fabry_perot.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/602_tmm_fabry_perot.jl)
 
 Resonance behavior of a Fabry-Pérot cavity with Bragg mirrors.
 
@@ -216,7 +220,7 @@ ml = Multilayer(all_layers, mat_lo, mat_lo)
 
 ### Phononic Superlattice
 
-Source: `examples/603_tmm_phononic.jl`
+See also: [`examples/603_tmm_phononic.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/603_tmm_phononic.jl)
 
 Steel/Epoxy multilayer for acoustic wave bandgaps.
 
@@ -237,7 +241,7 @@ bands = tmm_bandstructure(solver; k_points=51, bands=1:4)
 
 ### PWE vs TMM Comparison
 
-Source: `examples/604_tmm_vs_pwe.jl`
+See also: [`examples/604_tmm_vs_pwe.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/604_tmm_vs_pwe.jl)
 
 Verifies consistency between PWE and TMM for 1D structures.
 
