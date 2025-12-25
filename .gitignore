@@ -4,7 +4,6 @@ Manifest.toml
 
 # Examples output
 examples/*.png
-examples_rsk/*.png
 
 # System files
 .DS_Store

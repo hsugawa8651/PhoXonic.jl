@@ -176,10 +176,6 @@ ldos_cg = compute_ldos(solver, position, ω_values, k_points,
                         MatrixFreeGF(rhs_inv_method=CGRHSInv()); η=0.01)
 ```
 
-### Finding Defect Modes
-
-See `examples_rsk/502_defect_mode_matrixfree.jl` for a complete example of using matrix-free methods to find defect modes in photonic crystal supercells.
-
 ## Dimension Support
 
 | Method | 1D | 2D | 3D |
@@ -192,4 +188,3 @@ See `examples_rsk/502_defect_mode_matrixfree.jl` for a complete example of using
 
 - [Advanced API](api-advanced.md) - GFMethod, compute_dos, compute_ldos
 - [Matrix-Free Methods](matrixfree.md) for operators and FFT context
-- `examples_rsk/` directory for RSK-dependent examples
