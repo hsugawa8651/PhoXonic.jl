@@ -1,7 +1,7 @@
 name = "PhoXonic"
 uuid = "f8e5d5a0-1234-4567-89ab-cdef01234567"
 authors = ["Hiroharu Sugawara <hsugawa@gmail.com>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 Brillouin = "23470ee3-d0df-4052-8b1a-8cbd6363e7f0"

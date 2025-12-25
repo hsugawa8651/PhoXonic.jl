@@ -137,8 +137,6 @@ recommended as it eliminates spurious modes without requiring shift-and-invert. 
 
 ## Unified Green's Function API
 
-See also: `examples_rsk/502_defect_mode_matrixfree.jl` - Matrix-free LDOS calculation (requires [ReducedShiftedKrylov.jl](https://github.com/hsugawa8651/ReducedShiftedKrylov.jl))
-
 PhoXonic provides a unified API for Green's function, DOS, and LDOS calculations.
 The same `GFMethod` types work with all three functions.
 

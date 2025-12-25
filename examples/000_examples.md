@@ -99,17 +99,6 @@ automatically satisfies ∇·H = 0.
 | 911_joannopoulos_ch5_fig2.jl | Joannopoulos Ch.5 Fig.2 (rods) |
 | 912_joannopoulos_ch5_fig10.jl | Joannopoulos Ch.5 Fig.10 (holes) |
 
-## Examples Requiring ReducedShiftedKrylov.jl
-
-The following examples require `using ReducedShiftedKrylov` and are located in a **separate folder** `examples_rsk/` (not in `examples/`):
-
-| File (in `examples_rsk/`) | Description |
-|---------------------------|-------------|
-| 131_high_contrast_silicon.jl | High contrast Si/Air (RHSInvMethod comparison) |
-| 502_defect_mode_matrixfree.jl | Defect mode (matrix-free method) |
-
-> **Note**: These files were moved from `examples/` to `examples_rsk/` because they depend on the optional ReducedShiftedKrylov.jl package.
-
 ## How to Run
 
 ```bash
@@ -123,16 +112,6 @@ Or from REPL:
 using Pkg
 Pkg.activate(".")
 include("examples/101_triangular_rods.jl")
-```
-
-### Running RSK-dependent examples
-
-```bash
-cd PhoXonic.jl
-julia --project=. -e '
-using ReducedShiftedKrylov
-include("examples_rsk/502_defect_mode_matrixfree.jl")
-'
 ```
 
 ## Run All Examples
