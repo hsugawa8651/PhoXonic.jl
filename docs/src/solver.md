@@ -26,22 +26,25 @@ For large-scale calculations with N > 10,000, see [Matrix-Free Methods](@ref).
 
 ## Recommendations
 
-| Dimension | Wave Type | N (typical) | Recommended Method |
-|-----------|-----------|-------------|-------------------|
-| 1D | [`Photonic1D`](api-solver.md#PhoXonic.Photonic1D) | < 100 | [`DenseMethod()`](api-solver.md#PhoXonic.DenseMethod) |
-| 2D | [`TEWave`](api-solver.md#PhoXonic.TEWave)/[`TMWave`](api-solver.md#PhoXonic.TMWave)/[`SHWave`](api-solver.md#PhoXonic.SHWave) | 100–1,000 | [`DenseMethod()`](api-solver.md#PhoXonic.DenseMethod) |
-| 2D | TE/TM/SH | 1,000–10,000 | [`KrylovKitMethod()`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod()`](api-solver.md#PhoXonic.LOBPCGMethod) |
-| 2D | [`PSVWave`](api-solver.md#PhoXonic.PSVWave) | 200–2,000 | [`DenseMethod()`](api-solver.md#PhoXonic.DenseMethod) |
-| 2D | PSVWave | > 2,000 | [`KrylovKitMethod()`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod()`](api-solver.md#PhoXonic.LOBPCGMethod) |
-| 3D | [`TransverseEM`](api-solver.md#PhoXonic.TransverseEM) | < 2,000 | [`DenseMethod()`](api-solver.md#PhoXonic.DenseMethod) **(recommended)** |
-| 3D | [`FullVectorEM`](api-solver.md#PhoXonic.FullVectorEM) | < 500 | [`DenseMethod(shift=0.01)`](api-solver.md#PhoXonic.DenseMethod) |
-| 3D | FullVectorEM | 500–5,000 | [`KrylovKitMethod(shift=0.01)`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod(shift=0.01)`](api-solver.md#PhoXonic.LOBPCGMethod) |
-| 3D | [`FullElastic`](api-solver.md#PhoXonic.FullElastic) | < 500 | [`DenseMethod(shift=0.01)`](api-solver.md#PhoXonic.DenseMethod) |
-| 3D | FullElastic | 500–5,000 | [`KrylovKitMethod(shift=0.01)`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod(shift=0.01)`](api-solver.md#PhoXonic.LOBPCGMethod) |
+| Dimension | Wave Type | N (typical) | Recommended Method | Example |
+|-----------|-----------|-------------|-------------------|---------|
+| 1D | [`Photonic1D`](api-solver.md#PhoXonic.Photonic1D) | < 100 | [`DenseMethod()`](api-solver.md#PhoXonic.DenseMethod) | [`301`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/301_bragg_reflector.jl) |
+| 1D | [`Longitudinal1D`](api-solver.md#PhoXonic.Longitudinal1D) | < 100 | [`DenseMethod()`](api-solver.md#PhoXonic.DenseMethod) | [`302`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/302_elastic_superlattice.jl) |
+| 2D | [`TEWave`](api-solver.md#PhoXonic.TEWave)/[`TMWave`](api-solver.md#PhoXonic.TMWave)/[`SHWave`](api-solver.md#PhoXonic.SHWave) | 100–1,000 | [`DenseMethod()`](api-solver.md#PhoXonic.DenseMethod) | [`101`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/101_triangular_rods.jl), [`201`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/201_phononic_steel_epoxy.jl) |
+| 2D | TE/TM/SH | 1,000–10,000 | [`KrylovKitMethod()`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod()`](api-solver.md#PhoXonic.LOBPCGMethod) | [`201`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/201_phononic_steel_epoxy.jl), [`208`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/208_solver_comparison.jl) |
+| 2D | [`PSVWave`](api-solver.md#PhoXonic.PSVWave) | 200–2,000 | [`DenseMethod()`](api-solver.md#PhoXonic.DenseMethod) | [`201`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/201_phononic_steel_epoxy.jl) |
+| 2D | PSVWave | > 2,000 | [`KrylovKitMethod()`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod()`](api-solver.md#PhoXonic.LOBPCGMethod) | [`201`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/201_phononic_steel_epoxy.jl), [`208`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/208_solver_comparison.jl) |
+| 3D | [`TransverseEM`](api-solver.md#PhoXonic.TransverseEM) | < 2,000 | [`DenseMethod()`](api-solver.md#PhoXonic.DenseMethod) **(recommended)** | [`401`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/401_fcc_spheres.jl) |
+| 3D | [`FullVectorEM`](api-solver.md#PhoXonic.FullVectorEM) | < 500 | [`DenseMethod(shift=0.01)`](api-solver.md#PhoXonic.DenseMethod) | [`402`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/402_sc_spheres.jl) |
+| 3D | FullVectorEM | 500–5,000 | [`KrylovKitMethod(shift=0.01)`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod(shift=0.01)`](api-solver.md#PhoXonic.LOBPCGMethod) | — |
+| 3D | [`FullElastic`](api-solver.md#PhoXonic.FullElastic) | < 500 | [`DenseMethod(shift=0.01)`](api-solver.md#PhoXonic.DenseMethod) | — |
+| 3D | FullElastic | 500–5,000 | [`KrylovKitMethod(shift=0.01)`](api-solver.md#PhoXonic.KrylovKitMethod) or [`LOBPCGMethod(shift=0.01)`](api-solver.md#PhoXonic.LOBPCGMethod) | — |
 
 **Note:** For 3D photonic crystals, `TransverseEM` is strongly recommended over `FullVectorEM`.
-TransverseEM uses a 2N×2N transverse basis that automatically satisfies ∇·H = 0, eliminating
-spurious longitudinal modes without requiring shift-and-invert.
+See [TransverseEM vs FullVectorEM](workflow_3d.md#TransverseEM-vs-FullVectorEM) for why.
+
+**Note:** For 3D phononic crystals, `FullElastic` is an experimental implementation.
+See [FullElastic (Experimental)](workflow_3d.md#FullElastic-(Experimental)) for why parameter tuning is challenging.
 
 ## DenseMethod
 

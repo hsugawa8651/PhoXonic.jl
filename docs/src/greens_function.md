@@ -138,6 +138,8 @@ dos = compute_dos(solver, ω_values, k_points, method; η=1e-3, n_random=10)
 
 ## Examples
 
+See also: [`examples/501_defect_mode.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/501_defect_mode.jl) - Defect mode finding with LDOS
+
 ### Basic LDOS Calculation
 
 ```julia

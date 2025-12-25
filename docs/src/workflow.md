@@ -1,4 +1,4 @@
-# Workflow
+# Workflow (2D)
 
 ## Wave Types and Polarizations
 
@@ -30,6 +30,8 @@ For 3D wave types, see [3D Calculations](@ref).
 
 ### Triangular Lattice Rods (TM mode)
 
+See also: [`examples/101_triangular_rods.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/101_triangular_rods.jl)
+
 ```julia
 using PhoXonic
 
@@ -59,6 +61,8 @@ end
 
 ### Square Lattice (TE/TM comparison)
 
+See also: [`examples/103_square_rods.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/103_square_rods.jl)
+
 ```julia
 lat = square_lattice(1.0)
 geo = Geometry(lat, air, [(Circle([0.0, 0.0], 0.2), rod)])
@@ -75,6 +79,8 @@ bands_tm = compute_bands(solver_tm, kpath; bands=1:8)
 ## 2D Phononic Crystal
 
 ### Steel/Epoxy (SH mode)
+
+See also: [`examples/201_phononic_steel_epoxy.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/201_phononic_steel_epoxy.jl)
 
 ```julia
 # Materials
@@ -96,33 +102,6 @@ bands = compute_bands(solver, kpath; bands=1:8)
 ```julia
 solver_psv = Solver(PSVWave(), geo, (64, 64); cutoff=7)
 bands_psv = compute_bands(solver_psv, kpath; bands=1:12)
-```
-
-## 1D Structures
-
-### Bragg Reflector (Photonic)
-
-```julia
-lat = lattice_1d(1.0)
-mat1 = Dielectric(1.0)
-mat2 = Dielectric(12.0)
-
-# Quarter-wave stack: d1/d2 = n2/n1
-d1 = 0.5 * sqrt(12) / (1 + sqrt(12))
-geo = Geometry(lat, mat1, [(Segment(0.0, d1), mat2)])
-
-solver = Solver(Photonic1D(), geo, 128; cutoff=20)
-```
-
-### Elastic Superlattice (Phononic)
-
-```julia
-lat = lattice_1d(0.01)  # 1 cm period
-steel = IsotropicElastic(ρ=7800.0, λ=115e9, μ=82e9)
-epoxy = IsotropicElastic(ρ=1180.0, λ=4.43e9, μ=1.59e9)
-geo = Geometry(lat, epoxy, [(Segment(0.0, 0.5), steel)])
-
-solver = Solver(Longitudinal1D(), geo, 128; cutoff=20)
 ```
 
 ## Subpixel Averaging

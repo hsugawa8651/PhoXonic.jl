@@ -98,6 +98,8 @@ solver_good = Solver(TEWave(), geo, (32, 32); cutoff=7)  # Also correct
 
 ## Usage with Iterative Eigensolvers
 
+See also: [`examples/208_solver_comparison.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/208_solver_comparison.jl) - Dense vs LOBPCG performance comparison
+
 Matrix-free operators are used automatically with iterative solvers:
 
 ```julia
@@ -134,6 +136,8 @@ recommended as it eliminates spurious modes without requiring shift-and-invert. 
 [3D Calculations](@ref) for details.
 
 ## Unified Green's Function API
+
+See also: `examples_rsk/502_defect_mode_matrixfree.jl` - Matrix-free LDOS calculation (requires [ReducedShiftedKrylov.jl](https://github.com/hsugawa8651/ReducedShiftedKrylov.jl))
 
 PhoXonic provides a unified API for Green's function, DOS, and LDOS calculations.
 The same `GFMethod` types work with all three functions.

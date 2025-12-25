@@ -12,6 +12,8 @@ Pkg.add("Plots")  # For plotting
 
 ## Your First Calculation: 2D Photonic Crystal
 
+See also: [`examples/101_triangular_rods.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/101_triangular_rods.jl)
+
 Let's compute the band structure of a 2D photonic crystal with dielectric rods in a triangular lattice.
 
 ### Step 1: Define the Structure
@@ -93,12 +95,13 @@ Now that you've run your first calculation, explore more:
 
 ## Quick Reference
 
-| Structure | Wave Type | Lattice |
-|-----------|-----------|---------|
-| 1D photonic | `Photonic1D()` | `lattice_1d(a)` |
-| 2D photonic TE | `TEWave()` | `square_lattice(a)`, `hexagonal_lattice(a)` |
-| 2D photonic TM | `TMWave()` | `square_lattice(a)`, `hexagonal_lattice(a)` |
-| 2D phononic SH | `SHWave()` | `square_lattice(a)`, `hexagonal_lattice(a)` |
-| 2D phononic P-SV | `PSVWave()` | `square_lattice(a)`, `hexagonal_lattice(a)` |
-| 3D photonic | `TransverseEM()` | `cubic_lattice(a)`, `fcc_lattice(a)` |
-| 3D phononic | `FullElastic()` | `cubic_lattice(a)`, `fcc_lattice(a)` |
+| Structure | Wave Type | Lattice | Example |
+|-----------|-----------|---------|---------|
+| [1D photonic](workflow_1d.md#1D-Photonic-Crystal) | [`Photonic1D()`](@ref Photonic1D) | [`lattice_1d(a)`](@ref lattice_1d) | [`301`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/301_bragg_reflector.jl) |
+| [1D phononic](workflow_1d.md#1D-Phononic-Crystal) | [`Longitudinal1D()`](@ref Longitudinal1D) | [`lattice_1d(a)`](@ref lattice_1d) | [`302`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/302_elastic_superlattice.jl) |
+| [2D photonic TE](workflow.md#2D-Photonic-Crystal) | [`TEWave()`](@ref TEWave) | [`square_lattice(a)`](@ref square_lattice), [`hexagonal_lattice(a)`](@ref hexagonal_lattice) | [`103`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/103_square_rods.jl) |
+| [2D photonic TM](workflow.md#2D-Photonic-Crystal) | [`TMWave()`](@ref TMWave) | [`square_lattice(a)`](@ref square_lattice), [`hexagonal_lattice(a)`](@ref hexagonal_lattice) | [`101`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/101_triangular_rods.jl) |
+| [2D phononic SH](workflow.md#2D-Phononic-Crystal) | [`SHWave()`](@ref SHWave) | [`square_lattice(a)`](@ref square_lattice), [`hexagonal_lattice(a)`](@ref hexagonal_lattice) | [`201`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/201_phononic_steel_epoxy.jl) |
+| [2D phononic P-SV](workflow.md#2D-Phononic-Crystal) | [`PSVWave()`](@ref PSVWave) | [`square_lattice(a)`](@ref square_lattice), [`hexagonal_lattice(a)`](@ref hexagonal_lattice) | [`201`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/201_phononic_steel_epoxy.jl) |
+| [3D photonic](workflow_3d.md#3D-Photonic-Crystals) | [`TransverseEM()`](@ref TransverseEM) | [`cubic_lattice(a)`](@ref cubic_lattice), [`fcc_lattice(a)`](@ref fcc_lattice) | [`401`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/401_fcc_spheres.jl) |
+| [3D phononic](workflow_3d.md#3D-Phononic-Crystals) | [`FullElastic()`](@ref FullElastic) | [`cubic_lattice(a)`](@ref cubic_lattice), [`fcc_lattice(a)`](@ref fcc_lattice) | — |

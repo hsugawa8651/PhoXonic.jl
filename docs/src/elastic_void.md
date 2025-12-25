@@ -74,6 +74,8 @@ The default `ρ_ratio=1e-7` was validated against:
 
 ## Usage Example
 
+See also: [`examples/210_vacuum_phononic.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/210_vacuum_phononic.jl)
+
 ```julia
 using PhoXonic
 

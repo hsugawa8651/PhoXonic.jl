@@ -8,7 +8,8 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Getting Started" => "getting_started.md",
-        "Workflow" => "workflow.md",
+        "Workflow (2D)" => "workflow.md",
+        "1D Calculations" => "workflow_1d.md",
         "3D Calculations" => "workflow_3d.md",
         "Solver Methods" => "solver.md",
         "Analysis" => "analysis.md",
@@ -24,6 +25,7 @@ makedocs(;
             "Plotting" => "api-plotting.md",
             "I/O" => "api-io.md",
         ],
+        "Dependencies" => "dependencies.md",
     ],
     remotes=nothing,
     warnonly=[:missing_docs, :cross_references],

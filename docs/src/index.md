@@ -6,9 +6,8 @@ Band structure calculation for photonic and phononic crystals using the plane wa
 
 PhoXonic.jl computes eigenfrequencies and eigenmodes of periodic structures:
 
-- **Photonic crystals**: TE/TM modes (2D), full vector (3D)
-- **Phononic crystals**: SH/P-SV modes (2D), full elastic (3D)
-- **Dimensions**: 1D, 2D, 3D
+- **Photonic crystals**: [1D multilayer](workflow_1d.md#1D-Photonic-Crystal), [TE/TM](workflow.md#2D-Photonic-Crystal) (2D), [TransverseEM](workflow_3d.md#3D-Photonic-Crystals) (3D)
+- **Phononic crystals**: [1D longitudinal](workflow_1d.md#1D-Phononic-Crystal), [SH/P-SV](workflow.md#2D-Phononic-Crystal) (2D), [FullElastic](workflow_3d.md#FullElastic-(Experimental)) (3D, experimental)
 
 The name "PhoXonic" comes from **Phoxonic crystals** - structures that exhibit both photonic and phononic band gaps simultaneously.
 
