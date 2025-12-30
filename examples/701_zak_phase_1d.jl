@@ -53,26 +53,32 @@ p = plot(
     legend = :topright,
     ylims = (-1.2, 1.2),
     yticks = ([-1, -0.5, 0, 0.5, 1], ["-π", "-π/2", "0", "π/2", "π"]),
+    xticks = 1:n_bands,
     size = (600, 400),
 )
 
-bar!(
+# Add horizontal lines at 0 and ±π (behind)
+hline!([0, 1, -1], color = :gray, linestyle = :dash, label = "")
+
+# Plot Geometry B first (behind) - large red circles
+scatter!(
+    1:n_bands,
+    zak_B.phases ./ π,
+    label = "Geometry B (edge)",
+    markersize = 10,
+    color = :red,
+    markerstrokewidth = 0,
+)
+
+# Plot Geometry A second (in front) - small blue circles
+scatter!(
     1:n_bands,
     zak_A.phases ./ π,
     label = "Geometry A (centered)",
-    bar_width = 0.35,
-    fillalpha = 0.7,
+    markersize = 5,
+    color = :blue,
+    markerstrokewidth = 0,
 )
-bar!(
-    (1:n_bands) .+ 0.35,
-    zak_B.phases ./ π,
-    label = "Geometry B (edge)",
-    bar_width = 0.35,
-    fillalpha = 0.7,
-)
-
-# Add horizontal lines at 0 and ±π
-hline!([0, 1, -1], color = :gray, linestyle = :dash, label = "")
 
 savefig(p, "701_zak_phase_1d.png")
 println("Saved: 701_zak_phase_1d.png")
