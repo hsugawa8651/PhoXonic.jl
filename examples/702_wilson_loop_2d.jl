@@ -46,15 +46,27 @@ p1 = plot(
     size = (700, 500),
 )
 
-for band in 1:size(result.phases, 2)
-    scatter!(
-        p1,
-        result.k_values,
-        result.phases[:, band] ./ π,
-        label = "Band $band",
-        markersize = 4,
-    )
-end
+# Plot band 2 first (behind) - large red circles
+scatter!(
+    p1,
+    result.k_values,
+    result.phases[:, 2] ./ π,
+    label = "Band 2",
+    markersize = 6,
+    color = :red,
+    markerstrokewidth = 0,
+)
+
+# Plot band 1 second (in front) - small blue circles
+scatter!(
+    p1,
+    result.k_values,
+    result.phases[:, 1] ./ π,
+    label = "Band 1",
+    markersize = 3,
+    color = :blue,
+    markerstrokewidth = 0,
+)
 
 hline!([0], color = :gray, linestyle = :dash, label = "")
 
