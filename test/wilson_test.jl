@@ -262,6 +262,71 @@ using LinearAlgebra
 
     # Phase 2: 2D Wilson loop
     @testset "2D Wilson loop" begin
-        # Tests will be added as functions are implemented
+        # Test result type
+        @testset "WilsonSpectrumResult type" begin
+            # Create a simple 2D photonic crystal (square lattice with circular rod)
+            lat = square_lattice(1.0)
+            geo = Geometry(
+                lat, Dielectric(1.0), [(Circle([0.0, 0.0], 0.3), Dielectric(9.0))]
+            )
+            solver = Solver(TMWave(), geo, (32, 32); cutoff = 5)
+
+            # Compute Wilson spectrum for bands 1:2 along Γ-X-Γ
+            result = compute_wilson_spectrum(solver, 1:2; n_k_path = 11, n_k_loop = 30)
+
+            # Check result type and structure
+            @test result isa PhoXonic.WilsonSpectrumResult
+            @test length(result.k_values) == 11
+            @test size(result.phases) == (11, 2)  # n_k_path × n_bands
+            @test result.bands == 1:2
+            @test all(-π .<= result.phases .<= π)
+        end
+
+        # Test winding number calculation
+        @testset "winding_number" begin
+            # For a trivial system, winding number should be 0
+            lat = square_lattice(1.0)
+            geo = Geometry(
+                lat, Dielectric(1.0), [(Circle([0.0, 0.0], 0.2), Dielectric(4.0))]
+            )
+            solver = Solver(TMWave(), geo, (32, 32); cutoff = 5)
+
+            result = compute_wilson_spectrum(solver, 1:2; n_k_path = 21, n_k_loop = 50)
+
+            # Winding number should be an integer
+            w1 = winding_number(result, 1)
+            w2 = winding_number(result, 2)
+            @test w1 isa Int
+            @test w2 isa Int
+
+            # For this simple structure, winding should be 0
+            @test w1 == 0
+            @test w2 == 0
+        end
+
+        # Test different wave types
+        @testset "Wave type support" begin
+            lat = square_lattice(1.0)
+
+            # TM wave
+            geo_ph = Geometry(
+                lat, Dielectric(1.0), [(Circle([0.0, 0.0], 0.3), Dielectric(4.0))]
+            )
+            solver_tm = Solver(TMWave(), geo_ph, (16, 16); cutoff = 4)
+            result_tm = compute_wilson_spectrum(solver_tm, 1:1; n_k_path = 5, n_k_loop = 20)
+            @test result_tm isa PhoXonic.WilsonSpectrumResult
+
+            # TE wave
+            solver_te = Solver(TEWave(), geo_ph, (16, 16); cutoff = 4)
+            result_te = compute_wilson_spectrum(solver_te, 1:1; n_k_path = 5, n_k_loop = 20)
+            @test result_te isa PhoXonic.WilsonSpectrumResult
+
+            # SH wave (phononic)
+            mat = IsotropicElastic(; ρ = 7800.0, λ = 115e9, μ = 82e9)
+            geo_ph_el = Geometry(lat, mat, [(Circle([0.0, 0.0], 0.3), mat)])
+            solver_sh = Solver(SHWave(), geo_ph_el, (16, 16); cutoff = 4)
+            result_sh = compute_wilson_spectrum(solver_sh, 1:1; n_k_path = 5, n_k_loop = 20)
+            @test result_sh isa PhoXonic.WilsonSpectrumResult
+        end
     end
 end

@@ -146,5 +146,6 @@ export TMMSolver, TMMResult, tmm_spectrum, tmm_bandstructure, bloch_k
 
 # Exports - Wilson loop / Topological invariants
 export ZakPhaseResult, compute_zak_phase
+export WilsonSpectrumResult, compute_wilson_spectrum, winding_number
 
 end # module

@@ -25,6 +25,24 @@ struct ZakPhaseResult
     bands::UnitRange{Int}
 end
 
+"""
+    WilsonSpectrumResult
+
+Result of 2D Wilson loop spectrum calculation.
+
+# Fields
+- `k_values::Vector{Float64}`: k-values along the scanning direction
+- `phases::Matrix{Float64}`: Wilson phases (n_k_path × n_bands)
+- `bands::UnitRange{Int}`: Which bands were computed
+- `loop_direction::Symbol`: Direction of Wilson loop integration (:b1 or :b2)
+"""
+struct WilsonSpectrumResult
+    k_values::Vector{Float64}
+    phases::Matrix{Float64}
+    bands::UnitRange{Int}
+    loop_direction::Symbol
+end
+
 # Core functions
 
 """
@@ -206,4 +224,133 @@ function compute_zak_phase(
     sort!(phases)
 
     return ZakPhaseResult(phases, bands)
+end
+
+"""
+    compute_wilson_spectrum(solver::Solver{Dim2}, bands; n_k_path=21, n_k_loop=50, loop_direction=:b2)
+
+Compute the Wilson loop spectrum for a 2D system.
+
+The Wilson spectrum shows the eigenvalues of the Wilson loop operator as a function
+of momentum along a path in the Brillouin zone. The Wilson loop is computed along
+the perpendicular direction at each k-point.
+
+# Arguments
+- `solver`: 2D solver (TEWave, TMWave, SHWave, or PSVWave)
+- `bands`: Which bands to include in the Wilson loop (e.g., `1:2`)
+- `n_k_path`: Number of k-points along the scanning path (default: 21)
+- `n_k_loop`: Number of k-points for Wilson loop integration (default: 50)
+- `loop_direction`: Direction of Wilson loop (:b1 or :b2, default: :b2)
+
+# Returns
+- `WilsonSpectrumResult`: Contains k_values, phases matrix, bands, and loop_direction
+
+# Example
+```julia
+lat = square_lattice(1.0)
+geo = Geometry(lat, Dielectric(1.0), [(Circle([0.0, 0.0], 0.3), Dielectric(9.0))])
+solver = Solver(TMWave(), geo, (32, 32); cutoff=5)
+result = compute_wilson_spectrum(solver, 1:2; n_k_path=21, n_k_loop=50)
+```
+"""
+function compute_wilson_spectrum(
+    solver::Solver{Dim2},
+    bands::UnitRange{Int};
+    n_k_path::Int = 21,
+    n_k_loop::Int = 50,
+    loop_direction::Symbol = :b2
+)
+    # Get weight matrix for inner product
+    W = get_weight_matrix(solver)
+
+    n_bands = length(bands)
+    max_band = maximum(bands)
+
+    # k-values along the scanning path (0 to 1 in the scanning direction)
+    k_scan = range(0.0, 1.0, length = n_k_path)
+
+    # k-values for Wilson loop (0 to 1-δ in the loop direction)
+    k_loop = range(0.0, 1.0 - 1.0 / n_k_loop, length = n_k_loop)
+
+    # Storage for Wilson phases at each scan point
+    phases_matrix = Matrix{Float64}(undef, n_k_path, n_bands)
+
+    # For each k-point along the scanning direction
+    for (i_scan, k_s) in enumerate(k_scan)
+        # Collect eigenvectors along the Wilson loop
+        spaces = Vector{Matrix{ComplexF64}}(undef, n_k_loop)
+
+        for (i_loop, k_l) in enumerate(k_loop)
+            # Construct k-vector based on loop direction
+            if loop_direction == :b2
+                k_vec = [k_s, k_l]  # scan in b1, loop in b2
+            else  # :b1
+                k_vec = [k_l, k_s]  # scan in b2, loop in b1
+            end
+
+            # Solve at this k-point
+            _, vectors = solve_at_k_with_vectors(
+                solver, k_vec, solver.method; bands = 1:max_band
+            )
+
+            # Extract the bands we want
+            spaces[i_loop] = vectors[:, bands]
+        end
+
+        # Compute Wilson matrix for this loop
+        W_wilson = wilson_matrix(spaces, W)
+
+        # Extract phases and sort them
+        phases = wilson_phases(W_wilson)
+        sort!(phases)
+
+        phases_matrix[i_scan, :] = phases
+    end
+
+    return WilsonSpectrumResult(collect(k_scan), phases_matrix, bands, loop_direction)
+end
+
+"""
+    winding_number(result::WilsonSpectrumResult, band_index::Int)
+
+Calculate the winding number of a Wilson phase band.
+
+The winding number counts how many times the Wilson phase winds around
+the Brillouin zone as k varies along the scanning path. A non-zero winding
+number indicates non-trivial topology.
+
+# Arguments
+- `result`: Wilson spectrum result from `compute_wilson_spectrum`
+- `band_index`: Which band (1 to n_bands) to compute winding for
+
+# Returns
+- `Int`: The winding number (positive for upward winding, negative for downward)
+
+# Example
+```julia
+result = compute_wilson_spectrum(solver, 1:2)
+w = winding_number(result, 1)  # Winding of first Wilson band
+```
+"""
+function winding_number(result::WilsonSpectrumResult, band_index::Int)
+    phases = result.phases[:, band_index]
+    n_k = length(phases)
+
+    # Compute total phase change, accounting for branch cuts
+    total_wind = 0.0
+    for i in 1:(n_k-1)
+        Δφ = phases[i+1] - phases[i]
+
+        # Unwrap: if jump is > π, it crossed a branch cut
+        if Δφ > π
+            Δφ -= 2π
+        elseif Δφ < -π
+            Δφ += 2π
+        end
+
+        total_wind += Δφ
+    end
+
+    # Winding number is total phase change divided by 2π, rounded to integer
+    return round(Int, total_wind / (2π))
 end
