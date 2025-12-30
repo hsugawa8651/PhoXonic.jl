@@ -4,6 +4,7 @@
 # The Zak phase is quantized to 0 or π for systems with inversion symmetry.
 
 using PhoXonic
+using Plots
 
 # Create a 1D photonic crystal with a dielectric layer
 # Unit cell: air-dielectric-air
@@ -22,12 +23,13 @@ geo_B = Geometry(lat, Dielectric(1.0), [
 solver_A = Solver(Photonic1D(), geo_A, 128; cutoff = 20)
 solver_B = Solver(Photonic1D(), geo_B, 128; cutoff = 20)
 
-# Compute Zak phases for bands 1-3
+# Compute Zak phases for bands 1-4
 println("Computing Zak phases...")
 println()
 
-zak_A = compute_zak_phase(solver_A, 1:3; n_k = 100)
-zak_B = compute_zak_phase(solver_B, 1:3; n_k = 100)
+n_bands = 4
+zak_A = compute_zak_phase(solver_A, 1:n_bands; n_k = 100)
+zak_B = compute_zak_phase(solver_B, 1:n_bands; n_k = 100)
 
 println("Geometry A (centered dielectric):")
 for (i, phase) in enumerate(zak_A.phases)
@@ -43,7 +45,67 @@ for (i, phase) in enumerate(zak_B.phases)
 end
 println()
 
-# The Zak phase should be quantized to 0 or π due to inversion symmetry
-# Different unit cell choices can give different Zak phases
+# Plot Zak phases comparison
+p = plot(
+    title = "Zak Phase Comparison",
+    xlabel = "Band index",
+    ylabel = "Zak phase / π",
+    legend = :topright,
+    ylims = (-1.2, 1.2),
+    yticks = ([-1, -0.5, 0, 0.5, 1], ["-π", "-π/2", "0", "π/2", "π"]),
+    size = (600, 400),
+)
+
+bar!(
+    1:n_bands,
+    zak_A.phases ./ π,
+    label = "Geometry A (centered)",
+    bar_width = 0.35,
+    fillalpha = 0.7,
+)
+bar!(
+    (1:n_bands) .+ 0.35,
+    zak_B.phases ./ π,
+    label = "Geometry B (edge)",
+    bar_width = 0.35,
+    fillalpha = 0.7,
+)
+
+# Add horizontal lines at 0 and ±π
+hline!([0, 1, -1], color = :gray, linestyle = :dash, label = "")
+
+savefig(p, "701_zak_phase_1d.png")
+println("Saved: 701_zak_phase_1d.png")
+
+# Also compute and plot band structure for reference
+println()
+println("Computing band structure...")
+
+k_values = range(0.0, 0.5, length = 51)
+n_k = length(k_values)
+n_plot_bands = 6
+freqs = zeros(n_k, n_plot_bands)
+
+for (i, k) in enumerate(k_values)
+    ω = solve_at_k(solver_A, k, solver_A.method; bands = 1:n_plot_bands)
+    freqs[i, :] = ω
+end
+
+p2 = plot(
+    title = "1D Photonic Crystal Band Structure",
+    xlabel = "k (π/a)",
+    ylabel = "Frequency (c/a)",
+    legend = false,
+    size = (600, 400),
+)
+
+for band in 1:n_plot_bands
+    plot!(p2, k_values .* 2, freqs[:, band], color = :blue, linewidth = 2)
+end
+
+savefig(p2, "701_zak_phase_1d_bands.png")
+println("Saved: 701_zak_phase_1d_bands.png")
+
+println()
 println("Note: For inversion-symmetric systems, Zak phase is quantized to 0 or π.")
 println("      Different unit cell choices yield different Zak phases.")
