@@ -1907,4 +1907,7 @@ using LinearAlgebra
 
     # Mid-level API tests
     include("test_midlevel_api.jl")
+
+    # Wilson loop and topological invariants
+    include("wilson_test.jl")
 end

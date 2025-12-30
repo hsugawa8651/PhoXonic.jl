@@ -51,6 +51,9 @@ include("plotting.jl")
 include("io.jl")
 include("supercell.jl")
 
+# Topological invariants
+include("wilson.jl")
+
 # Transfer Matrix Method
 include("tmm/TMM.jl")
 
@@ -140,5 +143,8 @@ export thickness, material, layers, incident, substrate
 export nlayers, total_thickness
 export periodic_multilayer, bragg_mirror
 export TMMSolver, TMMResult, tmm_spectrum, tmm_bandstructure, bloch_k
+
+# Exports - Wilson loop / Topological invariants
+export ZakPhaseResult, compute_zak_phase
 
 end # module
