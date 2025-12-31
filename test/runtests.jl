@@ -73,6 +73,92 @@ using LinearAlgebra
             @test !([0.6, 0.0] in r)
         end
 
+        @testset "Ellipse" begin
+            @testset "Basic ellipse (no rotation)" begin
+                e = Ellipse([0.0, 0.0], 2.0, 1.0)
+
+                # Center
+                @test [0.0, 0.0] in e
+
+                # On major axis (inside)
+                @test [1.0, 0.0] in e
+
+                # On edge (major)
+                @test [2.0, 0.0] in e
+
+                # On edge (minor)
+                @test [0.0, 1.0] in e
+
+                # Interior point
+                @test [1.0, 0.5] in e
+
+                # Outside (beyond major axis)
+                @test !([2.1, 0.0] in e)
+
+                # Outside (beyond minor axis)
+                @test !([0.0, 1.1] in e)
+
+                # Outside (diagonal)
+                @test !([1.5, 0.8] in e)
+            end
+
+            @testset "Circle (a == b)" begin
+                e = Ellipse([0.0, 0.0], 1.0, 1.0)
+                @test [0.5, 0.5] in e
+                @test [1.0, 0.0] in e
+                @test !([1.0, 1.0] in e)  # Outside (diagonal at sqrt(2))
+            end
+
+            @testset "Rotated ellipse (90 degrees)" begin
+                e90 = Ellipse([0.0, 0.0], 2.0, 1.0, π / 2)
+
+                # Major axis now along y
+                @test [0.0, 2.0] in e90    # Edge along y (was x)
+                @test [1.0, 0.0] in e90    # Edge along x (was y)
+                @test !([2.0, 0.0] in e90) # Was major, now outside
+                @test !([0.0, 2.1] in e90)
+            end
+
+            @testset "Rotated ellipse (45 degrees)" begin
+                e45 = Ellipse([0.0, 0.0], 2.0, 1.0, π / 4)
+
+                # Point at (sqrt(2), sqrt(2)) should be on edge after -45 deg rotation -> (2, 0)
+                @test [sqrt(2), sqrt(2)] in e45
+
+                # Point at (sqrt(2), -sqrt(2)) is outside
+                @test !([sqrt(2), -sqrt(2)] in e45)
+            end
+
+            @testset "Offset center" begin
+                e = Ellipse([1.0, 2.0], 0.5, 0.25, 0.0)
+                @test [1.0, 2.0] in e      # Center
+                @test [1.5, 2.0] in e      # Edge (major)
+                @test [1.0, 2.25] in e     # Edge (minor)
+                @test !([0.0, 0.0] in e)   # Origin (outside)
+            end
+
+            @testset "de Paz 2019 compatibility" begin
+                # Reproduce de Paz 2019 geometry check
+                R = 1.0 / 3
+                d1, d2 = 0.4, 0.13
+                θ = 60.0 * π / 180
+
+                center = R .* [cos(θ), sin(θ)]
+                e = Ellipse(center, d1 / 2, d2 / 2, θ)
+
+                # Center should be inside
+                @test center in e
+
+                # Point along major axis (radial outward) - just inside
+                p_major = center .+ (d1 / 2 - 0.01) .* [cos(θ), sin(θ)]
+                @test p_major in e
+
+                # Point just outside along major axis
+                p_outside = center .+ (d1 / 2 + 0.01) .* [cos(θ), sin(θ)]
+                @test !(p_outside in e)
+            end
+        end
+
         @testset "Shape translate" begin
             # 2D shapes
             @testset "Circle translate" begin
@@ -90,6 +176,16 @@ using LinearAlgebra
                 @test r2.center ≈ PhoXonic.Vec2(2.0, 3.0)
                 @test r2.size ≈ PhoXonic.Vec2(1.0, 0.5)
                 @test [2.0, 3.0] in r2
+            end
+
+            @testset "Ellipse translate" begin
+                e = Ellipse([0.0, 0.0], 1.0, 0.5, π / 6)
+                e2 = translate(e, [3.0, 4.0])
+                @test e2.center ≈ PhoXonic.Vec2(3.0, 4.0)
+                @test e2.a == e.a
+                @test e2.b == e.b
+                @test e2.angle == e.angle
+                @test [3.0, 4.0] in e2  # New center
             end
 
             @testset "Polygon translate" begin

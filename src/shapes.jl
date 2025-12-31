@@ -79,6 +79,67 @@ function Base.in(point::AbstractVector, r::Rectangle)
 end
 
 """
+    Ellipse(center, a, b, angle=0.0)
+
+A 2D ellipse with specified semi-axes and rotation.
+
+# Arguments
+- `center`: Center position [x, y]
+- `a`: Semi-axis length in the direction of rotation angle
+- `b`: Semi-axis length perpendicular to rotation angle
+- `angle`: Rotation angle in radians (counter-clockwise from x-axis), default 0.0
+
+# Notes
+- When `angle=0`, `a` is along x-axis, `b` is along y-axis
+- When `a == b`, reduces to a circle
+
+# Examples
+```julia
+# Ellipse aligned with axes
+e = Ellipse([0.0, 0.0], 0.2, 0.1)
+
+# Rotated ellipse (45 degrees)
+e45 = Ellipse([0.0, 0.0], 0.2, 0.1, π/4)
+
+# Ellipse at offset position with rotation
+e_off = Ellipse([0.5, 0.5], 0.15, 0.08, π/6)
+```
+"""
+struct Ellipse <: Shape{Dim2}
+    center::Vec2
+    a::Float64
+    b::Float64
+    angle::Float64
+end
+
+# Constructor with default angle
+function Ellipse(center::AbstractVector, a::Real, b::Real, angle::Real=0.0)
+    Ellipse(Vec2(center...), Float64(a), Float64(b), Float64(angle))
+end
+
+"""
+    in(point, ellipse::Ellipse)
+
+Check if a point is inside the ellipse.
+"""
+function Base.in(point::Vec2, e::Ellipse)
+    dx = point[1] - e.center[1]
+    dy = point[2] - e.center[2]
+
+    # Rotate point by -angle to align with ellipse axes
+    c, s = cos(e.angle), sin(e.angle)
+    dx_rot = dx * c + dy * s
+    dy_rot = -dx * s + dy * c
+
+    # Check if inside ellipse (normalized to unit circle)
+    (dx_rot / e.a)^2 + (dy_rot / e.b)^2 <= 1.0
+end
+
+function Base.in(point::AbstractVector, e::Ellipse)
+    Vec2(point...) in e
+end
+
+"""
     Polygon(vertices)
 
 A polygon in 2D defined by its vertices (in order).
@@ -277,6 +338,9 @@ translate(c::Circle, offset::AbstractVector) = translate(c, Vec2(offset...))
 
 translate(r::Rectangle, offset::Vec2) = Rectangle(r.center + offset, r.size)
 translate(r::Rectangle, offset::AbstractVector) = translate(r, Vec2(offset...))
+
+translate(e::Ellipse, offset::Vec2) = Ellipse(e.center + offset, e.a, e.b, e.angle)
+translate(e::Ellipse, offset::AbstractVector) = translate(e, Vec2(offset...))
 
 translate(p::Polygon, offset::Vec2) = Polygon([v + offset for v in p.vertices])
 translate(p::Polygon, offset::AbstractVector) = translate(p, Vec2(offset...))

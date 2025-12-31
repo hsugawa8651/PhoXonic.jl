@@ -71,7 +71,7 @@ export permittivity, permeability, refractive_index
 export density, shear_modulus, transverse_velocity, longitudinal_velocity
 
 # Exports - Shapes
-export Circle, Rectangle, Polygon, Sphere, Cylinder, Slab, Segment
+export Circle, Rectangle, Ellipse, Polygon, Sphere, Cylinder, Slab, Segment
 export translate  # Shape translation for supercell construction
 
 # Exports - Supercell
