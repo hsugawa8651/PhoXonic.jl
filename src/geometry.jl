@@ -171,6 +171,29 @@ function point_in_shape_periodic(
     point_in_shape_periodic(Vec2(point...), r, lattice)
 end
 
+# Ellipse: check if point is in ellipse or any periodic image
+function point_in_shape_periodic(point::Vec2, e::Ellipse, lattice::Lattice{Dim2})
+    a1, a2 = lattice.vectors
+
+    # Check original and all 8 neighboring periodic images
+    for i in -1:1
+        for j in -1:1
+            shifted_point = point - i * a1 - j * a2
+            if shifted_point in e
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+function point_in_shape_periodic(
+    point::AbstractVector, e::Ellipse, lattice::Lattice{Dim2}
+)
+    point_in_shape_periodic(Vec2(point...), e, lattice)
+end
+
 # Polygon: check if point is in polygon or any periodic image
 function point_in_shape_periodic(point::Vec2, poly::Polygon, lattice::Lattice{Dim2})
     a1, a2 = lattice.vectors

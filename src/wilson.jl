@@ -159,6 +159,50 @@ function wilson_matrix(
     return W_wilson
 end
 
+"""
+    wilson_matrix_open(spaces, W)
+
+Compute Wilson matrix for an open path (no closing step).
+
+This is used when the path goes from k=0 to k=1 (inclusive), where k=1 is the
+same point as k=0 due to Brillouin zone periodicity. The parallel transport
+is computed through all consecutive k-points without an explicit closing step.
+
+# Arguments
+- `spaces`: Vector of eigenvector matrices, one per k-point (n_basis × n_bands each)
+- `W`: Weight matrix for the inner product (n_basis × n_basis)
+
+# Returns
+- `W_wilson`: Wilson matrix (n_bands × n_bands), unitary
+"""
+function wilson_matrix_open(
+    spaces::Vector{<:AbstractMatrix{<:Complex}},
+    W::AbstractMatrix
+)
+    n_k = length(spaces)
+    n_bands = size(spaces[1], 2)
+
+    # For a single k-point, return identity
+    if n_k <= 1
+        return Matrix{ComplexF64}(I, n_bands, n_bands)
+    end
+
+    # Compute product of unitary overlap matrices
+    # Start with overlap between first and second k-point
+    W_wilson = unitary_approx(overlap_matrix(spaces[1], spaces[2], W))
+
+    # Multiply by subsequent overlaps (all the way to the last point)
+    for i in 2:(n_k-1)
+        M = overlap_matrix(spaces[i], spaces[i+1], W)
+        W_wilson = W_wilson * unitary_approx(M)
+    end
+
+    # No closing step - the path from k=0 to k=1 is complete
+    # (k=1 = k=0 by periodicity, so this is effectively a closed loop)
+
+    return W_wilson
+end
+
 # High-level API
 
 """
@@ -269,8 +313,10 @@ function compute_wilson_spectrum(
     # k-values along the scanning path (0 to 1 in the scanning direction)
     k_scan = range(0.0, 1.0, length = n_k_path)
 
-    # k-values for Wilson loop (0 to 1-δ in the loop direction)
-    k_loop = range(0.0, 1.0 - 1.0 / n_k_loop, length = n_k_loop)
+    # k-values for Wilson loop: 0 to 1 inclusive (n_k_loop+1 points)
+    # This ensures proper parallel transport: k=0 → k=δ → ... → k=1
+    # where k=1 is equivalent to k=0 due to BZ periodicity
+    k_loop = range(0.0, 1.0, length = n_k_loop + 1)
 
     # Storage for Wilson phases at each scan point
     phases_matrix = Matrix{Float64}(undef, n_k_path, n_bands)
@@ -278,7 +324,7 @@ function compute_wilson_spectrum(
     # For each k-point along the scanning direction
     for (i_scan, k_s) in enumerate(k_scan)
         # Collect eigenvectors along the Wilson loop
-        spaces = Vector{Matrix{ComplexF64}}(undef, n_k_loop)
+        spaces = Vector{Matrix{ComplexF64}}(undef, n_k_loop + 1)
 
         for (i_loop, k_l) in enumerate(k_loop)
             # Construct k-vector based on loop direction
@@ -297,8 +343,8 @@ function compute_wilson_spectrum(
             spaces[i_loop] = vectors[:, bands]
         end
 
-        # Compute Wilson matrix for this loop
-        W_wilson = wilson_matrix(spaces, W)
+        # Compute Wilson matrix for this loop (open loop, no explicit closing)
+        W_wilson = wilson_matrix_open(spaces, W)
 
         # Extract phases and sort them
         phases = wilson_phases(W_wilson)
