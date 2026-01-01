@@ -21,7 +21,7 @@ Band structure calculation for photonic and phononic crystals using the plane wa
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/hsugawa8651/PhoXonic.jl")
+Pkg.add("PhoXonic")
 ```
 
 ## Quick Start
@@ -35,6 +35,22 @@ See the [full documentation](https://hsugawa8651.github.io/PhoXonic.jl/dev/) for
 ## Contributing
 
 Contributions are welcome! Please open an issue or pull request on [GitHub](https://github.com/hsugawa8651/PhoXonic.jl).
+
+## Citation
+
+If you use PhoXonic.jl in your work, please cite:
+
+```bibtex
+@software{phoxonic_jl,
+  author       = {Sugawa, Hiroharu},
+  title        = {PhoXonic.jl: Photonic and Phononic Crystal Band Structure},
+  year         = 2025,
+  publisher    = {Zenodo},
+  version      = {v0.1.1},
+  doi          = {10.5281/zenodo.18055242},
+  url          = {https://doi.org/10.5281/zenodo.18055242}
+}
+```
 
 ## License
 

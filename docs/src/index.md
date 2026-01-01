@@ -84,6 +84,22 @@ For physical frequencies, material constants should be in consistent SI units (P
 - [Peacock.jl](https://github.com/sp94/Peacock.jl) - 2D photonic crystals in Julia (design inspiration). S. J. Palmer and V. Giannini, JOSS 5, 2678 (2020). [DOI:10.21105/joss.02678](https://doi.org/10.21105/joss.02678)
 - [MPB](https://mpb.readthedocs.io/) - MIT Photonic-Bands
 
+## Citation
+
+If you use PhoXonic.jl in your work, please cite:
+
+```bibtex
+@software{phoxonic_jl,
+  author       = {Sugawa, Hiroharu},
+  title        = {PhoXonic.jl: Photonic and Phononic Crystal Band Structure},
+  year         = 2025,
+  publisher    = {Zenodo},
+  version      = {v0.1.1},
+  doi          = {10.5281/zenodo.18055242},
+  url          = {https://doi.org/10.5281/zenodo.18055242}
+}
+```
+
 ## References
 
 - J. D. Joannopoulos et al., "Photonic Crystals: Molding the Flow of Light", Princeton University Press (2008). [Book](https://press.princeton.edu/books/hardcover/9780691124568/photonic-crystals)
