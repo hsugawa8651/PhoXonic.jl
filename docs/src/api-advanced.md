@@ -56,3 +56,22 @@ compute_ldos
 ```@docs
 compute_dos_stochastic
 ```
+
+## Topological Invariants
+
+See [Topological Invariants](topology.md) for usage examples.
+
+### Zak Phase (1D)
+
+```@docs
+compute_zak_phase
+ZakPhaseResult
+```
+
+### Wilson Loop (2D)
+
+```@docs
+compute_wilson_spectrum
+WilsonSpectrumResult
+winding_number
+```

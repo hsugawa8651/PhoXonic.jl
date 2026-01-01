@@ -5,6 +5,16 @@
 
 using PhoXonic
 using Plots
+default(
+    guidefontsize = 14,
+    tickfontsize = 12,
+    titlefontsize = 14,
+    legendfontsize = 11,
+    left_margin = 10Plots.mm,
+    right_margin = 10Plots.mm,
+    top_margin = 5Plots.mm,
+    bottom_margin = 10Plots.mm,
+)
 
 # Create a 1D photonic crystal with a dielectric layer
 # Unit cell: air-dielectric-air
@@ -54,30 +64,32 @@ p = plot(
     ylims = (-1.2, 1.2),
     yticks = ([-1, -0.5, 0, 0.5, 1], ["-π", "-π/2", "0", "π/2", "π"]),
     xticks = 1:n_bands,
-    size = (600, 400),
+    size = (700, 500),
 )
 
 # Add horizontal lines at 0 and ±π (behind)
 hline!([0, 1, -1], color = :gray, linestyle = :dash, label = "")
 
-# Plot Geometry B first (behind) - large red circles
+# Plot Geometry B - red crosses (×)
 scatter!(
     1:n_bands,
     zak_B.phases ./ π,
     label = "Geometry B (edge)",
     markersize = 10,
+    markershape = :xcross,
     color = :red,
-    markerstrokewidth = 0,
+    markerstrokewidth = 2,
 )
 
-# Plot Geometry A second (in front) - small blue circles
+# Plot Geometry A - blue plus (+)
 scatter!(
     1:n_bands,
     zak_A.phases ./ π,
     label = "Geometry A (centered)",
-    markersize = 5,
+    markersize = 10,
+    markershape = :cross,
     color = :blue,
-    markerstrokewidth = 0,
+    markerstrokewidth = 2,
 )
 
 savefig(p, "701_zak_phase_1d.png")
@@ -99,10 +111,10 @@ end
 
 p2 = plot(
     title = "1D Photonic Crystal Band Structure",
-    xlabel = "k (π/a)",
-    ylabel = "Frequency (c/a)",
+    xlabel = "Wave vector k (π/a)",
+    ylabel = "Frequency (ωa/2πc)",
     legend = false,
-    size = (600, 400),
+    size = (700, 500),
 )
 
 for band in 1:n_plot_bands
