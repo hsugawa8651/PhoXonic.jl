@@ -20,6 +20,12 @@ MatrixFreeEffectiveHamiltonian
 NegatedOperator
 ```
 
+## Band Tracking
+
+The `track_bands` option in [`compute_bands`](@ref) uses eigenvector overlap to maintain band continuity across k-points.
+
+See [Band Tracking](analysis.md#Band-Tracking) for usage examples.
+
 ## Green's Function and DOS/LDOS
 
 !!! note "Optional Dependency"

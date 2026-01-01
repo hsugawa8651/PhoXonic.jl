@@ -22,265 +22,19 @@ struct BandStructure{D}
     labels::Vector{Tuple{Int,String}}
 end
 
-"""
-    compute_bands(solver::Solver, kpath; bands=1:10, verbose=false)
+# ============================================================================
+# 2D Band structure computation
+# ============================================================================
 
-Compute band structure along a k-point path.
-
-When the solver uses LOBPCGMethod with warm_start=true, automatically:
-1. Solves first k-point with Dense (if first_dense=true)
-2. Uses previous eigenvectors as initial guess for subsequent k-points
-3. Applies matrix scaling (if scale=true)
-
-This can achieve up to 38x speedup for large problems.
-
-# Arguments
-- `solver`: The solver
-- `kpath`: K-point path (SimpleKPath, KPathInterpolant, or Vector)
-- `bands`: Which bands to compute (default: 1:10)
-- `verbose`: Print progress (default: false)
-
-# Returns
-A `BandStructure` object containing frequencies for each k-point and band.
-"""
-function compute_bands(
-    solver::Solver{Dim2}, kpath::SimpleKPath{2}; bands=1:10, verbose::Bool=false
-)
-    nk = length(kpath)
-    nbands = length(bands)
-    frequencies = zeros(Float64, nk, nbands)
-
-    # Check if warm start is enabled
-    method = solver.method
-    use_warm_start = method isa LOBPCGMethod && method.warm_start
-
-    if use_warm_start
-        _compute_bands_warmstart!(frequencies, solver, kpath.points, bands, verbose)
-    else
-        for (ik, k) in enumerate(kpath.points)
-            if verbose && ik % 10 == 0
-                println("Computing k-point $ik / $nk")
-            end
-            ω, _ = solve(solver, collect(k); bands=bands)
-            frequencies[ik, :] = ω
-        end
-    end
-
-    BandStructure{2}(kpath.points, kpath.distances, frequencies, kpath.labels)
-end
-
-"""
-    compute_bands(solver::Solver, kpoints::Vector; bands=1:10)
-
-Compute band structure at specified k-points (without path structure).
-"""
-function compute_bands(
-    solver::Solver{Dim2}, kpoints::Vector{<:AbstractVector}; bands=1:10, verbose::Bool=false
-)
-    nk = length(kpoints)
-    nbands = length(bands)
-    frequencies = zeros(Float64, nk, nbands)
-
-    for (ik, k) in enumerate(kpoints)
-        if verbose && ik % 10 == 0
-            println("Computing k-point $ik / $nk")
-        end
-        ω, _ = solve(solver, k; bands=bands)
-        frequencies[ik, :] = ω
-    end
-
-    # Create simple distance array
-    points = [SVector{2}(k...) for k in kpoints]
-    distances = Float64[0.0]
-    for i in 2:nk
-        push!(distances, distances[end] + norm(points[i] - points[i - 1]))
-    end
-
-    BandStructure{2}(points, distances, frequencies, Tuple{Int,String}[])
-end
-
-"""
-    compute_bands(solver::Solver, kpi::KPathInterpolant; bands=1:10, verbose=false)
-
-Compute band structure using Brillouin.jl KPathInterpolant.
-"""
-function compute_bands(
-    solver::Solver{Dim2}, kpi::KPathInterpolant; bands=1:10, verbose::Bool=false
-)
-    # Extract k-points from interpolant (only kx, ky for 2D)
-    kpoints_3d = collect(kpi)
-    kpoints = [SVector{2}(k[1], k[2]) for k in kpoints_3d]
-
-    nk = length(kpoints)
-    nbands = length(bands)
-    frequencies = zeros(Float64, nk, nbands)
-
-    for (ik, k) in enumerate(kpoints)
-        if verbose && ik % 10 == 0
-            println("Computing k-point $ik / $nk")
-        end
-        ω, _ = solve(solver, collect(k); bands=bands)
-        frequencies[ik, :] = ω
-    end
-
-    # Compute distances
-    distances = Float64[0.0]
-    for i in 2:nk
-        push!(distances, distances[end] + norm(kpoints[i] - kpoints[i - 1]))
-    end
-
-    # Extract labels from KPathInterpolant if available
-    labels = Tuple{Int,String}[]
-
-    BandStructure{2}(kpoints, distances, frequencies, labels)
-end
+# Note: compute_bands functions with track_bands option are defined below
+# after the Band Sorting section
 
 # ============================================================================
 # 3D Band structure computation
 # ============================================================================
 
-"""
-    compute_bands(solver::Solver{Dim3}, kpath::SimpleKPath{3}; bands=1:10, verbose=false)
-
-Compute 3D band structure along a k-point path.
-
-# Arguments
-- `solver`: 3D solver (FullVectorEM or FullElastic)
-- `kpath`: K-point path from `simple_kpath_cubic`, `simple_kpath_fcc`, etc.
-- `bands`: Which bands to compute (default: 1:10)
-- `verbose`: Print progress (default: false)
-
-# Returns
-A `BandStructure{3}` object containing frequencies for each k-point and band.
-
-# Example
-```julia
-lat = fcc_lattice(1.0)
-geo = Geometry(lat, Dielectric(1.0), [(Sphere([0,0,0], 0.25), Dielectric(12.0))])
-solver = Solver(FullVectorEM(), geo, (12,12,12), KrylovKitMethod(shift=0.01); cutoff=3)
-kpath = simple_kpath_fcc(a=1.0, npoints=20)
-bands = compute_bands(solver, kpath; bands=1:6)
-```
-
-# Note
-At Γ point (k=0), the lowest transverse modes also have ω→0, which can cause
-anomalous values. Consider using a small k offset or skipping the Γ point.
-"""
-function compute_bands(
-    solver::Solver{Dim3}, kpath::SimpleKPath{3}; bands=1:10, verbose::Bool=false
-)
-    nk = length(kpath)
-    nbands = length(bands)
-    frequencies = zeros(Float64, nk, nbands)
-
-    for (ik, k) in enumerate(kpath.points)
-        if verbose && ik % 10 == 0
-            println("Computing k-point $ik / $nk")
-        end
-        ω, _ = solve(solver, collect(k); bands=bands)
-        frequencies[ik, :] = ω
-    end
-
-    BandStructure{3}(kpath.points, kpath.distances, frequencies, kpath.labels)
-end
-
-"""
-    compute_bands(solver::Solver{Dim3}, kpoints::Vector; bands=1:10, verbose=false)
-
-Compute 3D band structure at specified k-points (without path structure).
-
-# Arguments
-- `solver`: 3D solver (FullVectorEM or FullElastic)
-- `kpoints`: Vector of k-points as 3-element vectors
-- `bands`: Which bands to compute (default: 1:10)
-- `verbose`: Print progress (default: false)
-
-# Returns
-A `BandStructure{3}` object. Labels will be empty since no path structure is provided.
-
-# Example
-```julia
-kpoints = [[0.5, 0.0, 0.0], [0.5, 0.5, 0.0], [0.5, 0.5, 0.5]]
-bands = compute_bands(solver, kpoints; bands=1:6)
-```
-"""
-function compute_bands(
-    solver::Solver{Dim3}, kpoints::Vector{<:AbstractVector}; bands=1:10, verbose::Bool=false
-)
-    nk = length(kpoints)
-    nbands = length(bands)
-    frequencies = zeros(Float64, nk, nbands)
-
-    for (ik, k) in enumerate(kpoints)
-        if verbose && ik % 10 == 0
-            println("Computing k-point $ik / $nk")
-        end
-        ω, _ = solve(solver, collect(k); bands=bands)
-        frequencies[ik, :] = ω
-    end
-
-    # Create simple distance array
-    points = [SVector{3}(k...) for k in kpoints]
-    distances = Float64[0.0]
-    for i in 2:nk
-        push!(distances, distances[end] + norm(points[i] - points[i - 1]))
-    end
-
-    BandStructure{3}(points, distances, frequencies, Tuple{Int,String}[])
-end
-
-"""
-    compute_bands(solver::Solver{Dim3}, kpi::KPathInterpolant; bands=1:10, verbose=false)
-
-Compute 3D band structure using Brillouin.jl KPathInterpolant.
-
-# Arguments
-- `solver`: 3D solver (FullVectorEM or FullElastic)
-- `kpi`: K-path interpolant from `kpath_cubic`, `kpath_fcc`, `kpath_bcc`, etc.
-- `bands`: Which bands to compute (default: 1:10)
-- `verbose`: Print progress (default: false)
-
-# Returns
-A `BandStructure{3}` object.
-
-# Example
-```julia
-lat = cubic_lattice(1.0)
-geo = Geometry(lat, Dielectric(1.0), [(Sphere([0,0,0], 0.3), Dielectric(12.0))])
-solver = Solver(FullVectorEM(), geo, (12,12,12), KrylovKitMethod(shift=0.01); cutoff=3)
-kpath = kpath_cubic(a=1.0, N=50)  # Brillouin.jl based
-bands = compute_bands(solver, kpath; bands=1:6)
-```
-"""
-function compute_bands(
-    solver::Solver{Dim3}, kpi::KPathInterpolant; bands=1:10, verbose::Bool=false
-)
-    kpoints_raw = collect(kpi)
-    kpoints = [SVector{3}(k[1], k[2], k[3]) for k in kpoints_raw]
-
-    nk = length(kpoints)
-    nbands = length(bands)
-    frequencies = zeros(Float64, nk, nbands)
-
-    for (ik, k) in enumerate(kpoints)
-        if verbose && ik % 10 == 0
-            println("Computing k-point $ik / $nk")
-        end
-        ω, _ = solve(solver, collect(k); bands=bands)
-        frequencies[ik, :] = ω
-    end
-
-    # Compute distances
-    distances = Float64[0.0]
-    for i in 2:nk
-        push!(distances, distances[end] + norm(kpoints[i] - kpoints[i - 1]))
-    end
-
-    # Extract labels from KPathInterpolant if available
-    labels = Tuple{Int,String}[]
-
-    BandStructure{3}(kpoints, distances, frequencies, labels)
-end
+# Note: 3D compute_bands functions with track_bands option are defined below
+# after the Band Sorting section
 
 # ============================================================================
 # Analysis functions
@@ -410,6 +164,342 @@ function _compute_bands_warmstart!(
             prev_eigenvectors = vecs
         end
     end
+end
+
+# ============================================================================
+# Band Sorting (Track bands across k-points)
+# ============================================================================
+
+"""
+    find_best_permutation(overlap_sq::AbstractMatrix{<:Real}) -> Vector{Int}
+
+Find permutation that maximizes sum of diagonal elements.
+
+Uses greedy algorithm (O(n²)) which works well for band tracking.
+Given a matrix of squared overlaps |⟨ψᵢ|ψⱼ⟩|², finds the permutation
+that assigns each previous band to the current band with maximum overlap.
+
+# Arguments
+- `overlap_sq`: Matrix of squared overlaps (n_bands × n_bands)
+
+# Returns
+- `perm`: Permutation vector where perm[i] is the new index for band i
+"""
+function find_best_permutation(overlap_sq::AbstractMatrix{<:Real})
+    n = size(overlap_sq, 1)
+    perm = zeros(Int, n)
+    used = falses(n)
+
+    for i in 1:n
+        # Find best unused column for row i
+        best_j = 0
+        best_val = -Inf
+        for j in 1:n
+            if !used[j] && overlap_sq[i, j] > best_val
+                best_val = overlap_sq[i, j]
+                best_j = j
+            end
+        end
+        perm[i] = best_j
+        used[best_j] = true
+    end
+
+    return perm
+end
+
+"""
+    _track_bands!(frequencies, kpoints, solver, bands, verbose)
+
+Internal helper for band tracking using eigenvector overlap.
+
+Reorders eigenvalues at each k-point to maintain band continuity
+by tracking eigenvector overlaps between adjacent k-points.
+"""
+function _track_bands!(
+    frequencies::Matrix{Float64},
+    kpoints,
+    solver::Solver,
+    bands,
+    verbose::Bool
+)
+    nk = length(kpoints)
+    nbands = length(bands)
+
+    # Get weight matrix for inner product
+    W = get_weight_matrix(solver)
+
+    # First k-point
+    k = collect(kpoints[1])
+    ω, vecs = solve_at_k_with_vectors(solver, k, solver.method; bands=bands)
+    frequencies[1, :] = ω
+    prev_vecs = vecs
+
+    # Track bands through remaining k-points
+    for ik in 2:nk
+        if verbose && ik % 10 == 0
+            println("Computing k-point $ik / $nk (tracking)")
+        end
+
+        k = collect(kpoints[ik])
+        ω, vecs = solve_at_k_with_vectors(solver, k, solver.method; bands=bands)
+
+        # Compute overlap matrix: M[i,j] = |⟨prev_i|current_j⟩|²
+        M = overlap_matrix(prev_vecs, vecs, W)
+        overlap_sq = abs2.(M)
+
+        # Find best permutation
+        perm = find_best_permutation(overlap_sq)
+
+        # Apply permutation
+        frequencies[ik, :] = ω[perm]
+        prev_vecs = vecs[:, perm]
+    end
+end
+
+# ============================================================================
+# Tracked band computation (2D)
+# ============================================================================
+
+"""
+    compute_bands(solver::Solver, kpath; bands=1:10, verbose=false, track_bands=false)
+
+Compute band structure along a k-point path.
+
+When the solver uses LOBPCGMethod with warm_start=true, automatically:
+1. Solves first k-point with Dense (if first_dense=true)
+2. Uses previous eigenvectors as initial guess for subsequent k-points
+3. Applies matrix scaling (if scale=true)
+
+This can achieve up to 38x speedup for large problems.
+
+# Arguments
+- `solver`: The solver
+- `kpath`: K-point path (SimpleKPath, KPathInterpolant, or Vector)
+- `bands`: Which bands to compute (default: 1:10)
+- `verbose`: Print progress (default: false)
+- `track_bands`: Track bands across k-points using eigenvector overlap (default: false).
+  When true, bands are reordered at each k-point to maintain continuity,
+  preventing spurious crossings from appearing as discontinuities.
+
+# Returns
+A `BandStructure` object containing frequencies for each k-point and band.
+"""
+function compute_bands(
+    solver::Solver{Dim2}, kpath::SimpleKPath{2}; bands=1:10, verbose::Bool=false,
+    track_bands::Bool=false
+)
+    nk = length(kpath)
+    nbands = length(bands)
+    frequencies = zeros(Float64, nk, nbands)
+
+    if track_bands
+        _track_bands!(frequencies, kpath.points, solver, bands, verbose)
+    else
+        # Check if warm start is enabled
+        method = solver.method
+        use_warm_start = method isa LOBPCGMethod && method.warm_start
+
+        if use_warm_start
+            _compute_bands_warmstart!(frequencies, solver, kpath.points, bands, verbose)
+        else
+            for (ik, k) in enumerate(kpath.points)
+                if verbose && ik % 10 == 0
+                    println("Computing k-point $ik / $nk")
+                end
+                ω, _ = solve(solver, collect(k); bands=bands)
+                frequencies[ik, :] = ω
+            end
+        end
+    end
+
+    BandStructure{2}(kpath.points, kpath.distances, frequencies, kpath.labels)
+end
+
+function compute_bands(
+    solver::Solver{Dim2}, kpoints::Vector{<:AbstractVector}; bands=1:10, verbose::Bool=false,
+    track_bands::Bool=false
+)
+    nk = length(kpoints)
+    nbands = length(bands)
+    frequencies = zeros(Float64, nk, nbands)
+
+    if track_bands
+        _track_bands!(frequencies, kpoints, solver, bands, verbose)
+    else
+        for (ik, k) in enumerate(kpoints)
+            if verbose && ik % 10 == 0
+                println("Computing k-point $ik / $nk")
+            end
+            ω, _ = solve(solver, k; bands=bands)
+            frequencies[ik, :] = ω
+        end
+    end
+
+    # Create simple distance array
+    points = [SVector{2}(k...) for k in kpoints]
+    distances = Float64[0.0]
+    for i in 2:nk
+        push!(distances, distances[end] + norm(points[i] - points[i - 1]))
+    end
+
+    BandStructure{2}(points, distances, frequencies, Tuple{Int,String}[])
+end
+
+function compute_bands(
+    solver::Solver{Dim2}, kpi::KPathInterpolant; bands=1:10, verbose::Bool=false,
+    track_bands::Bool=false
+)
+    # Extract k-points from interpolant (only kx, ky for 2D)
+    kpoints_3d = collect(kpi)
+    kpoints = [SVector{2}(k[1], k[2]) for k in kpoints_3d]
+
+    nk = length(kpoints)
+    nbands = length(bands)
+    frequencies = zeros(Float64, nk, nbands)
+
+    if track_bands
+        _track_bands!(frequencies, kpoints, solver, bands, verbose)
+    else
+        for (ik, k) in enumerate(kpoints)
+            if verbose && ik % 10 == 0
+                println("Computing k-point $ik / $nk")
+            end
+            ω, _ = solve(solver, collect(k); bands=bands)
+            frequencies[ik, :] = ω
+        end
+    end
+
+    # Compute distances
+    distances = Float64[0.0]
+    for i in 2:nk
+        push!(distances, distances[end] + norm(kpoints[i] - kpoints[i - 1]))
+    end
+
+    # Extract labels from KPathInterpolant if available
+    labels = Tuple{Int,String}[]
+
+    BandStructure{2}(kpoints, distances, frequencies, labels)
+end
+
+# ============================================================================
+# Tracked band computation (3D)
+# ============================================================================
+
+"""
+    compute_bands(solver::Solver{Dim3}, kpath::SimpleKPath{3}; bands=1:10, verbose=false, track_bands=false)
+
+Compute 3D band structure along a k-point path.
+
+# Arguments
+- `solver`: 3D solver (FullVectorEM or FullElastic)
+- `kpath`: K-point path from `simple_kpath_cubic`, `simple_kpath_fcc`, etc.
+- `bands`: Which bands to compute (default: 1:10)
+- `verbose`: Print progress (default: false)
+- `track_bands`: Track bands across k-points using eigenvector overlap (default: false).
+  When true, bands are reordered at each k-point to maintain continuity.
+
+# Returns
+A `BandStructure{3}` object containing frequencies for each k-point and band.
+
+# Example
+```julia
+lat = fcc_lattice(1.0)
+geo = Geometry(lat, Dielectric(1.0), [(Sphere([0,0,0], 0.25), Dielectric(12.0))])
+solver = Solver(FullVectorEM(), geo, (12,12,12), KrylovKitMethod(shift=0.01); cutoff=3)
+kpath = simple_kpath_fcc(a=1.0, npoints=20)
+bands = compute_bands(solver, kpath; bands=1:6, track_bands=true)
+```
+
+# Note
+At Γ point (k=0), the lowest transverse modes also have ω→0, which can cause
+anomalous values. Consider using a small k offset or skipping the Γ point.
+"""
+function compute_bands(
+    solver::Solver{Dim3}, kpath::SimpleKPath{3}; bands=1:10, verbose::Bool=false,
+    track_bands::Bool=false
+)
+    nk = length(kpath)
+    nbands = length(bands)
+    frequencies = zeros(Float64, nk, nbands)
+
+    if track_bands
+        _track_bands!(frequencies, kpath.points, solver, bands, verbose)
+    else
+        for (ik, k) in enumerate(kpath.points)
+            if verbose && ik % 10 == 0
+                println("Computing k-point $ik / $nk")
+            end
+            ω, _ = solve(solver, collect(k); bands=bands)
+            frequencies[ik, :] = ω
+        end
+    end
+
+    BandStructure{3}(kpath.points, kpath.distances, frequencies, kpath.labels)
+end
+
+function compute_bands(
+    solver::Solver{Dim3}, kpoints::Vector{<:AbstractVector}; bands=1:10, verbose::Bool=false,
+    track_bands::Bool=false
+)
+    nk = length(kpoints)
+    nbands = length(bands)
+    frequencies = zeros(Float64, nk, nbands)
+
+    if track_bands
+        _track_bands!(frequencies, kpoints, solver, bands, verbose)
+    else
+        for (ik, k) in enumerate(kpoints)
+            if verbose && ik % 10 == 0
+                println("Computing k-point $ik / $nk")
+            end
+            ω, _ = solve(solver, collect(k); bands=bands)
+            frequencies[ik, :] = ω
+        end
+    end
+
+    # Create simple distance array
+    points = [SVector{3}(k...) for k in kpoints]
+    distances = Float64[0.0]
+    for i in 2:nk
+        push!(distances, distances[end] + norm(points[i] - points[i - 1]))
+    end
+
+    BandStructure{3}(points, distances, frequencies, Tuple{Int,String}[])
+end
+
+function compute_bands(
+    solver::Solver{Dim3}, kpi::KPathInterpolant; bands=1:10, verbose::Bool=false,
+    track_bands::Bool=false
+)
+    kpoints_raw = collect(kpi)
+    kpoints = [SVector{3}(k[1], k[2], k[3]) for k in kpoints_raw]
+
+    nk = length(kpoints)
+    nbands = length(bands)
+    frequencies = zeros(Float64, nk, nbands)
+
+    if track_bands
+        _track_bands!(frequencies, kpoints, solver, bands, verbose)
+    else
+        for (ik, k) in enumerate(kpoints)
+            if verbose && ik % 10 == 0
+                println("Computing k-point $ik / $nk")
+            end
+            ω, _ = solve(solver, collect(k); bands=bands)
+            frequencies[ik, :] = ω
+        end
+    end
+
+    # Compute distances
+    distances = Float64[0.0]
+    for i in 2:nk
+        push!(distances, distances[end] + norm(kpoints[i] - kpoints[i - 1]))
+    end
+
+    # Extract labels from KPathInterpolant if available
+    labels = Tuple{Int,String}[]
+
+    BandStructure{3}(kpoints, distances, frequencies, labels)
 end
 
 # ============================================================================

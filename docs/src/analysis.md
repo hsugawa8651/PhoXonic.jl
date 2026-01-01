@@ -19,6 +19,38 @@ vg = group_velocity(solver, k; bands=1:4)
 # vg[i] = [∂ω/∂kx, ∂ω/∂ky] for band i
 ```
 
+## Band Tracking
+
+When bands cross or come close together, eigenvalue sorting by frequency can cause apparent discontinuities in the band structure. The `track_bands` option uses eigenvector overlap to maintain band continuity.
+
+```julia
+# Without tracking (default): bands sorted by frequency at each k-point
+bands = compute_bands(solver, kpath; bands=1:6)
+
+# With tracking: bands tracked using eigenvector overlap
+bands = compute_bands(solver, kpath; bands=1:6, track_bands=true)
+```
+
+**How it works:**
+1. At each k-point, compute overlap matrix between eigenvectors of adjacent k-points
+2. Find optimal permutation that maximizes diagonal overlap
+3. Reorder bands to maintain continuity
+
+**When to use:**
+- 3D calculations where band crossings are common
+- Near degeneracy points
+- When smooth band dispersion is needed for further analysis (e.g., group velocity)
+
+**Example: 3D FCC phononic crystal**
+```julia
+lat = fcc_lattice(1.0)
+geo = Geometry(lat, Epoxy, [(Sphere([0,0,0], 0.2), WC)])
+solver = Solver(FullElastic(), geo, (12,12,12), KrylovKitMethod(); cutoff=3)
+
+kpath = simple_kpath_fcc()
+bands = compute_bands(solver, kpath; bands=1:12, track_bands=true)
+```
+
 ## K-path Options
 
 ### Simple k-paths

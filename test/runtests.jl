@@ -2006,4 +2006,7 @@ using LinearAlgebra
 
     # Wilson loop and topological invariants
     include("wilson_test.jl")
+
+    # Band sorting
+    include("band_sorting_test.jl")
 end
