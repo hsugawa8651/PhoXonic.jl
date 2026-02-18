@@ -14,6 +14,7 @@ makedocs(;
         "Solver Methods" => "solver.md",
         "Analysis" => "analysis.md",
         "DOS / LDOS" => "greens_function.md",
+        "Topological Invariants" => "topology.md",
         "Examples" => "examples.md",
         "Matrix-Free Methods" => "matrixfree.md",
         "Elastic Void (Tanaka Limit)" => "elastic_void.md",

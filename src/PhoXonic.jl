@@ -51,6 +51,9 @@ include("plotting.jl")
 include("io.jl")
 include("supercell.jl")
 
+# Topological invariants
+include("wilson.jl")
+
 # Transfer Matrix Method
 include("tmm/TMM.jl")
 
@@ -68,7 +71,7 @@ export permittivity, permeability, refractive_index
 export density, shear_modulus, transverse_velocity, longitudinal_velocity
 
 # Exports - Shapes
-export Circle, Rectangle, Polygon, Sphere, Cylinder, Slab, Segment
+export Circle, Rectangle, Ellipse, Polygon, Sphere, Cylinder, Slab, Segment
 export translate  # Shape translation for supercell construction
 
 # Exports - Supercell
@@ -140,5 +143,9 @@ export thickness, material, layers, incident, substrate
 export nlayers, total_thickness
 export periodic_multilayer, bragg_mirror
 export TMMSolver, TMMResult, tmm_spectrum, tmm_bandstructure, bloch_k
+
+# Exports - Wilson loop / Topological invariants
+export ZakPhaseResult, compute_zak_phase
+export WilsonSpectrumResult, compute_wilson_spectrum, winding_number
 
 end # module
