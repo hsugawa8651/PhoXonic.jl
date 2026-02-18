@@ -95,8 +95,8 @@ If you use PhoXonic.jl in your work, please cite:
   year         = 2025,
   publisher    = {Zenodo},
   version      = {v0.2.0},
-  doi          = {10.5281/zenodo.18055242},
-  url          = {https://doi.org/10.5281/zenodo.18055242}
+  doi          = {10.5281/zenodo.18055170},
+  url          = {https://doi.org/10.5281/zenodo.18055170}
 }
 ```
 

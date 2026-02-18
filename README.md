@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/hsugawa8651/PhoXonic.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/hsugawa8651/PhoXonic.jl/actions/workflows/CI.yml)
 [![Documentation](https://github.com/hsugawa8651/PhoXonic.jl/actions/workflows/Documentation.yml/badge.svg)](https://hsugawa8651.github.io/PhoXonic.jl/dev/)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18055242.svg)](https://doi.org/10.5281/zenodo.18055242)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18055170.svg)](https://doi.org/10.5281/zenodo.18055170)
 
 Band structure calculation for photonic and phononic crystals using the plane wave expansion (PWE) method.
 
@@ -47,8 +47,8 @@ If you use PhoXonic.jl in your work, please cite:
   year         = 2025,
   publisher    = {Zenodo},
   version      = {v0.2.0},
-  doi          = {10.5281/zenodo.18055242},
-  url          = {https://doi.org/10.5281/zenodo.18055242}
+  doi          = {10.5281/zenodo.18055170},
+  url          = {https://doi.org/10.5281/zenodo.18055170}
 }
 ```
 
