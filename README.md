@@ -46,7 +46,7 @@ If you use PhoXonic.jl in your work, please cite:
   title        = {PhoXonic.jl: Photonic and Phononic Crystal Band Structure},
   year         = 2025,
   publisher    = {Zenodo},
-  version      = {v0.2.0},
+  version      = {v0.2.1},
   doi          = {10.5281/zenodo.18055170},
   url          = {https://doi.org/10.5281/zenodo.18055170}
 }

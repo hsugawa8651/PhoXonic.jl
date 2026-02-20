@@ -15,6 +15,11 @@ result = compute_zak_phase(solver, 1:4; n_k=100)
 result.phases  # Zak phase for each band
 ```
 
+!!! warning "Per-band gauge ambiguity"
+    Per-band Zak phases computed via the open Wilson line have an inherent ±π
+    ambiguity due to endpoint gauge dependence in the truncated plane-wave basis.
+    The multi-band total `sum(result.phases)` is gauge-invariant and reliable.
+
 !!! note "Unit Cell Choice"
     Different choices of unit cell origin yield different Zak phases, but the difference between bands remains invariant.
 
