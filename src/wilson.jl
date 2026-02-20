@@ -19,6 +19,11 @@ Result of 1D Zak phase calculation.
 # Fields
 - `phases::Vector{Float64}`: Zak phase for each band, in [-π, π]
 - `bands::UnitRange{Int}`: Which bands were computed
+
+# Note
+Per-band Zak phases have an inherent ±π gauge ambiguity due to endpoint
+gauge dependence in the truncated PWE basis. The multi-band total
+`sum(phases)` is gauge-invariant and reliable.
 """
 struct ZakPhaseResult
     phases::Vector{Float64}
@@ -222,6 +227,10 @@ the Zak phase is quantized to 0 or π.
 # Returns
 - `ZakPhaseResult`: Contains phases for each band
 
+!!! warning
+    Per-band phases have ±π gauge ambiguity. Use `sum(result.phases)` for
+    a gauge-invariant total.
+
 # Example
 ```julia
 lat = lattice_1d(1.0)
@@ -240,13 +249,12 @@ function compute_zak_phase(
     W = get_weight_matrix(solver)
 
     # Sample k-points from 0 to 1 (in units of reciprocal lattice vector)
-    # We need n_k+1 points but the last one wraps back, so we use n_k points
-    # for the Wilson loop product
-    k_points = range(0.0, 1.0 - 1.0 / n_k, length = n_k)
+    # Use n_k+1 points including endpoint k=1 for open Wilson line
+    k_points = range(0.0, 1.0, length = n_k + 1)
 
     # Collect eigenvectors at each k-point
     n_bands = length(bands)
-    spaces = Vector{Matrix{ComplexF64}}(undef, n_k)
+    spaces = Vector{Matrix{ComplexF64}}(undef, n_k + 1)
 
     max_band = maximum(bands)
     for (i, k) in enumerate(k_points)
@@ -258,7 +266,7 @@ function compute_zak_phase(
     end
 
     # Compute Wilson matrix
-    W_wilson = wilson_matrix(spaces, W)
+    W_wilson = wilson_matrix_open(spaces, W)
 
     # Extract phases
     phases = wilson_phases(W_wilson)

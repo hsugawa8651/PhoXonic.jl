@@ -55,6 +55,12 @@ for (i, phase) in enumerate(zak_B.phases)
 end
 println()
 
+# Multi-band total (gauge-invariant)
+println("Multi-band total Zak phase:")
+println("  Geometry A: $(round(sum(zak_A.phases), digits=4))")
+println("  Geometry B: $(round(sum(zak_B.phases), digits=4))")
+println()
+
 # Plot Zak phases comparison
 p = plot(
     title = "Zak Phase Comparison",
@@ -125,5 +131,6 @@ savefig(p2, "701_zak_phase_1d_bands.png")
 println("Saved: 701_zak_phase_1d_bands.png")
 
 println()
-println("Note: For inversion-symmetric systems, Zak phase is quantized to 0 or π.")
+println("Note: Per-band Zak phases have ±π gauge ambiguity in the truncated PWE basis.")
+println("      The multi-band total sum(phases) is gauge-invariant and reliable.")
 println("      Different unit cell choices yield different Zak phases.")
