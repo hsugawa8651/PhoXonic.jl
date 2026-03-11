@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 310">
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333"/>
+    </marker>
+    <marker id="arrowhead-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#dc2626"/>
+    </marker>
+    <marker id="arrowhead-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16a34a"/>
+    </marker>
+    <marker id="arrowhead-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="850" height="310" fill="#fafafa"/>
+
+  <!-- Title -->
+  <text x="425" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333">3D Wave Polarizations</text>
+
+  <!-- ===== TransverseEM (Recommended) ===== -->
+  <g transform="translate(30, 70)">
+    <text x="120" y="0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#2563eb">TransverseEM</text>
+    <text x="120" y="15" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#666">(2N transverse basis)</text>
+
+    <!-- 3D box with perspective -->
+    <g transform="translate(20, 30)">
+      <!-- Back face -->
+      <polygon points="40,100 160,100 180,70 60,70" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+      <!-- Left face -->
+      <polygon points="40,100 40,30 60,0 60,70" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+      <!-- Top face -->
+      <polygon points="40,30 160,30 180,0 60,0" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+      <!-- Right face -->
+      <polygon points="160,100 160,30 180,0 180,70" fill="#e0e7ff" stroke="#93c5fd" stroke-width="1"/>
+
+      <!-- Axes -->
+      <line x1="50" y1="85" x2="50" y2="20" stroke="#999" stroke-width="1" marker-end="url(#arrowhead)"/>
+      <line x1="50" y1="85" x2="130" y2="85" stroke="#999" stroke-width="1" marker-end="url(#arrowhead)"/>
+      <line x1="50" y1="85" x2="25" y2="105" stroke="#999" stroke-width="1" marker-end="url(#arrowhead)"/>
+      <text x="45" y="15" font-family="Arial, sans-serif" font-size="9" fill="#999">z</text>
+      <text x="135" y="88" font-family="Arial, sans-serif" font-size="9" fill="#999">x</text>
+      <text x="15" y="112" font-family="Arial, sans-serif" font-size="9" fill="#999">y</text>
+
+      <!-- k vector (propagation) -->
+      <line x1="70" y1="75" x2="140" y2="40" stroke="#333" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+      <text x="145" y="38" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#333">k+G</text>
+
+      <!-- H field (two transverse components, perpendicular to k) -->
+      <line x1="105" y1="57" x2="75" y2="30" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowhead-blue)"/>
+      <line x1="105" y1="57" x2="130" y2="25" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowhead-blue)"/>
+      <text x="62" y="25" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#2563eb">e₁</text>
+      <text x="133" y="22" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#2563eb">e₂</text>
+
+      <!-- Perpendicular plane indicator -->
+      <ellipse cx="105" cy="57" rx="25" ry="10" fill="none" stroke="#2563eb" stroke-width="1" stroke-dasharray="3,2" transform="rotate(-35, 105, 57)"/>
+    </g>
+
+    <!-- Description -->
+    <text x="120" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1d4ed8" font-weight="bold">Recommended</text>
+    <text x="120" y="163" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">e₁, e₂ ⊥ (k+G)</text>
+    <text x="120" y="175" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#666">No spurious modes</text>
+  </g>
+
+  <!-- ===== 3D Photonic (FullVectorEM) ===== -->
+  <g transform="translate(300, 70)">
+    <text x="120" y="0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#333">FullVectorEM</text>
+    <text x="120" y="15" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#666">(H_x, H_y, H_z)</text>
+
+    <!-- 3D box with perspective -->
+    <g transform="translate(20, 30)">
+      <!-- Back face -->
+      <polygon points="40,100 160,100 180,70 60,70" fill="#f5f5f5" stroke="#ccc" stroke-width="1"/>
+      <!-- Left face -->
+      <polygon points="40,100 40,30 60,0 60,70" fill="#eee" stroke="#ccc" stroke-width="1"/>
+      <!-- Top face -->
+      <polygon points="40,30 160,30 180,0 60,0" fill="#fafafa" stroke="#ccc" stroke-width="1"/>
+      <!-- Right face -->
+      <polygon points="160,100 160,30 180,0 180,70" fill="#e8e8e8" stroke="#ccc" stroke-width="1"/>
+
+      <!-- Axes -->
+      <line x1="50" y1="85" x2="50" y2="20" stroke="#999" stroke-width="1" marker-end="url(#arrowhead)"/>
+      <line x1="50" y1="85" x2="130" y2="85" stroke="#999" stroke-width="1" marker-end="url(#arrowhead)"/>
+      <line x1="50" y1="85" x2="25" y2="105" stroke="#999" stroke-width="1" marker-end="url(#arrowhead)"/>
+      <text x="45" y="15" font-family="Arial, sans-serif" font-size="9" fill="#999">z</text>
+      <text x="135" y="88" font-family="Arial, sans-serif" font-size="9" fill="#999">x</text>
+      <text x="15" y="112" font-family="Arial, sans-serif" font-size="9" fill="#999">y</text>
+
+      <!-- k vector (propagation) -->
+      <line x1="70" y1="75" x2="140" y2="40" stroke="#333" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+      <text x="145" y="38" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#333">k</text>
+
+      <!-- H field (two transverse components, perpendicular to k) -->
+      <line x1="105" y1="57" x2="75" y2="30" stroke="#dc2626" stroke-width="2" marker-end="url(#arrowhead-red)"/>
+      <line x1="105" y1="57" x2="130" y2="25" stroke="#dc2626" stroke-width="2" marker-end="url(#arrowhead-red)"/>
+      <text x="65" y="25" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#dc2626">H₁</text>
+      <text x="133" y="22" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#dc2626">H₂</text>
+
+      <!-- Perpendicular plane indicator -->
+      <ellipse cx="105" cy="57" rx="25" ry="10" fill="none" stroke="#dc2626" stroke-width="1" stroke-dasharray="3,2" transform="rotate(-35, 105, 57)"/>
+    </g>
+
+    <!-- Description -->
+    <text x="120" y="155" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">H ⊥ k (transverse)</text>
+    <text x="120" y="168" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#999">+ N spurious modes</text>
+  </g>
+
+  <!-- ===== 3D Phononic (FullElastic) ===== -->
+  <g transform="translate(570, 70)">
+    <text x="120" y="0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#333">FullElastic</text>
+    <text x="120" y="15" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#666">(u_x, u_y, u_z)</text>
+
+    <!-- 3D box with perspective -->
+    <g transform="translate(20, 30)">
+      <!-- Back face -->
+      <polygon points="40,100 160,100 180,70 60,70" fill="#f5f5f5" stroke="#ccc" stroke-width="1"/>
+      <!-- Left face -->
+      <polygon points="40,100 40,30 60,0 60,70" fill="#eee" stroke="#ccc" stroke-width="1"/>
+      <!-- Top face -->
+      <polygon points="40,30 160,30 180,0 60,0" fill="#fafafa" stroke="#ccc" stroke-width="1"/>
+      <!-- Right face -->
+      <polygon points="160,100 160,30 180,0 180,70" fill="#e8e8e8" stroke="#ccc" stroke-width="1"/>
+
+      <!-- Axes -->
+      <line x1="50" y1="85" x2="50" y2="20" stroke="#999" stroke-width="1" marker-end="url(#arrowhead)"/>
+      <line x1="50" y1="85" x2="130" y2="85" stroke="#999" stroke-width="1" marker-end="url(#arrowhead)"/>
+      <line x1="50" y1="85" x2="25" y2="105" stroke="#999" stroke-width="1" marker-end="url(#arrowhead)"/>
+      <text x="45" y="15" font-family="Arial, sans-serif" font-size="9" fill="#999">z</text>
+      <text x="135" y="88" font-family="Arial, sans-serif" font-size="9" fill="#999">x</text>
+      <text x="15" y="112" font-family="Arial, sans-serif" font-size="9" fill="#999">y</text>
+
+      <!-- k vector (propagation) -->
+      <line x1="70" y1="75" x2="140" y2="40" stroke="#333" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+      <text x="145" y="38" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#333">k</text>
+
+      <!-- P-wave (longitudinal, parallel to k) -->
+      <line x1="90" y1="63" x2="120" y2="43" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowhead-green)"/>
+      <text x="125" y="50" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#16a34a">P</text>
+
+      <!-- S-wave (transverse, perpendicular to k, two components) -->
+      <line x1="105" y1="57" x2="80" y2="35" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowhead-green)"/>
+      <line x1="105" y1="57" x2="125" y2="30" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowhead-green)"/>
+      <text x="70" y="30" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#16a34a">S₁</text>
+      <text x="128" y="27" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#16a34a">S₂</text>
+    </g>
+
+    <!-- Description -->
+    <text x="120" y="155" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">P: u ∥ k (longitudinal)</text>
+    <text x="120" y="168" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#666">S: u ⊥ k (shear, 2 pol.)</text>
+  </g>
+
+  <!-- Legend and notes at bottom -->
+  <g transform="translate(50, 260)">
+    <line x1="0" y1="0" x2="30" y2="0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="40" y="4" font-family="Arial, sans-serif" font-size="10" fill="#333">k: propagation</text>
+
+    <line x1="170" y1="0" x2="200" y2="0" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowhead-blue)"/>
+    <text x="210" y="4" font-family="Arial, sans-serif" font-size="10" fill="#2563eb">e₁,e₂: polarization basis</text>
+
+    <line x1="380" y1="0" x2="410" y2="0" stroke="#dc2626" stroke-width="2" marker-end="url(#arrowhead-red)"/>
+    <text x="420" y="4" font-family="Arial, sans-serif" font-size="10" fill="#dc2626">H: magnetic field</text>
+
+    <line x1="560" y1="0" x2="590" y2="0" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowhead-green)"/>
+    <text x="600" y="4" font-family="Arial, sans-serif" font-size="10" fill="#16a34a">u: displacement</text>
+  </g>
+
+  <!-- Note about modes -->
+  <g transform="translate(50, 285)">
+    <rect x="0" y="0" width="750" height="20" fill="#d1fae5" rx="3" stroke="#10b981" stroke-width="1"/>
+    <text x="375" y="14" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#065f46">
+      TransverseEM: recommended for 3D photonic crystals — automatically satisfies ∇·H = 0, no spurious modes
+    </text>
+  </g>
+</svg>
