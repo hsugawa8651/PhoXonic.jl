@@ -45,6 +45,9 @@ Last-Modified: 2025-12-24
 | 212_kushwaha1993_fig2.jl | Kushwaha 1993 Fig.2: Ni/Al square lattice (different f) |
 | 213_tanaka2000_vacuum_al.jl | Tanaka 2000: Al/vacuum (Tanaka limit validation) |
 | 214_maldovan2006_phoxonic.jl | Maldovan 2006: Phoxonic crystal (Si/air) |
+| 216_si_epoxy_square.jl | Dobrzynski 2017 Ch.5 Fig.20A: Si/Epoxy square lattice |
+| 217_carbon_epoxy_square_section.jl | Dobrzynski 2017 Ch.5 Fig.3A: C/Epoxy square-section |
+| 218_carbon_epoxy_square.jl | Dobrzynski 2017 Ch.5 Fig.2A: C/Epoxy circle |
 
 ### 3xx: 1D Structures
 

@@ -195,6 +195,9 @@ See the `examples/` directory in the repository for additional examples:
 | 2D Phononic | [`212_kushwaha1993_fig2.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/212_kushwaha1993_fig2.jl) | Kushwaha 1993 Fig2 |
 | 2D Phononic | [`213_tanaka2000_vacuum_al.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/213_tanaka2000_vacuum_al.jl) | Tanaka 2000 Al/vacuum |
 | 2D Phononic | [`214_maldovan2006_phoxonic.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/214_maldovan2006_phoxonic.jl) | Maldovan 2006 phoxonic |
+| 2D Phononic | [`216_si_epoxy_square.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/216_si_epoxy_square.jl) | Dobrzynski 2017 Ch.5 Fig.20A: Si/Epoxy |
+| 2D Phononic | [`217_carbon_epoxy_square_section.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/217_carbon_epoxy_square_section.jl) | Dobrzynski 2017 Ch.5 Fig.3A: C/Epoxy square-section |
+| 2D Phononic | [`218_carbon_epoxy_square.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/218_carbon_epoxy_square.jl) | Dobrzynski 2017 Ch.5 Fig.2A: C/Epoxy |
 | 1D Photonic | [`311_joannopoulos_ch4_fig2.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/311_joannopoulos_ch4_fig2.jl) | Joannopoulos Ch4 Fig2 |
 | 1D Elastic | [`302_elastic_superlattice.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/302_elastic_superlattice.jl) | Elastic wave superlattice |
 | 3D Photonic | [`411_joannopoulos_ch6_fig3.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/411_joannopoulos_ch6_fig3.jl) | FCC lattice benchmark |
