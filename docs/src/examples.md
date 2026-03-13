@@ -204,6 +204,9 @@ See the `examples/` directory in the repository for additional examples:
 | 3D Photonic | [`412_joannopoulos_ch6_fig8.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/412_joannopoulos_ch6_fig8.jl) | Diamond lattice |
 | 3D Photonic | [`413_mpb_diamond.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/413_mpb_diamond.jl) | MPB diamond comparison |
 | 3D Photonic | [`901_mpb_benchmark.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/901_mpb_benchmark.jl) | MPB benchmark |
+| Topology | [`701_zak_phase_1d.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/701_zak_phase_1d.jl) | 1D Zak phase calculation |
+| Topology | [`702_wilson_loop_2d.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/702_wilson_loop_2d.jl) | 2D Wilson loop spectrum |
+| Topology | [`703_wilson_fragile.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/703_wilson_fragile.jl) | Wilson loop for de Paz 2019 (fragile topology) |
 | Defect | [`501_defect_mode.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/501_defect_mode.jl) | Defect states and LDOS |
 | Defect | [`511_supercell_study.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/511_supercell_study.jl) | Supercell size study |
 | TMM | [`601_tmm_bragg_mirror.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/601_tmm_bragg_mirror.jl) | Bragg mirror spectrum |

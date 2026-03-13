@@ -13,6 +13,7 @@ Last-Modified: 2025-12-24
 | 4xx | 3D Structures |
 | 5xx | Defects / Supercells |
 | 6xx | Transfer Matrix Method (TMM) |
+| 7xx | Topology |
 | 8xx | Utilities |
 | 9xx | Benchmarks / References |
 
@@ -87,6 +88,14 @@ automatically satisfies ∇·H = 0.
 | 602_tmm_fabry_perot.jl | Fabry-Pérot cavity resonance | 602_fabry_perot_*.png |
 | 603_tmm_phononic.jl | Phononic TMM (Steel/Epoxy) | 603_phononic_*.png |
 | 604_tmm_vs_pwe.jl | PWE vs TMM comparison | 604_*.png |
+
+### 7xx: Topology
+
+| File | Description |
+|------|-------------|
+| 701_zak_phase_1d.jl | 1D Zak phase calculation |
+| 702_wilson_loop_2d.jl | 2D Wilson loop spectrum |
+| 703_wilson_fragile.jl | Wilson loop for de Paz 2019 (fragile topology) |
 
 ### 8xx: Utilities
 
