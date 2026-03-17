@@ -68,7 +68,7 @@ automatically satisfies ∇·H = 0.
 |------|-------------|
 | 401_fcc_spheres.jl | FCC lattice spheres (3D photonic, TransverseEM) |
 | 402_sc_spheres.jl | SC lattice spheres (3D photonic, TransverseEM) |
-| 403_fcc_phononic.jl | FCC phononic (not included in v1) |
+| 403_fcc_phononic.jl | FCC phononic WC/Epoxy with band tracking |
 | 411_joannopoulos_ch6_fig3.jl | Diamond air spheres (Joannopoulos Ch.6 Fig.3) |
 | 412_joannopoulos_ch6_fig8.jl | Inverse opal (Joannopoulos Ch.6 Fig.8) |
 | 413_mpb_diamond.jl | MPB diamond tutorial (dielectric spheres) |
@@ -78,6 +78,9 @@ automatically satisfies ∇·H = 0.
 | File | Description |
 |------|-------------|
 | 501_defect_mode.jl | Defect mode / LDOS (DirectGF) |
+| 502_dos.jl | DOS calculation (DirectGF) |
+| 503_ldos_rsk.jl | LDOS at defect site (MatrixFreeGF) |
+| 504_dos_1d.jl | 1D DOS with band structure |
 | 511_supercell_study.jl | Supercell study |
 
 ### 6xx: Transfer Matrix Method (TMM)
