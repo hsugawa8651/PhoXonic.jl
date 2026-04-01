@@ -173,24 +173,4 @@ function PhoXonic.plot_bands!(
     return p
 end
 
-# Plots.jl recipe for BandStructure
-@recipe function f(bs::BandStructure)
-    data = band_plot_data(bs)
-
-    # Set default attributes
-    xlabel --> "Wave vector"
-    ylabel --> "Frequency"
-    legend --> false
-    grid --> true
-
-    # Plot each band as a separate series
-    for b in 1:Base.size(data.frequencies, 2)
-        @series begin
-            seriestype := :path
-            linewidth --> 2
-            data.distances, data.frequencies[:, b]
-        end
-    end
-end
-
 end # module
