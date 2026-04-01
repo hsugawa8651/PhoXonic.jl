@@ -48,6 +48,7 @@ include("rscg.jl")
 include("kpath.jl")
 include("bandstructure.jl")
 include("plotting.jl")
+include("fallbacks.jl")
 include("io.jl")
 include("supercell.jl")
 
@@ -129,8 +130,9 @@ export BandStructure, compute_bands
 export find_bandgap, find_all_gaps
 export frequencies, distances, labels, nbands, nkpoints
 
-# Exports - Plotting (requires Plots.jl)
+# Exports - Plotting (requires Plots.jl or PythonPlot.jl)
 export plot_bands, plot_bands!, band_plot_data
+export savefig_publication
 
 # Exports - I/O (requires JLD2.jl)
 export save_bands, load_bands

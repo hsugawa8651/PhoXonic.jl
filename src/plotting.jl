@@ -64,6 +64,16 @@ function plot_bands! end
 # These stubs only exist to provide docstrings and allow pre-declaration
 
 """
+    savefig_publication(bs::BandStructure, filename::AbstractString; kwargs...)
+
+Save a publication-quality band structure figure using PythonPlot.
+Requires `using PythonPlot`.
+
+See also: [`plot_bands`](@ref) for interactive plotting with Plots.jl.
+"""
+function savefig_publication end
+
+"""
     band_plot_data(bs::BandStructure; normalize=1.0)
 
 Extract data for plotting a band structure.
