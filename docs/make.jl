@@ -13,6 +13,7 @@ makedocs(;
         "3D Calculations" => "workflow_3d.md",
         "Solver Methods" => "solver.md",
         "Analysis" => "analysis.md",
+        "Field Visualization" => "field_visualization.md",
         "DOS / LDOS" => "greens_function.md",
         "Topological Invariants" => "topology.md",
         "Examples" => "examples.md",

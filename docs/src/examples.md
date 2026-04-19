@@ -214,3 +214,6 @@ See the `examples/` directory in the repository for additional examples:
 | TMM | [`603_tmm_phononic.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/603_tmm_phononic.jl) | Phononic superlattice |
 | TMM | [`604_tmm_vs_pwe.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/604_tmm_vs_pwe.jl) | TMM vs PWE comparison |
 | Utility | [`801_plot_structures.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/801_plot_structures.jl) | Structure visualization |
+| Field Viz | [`811_field_1d.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/811_field_1d.jl) | 1D photonic field modes |
+| Field Viz | [`812_field_2d_tm.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/812_field_2d_tm.jl) | 2D TM photonic field |
+| Field Viz | [`813_field_2d_sh.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/813_field_2d_sh.jl) | 2D SH phononic field |

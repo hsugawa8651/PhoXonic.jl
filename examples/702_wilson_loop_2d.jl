@@ -89,7 +89,7 @@ println("Saved: 702_wilson_loop_2d.png")
 println()
 println("Computing band structure...")
 
-kpath = kpath_square()
+kpath = simple_kpath_square(; npoints = 31)
 bands = compute_bands(solver, kpath; bands = 1:6)
 
 # Manual plot with clear axis labels

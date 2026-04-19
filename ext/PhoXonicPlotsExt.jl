@@ -10,6 +10,9 @@ using PhoXonic
 using Plots
 
 import PhoXonic: plot_bands, plot_bands!, band_plot_data
+import PhoXonic: plot_field, plot_field!, plot_epsilon
+import PhoXonic: reconstruct_field, get_epsilon_field, fix_phase
+import PhoXonic: Dim1, Dim2, Dim3, Solver, WaveType
 
 """
     plot_bands(bs::BandStructure; kwargs...)
@@ -171,6 +174,251 @@ function PhoXonic.plot_bands!(
     end
 
     return p
+end
+
+# =============================================================================
+# Field Visualization Functions
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# plot_field - 1D
+# -----------------------------------------------------------------------------
+"""
+    plot_field(solver::Solver{Dim1}, eigenvector; kwargs...)
+
+Plot a 1D field distribution.
+
+# Keyword Arguments
+- `quantity::Symbol = :real` - Quantity to plot: `:real`, `:imag`, `:abs`, `:phase`
+- `fix_phase_flag::Bool = true` - Apply phase normalization
+- `title::String = "Field"` - Plot title
+- `xlabel::String = "x/a"` - X-axis label
+- `ylabel::String = "Field"` - Y-axis label
+"""
+function PhoXonic.plot_field(
+    solver::Solver{Dim1},
+    eigenvector::AbstractVector;
+    quantity::Symbol=:real,
+    fix_phase_flag::Bool=true,
+    title::String="Field",
+    xlabel::String="x/a",
+    ylabel::String="Field",
+    kwargs...
+)
+    field = reconstruct_field(solver, eigenvector)
+    if fix_phase_flag
+        field = fix_phase(field)
+    end
+
+    data = _extract_quantity(field, quantity)
+    N = length(data)
+    x = range(0, 1, length=N)
+
+    Plots.plot(x, data;
+        xlabel=xlabel,
+        ylabel=ylabel,
+        title=title,
+        legend=false,
+        kwargs...
+    )
+end
+
+# -----------------------------------------------------------------------------
+# plot_field - 2D
+# -----------------------------------------------------------------------------
+"""
+    plot_field(solver::Solver{Dim2}, eigenvector; kwargs...)
+
+Plot a 2D field distribution as a heatmap.
+
+# Keyword Arguments
+- `component::Symbol = :auto` - Component to plot for vector fields
+- `quantity::Symbol = :real` - Quantity to plot: `:real`, `:imag`, `:abs`, `:phase`
+- `fix_phase_flag::Bool = true` - Apply phase normalization
+- `colormap::Symbol = :RdBu` - Colormap
+- `title::String = "Field"` - Plot title
+- `xlabel::String = "x/a"` - X-axis label
+- `ylabel::String = "y/a"` - Y-axis label
+"""
+function PhoXonic.plot_field(
+    solver::Solver{Dim2,W},
+    eigenvector::AbstractVector;
+    component::Symbol=:auto,
+    quantity::Symbol=:real,
+    fix_phase_flag::Bool=true,
+    colormap::Symbol=:RdBu,
+    title::String="Field",
+    xlabel::String="x/a",
+    ylabel::String="y/a",
+    kwargs...
+) where {W}
+    field = reconstruct_field(solver, eigenvector)
+
+    # Handle tuple (vector field) or matrix (scalar field)
+    if field isa Tuple
+        comp_idx = _get_component_index(W, component)
+        data_complex = field[comp_idx]
+    else
+        data_complex = field
+    end
+
+    if fix_phase_flag
+        data_complex = fix_phase(data_complex)
+    end
+
+    data = _extract_quantity(data_complex, quantity)
+
+    # Transpose for correct orientation (x horizontal, y vertical)
+    Plots.heatmap(data';
+        c=colormap,
+        title=title,
+        xlabel=xlabel,
+        ylabel=ylabel,
+        aspect_ratio=:equal,
+        kwargs...
+    )
+end
+
+# -----------------------------------------------------------------------------
+# plot_field! - Add field to existing plot
+# -----------------------------------------------------------------------------
+"""
+    plot_field!(p, solver, eigenvector; kwargs...)
+
+Add a field to an existing plot.
+"""
+function PhoXonic.plot_field!(
+    p,
+    solver::Solver{Dim1},
+    eigenvector::AbstractVector;
+    quantity::Symbol=:real,
+    fix_phase_flag::Bool=true,
+    kwargs...
+)
+    field = reconstruct_field(solver, eigenvector)
+    if fix_phase_flag
+        field = fix_phase(field)
+    end
+
+    data = _extract_quantity(field, quantity)
+    N = length(data)
+    x = range(0, 1, length=N)
+
+    plot!(p, x, data; kwargs...)
+    return p
+end
+
+function PhoXonic.plot_field!(
+    p,
+    solver::Solver{Dim2,W},
+    eigenvector::AbstractVector;
+    component::Symbol=:auto,
+    quantity::Symbol=:real,
+    fix_phase_flag::Bool=true,
+    colormap::Symbol=:RdBu,
+    kwargs...
+) where {W}
+    field = reconstruct_field(solver, eigenvector)
+
+    if field isa Tuple
+        comp_idx = _get_component_index(W, component)
+        data_complex = field[comp_idx]
+    else
+        data_complex = field
+    end
+
+    if fix_phase_flag
+        data_complex = fix_phase(data_complex)
+    end
+
+    data = _extract_quantity(data_complex, quantity)
+
+    heatmap!(p, data'; c=colormap, aspect_ratio=:equal, kwargs...)
+    return p
+end
+
+# -----------------------------------------------------------------------------
+# plot_epsilon - 1D
+# -----------------------------------------------------------------------------
+"""
+    plot_epsilon(solver::Solver{Dim1}; kwargs...)
+
+Plot 1D permittivity distribution.
+"""
+function PhoXonic.plot_epsilon(
+    solver::Solver{Dim1};
+    title::String="Permittivity",
+    xlabel::String="x/a",
+    ylabel::String="ε",
+    kwargs...
+)
+    eps = get_epsilon_field(solver)
+    N = length(eps)
+    x = range(0, 1, length=N)
+
+    Plots.plot(x, eps;
+        xlabel=xlabel,
+        ylabel=ylabel,
+        title=title,
+        fill=0,
+        alpha=0.3,
+        legend=false,
+        kwargs...
+    )
+end
+
+# -----------------------------------------------------------------------------
+# plot_epsilon - 2D
+# -----------------------------------------------------------------------------
+"""
+    plot_epsilon(solver::Solver{Dim2}; kwargs...)
+
+Plot 2D permittivity distribution as a heatmap.
+"""
+function PhoXonic.plot_epsilon(
+    solver::Solver{Dim2};
+    colormap::Symbol=:grays,
+    title::String="Permittivity",
+    xlabel::String="x/a",
+    ylabel::String="y/a",
+    kwargs...
+)
+    eps = get_epsilon_field(solver)
+
+    Plots.heatmap(eps';
+        c=colormap,
+        title=title,
+        xlabel=xlabel,
+        ylabel=ylabel,
+        aspect_ratio=:equal,
+        kwargs...
+    )
+end
+
+# -----------------------------------------------------------------------------
+# Helper functions for field visualization
+# -----------------------------------------------------------------------------
+function _extract_quantity(field::AbstractArray{<:Complex}, quantity::Symbol)
+    if quantity == :real
+        real.(field)
+    elseif quantity == :imag
+        imag.(field)
+    elseif quantity == :abs
+        abs.(field)
+    elseif quantity == :phase
+        angle.(field)
+    else
+        error("Unknown quantity: $quantity. Use :real, :imag, :abs, or :phase")
+    end
+end
+
+function _get_component_index(::Type{<:WaveType}, component::Symbol)
+    # Default: first component
+    component == :auto && return 1
+    component in (:x, :first, :1) && return 1
+    component in (:y, :second, :2) && return 2
+    component in (:z, :third, :3) && return 3
+    error("Unknown component: $component")
 end
 
 end # module
