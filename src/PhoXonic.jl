@@ -42,6 +42,7 @@ include("waves.jl")
 # Solvers
 include("solver.jl")
 include("matrixfree.jl")
+include("field.jl")  # Field reconstruction (depends on matrixfree.jl)
 include("rscg.jl")
 
 # High-level API
@@ -106,6 +107,11 @@ export group_velocity, matrix_dimension
 export FFTContext, MatrixFreeWorkspace
 export MatrixFreeOperator, apply_lhs!, apply_rhs!
 export to_linear_map_lhs, to_linear_map_rhs
+
+# Exports - Field reconstruction and visualization
+export reconstruct_field, get_epsilon_field, get_material_field
+export fix_phase, field_energy
+export plot_field, plot_epsilon, plot_field!
 
 # Exports - Green's function and DOS/LDOS
 export compute_greens_function, compute_dos, compute_ldos

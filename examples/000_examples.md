@@ -100,11 +100,14 @@ automatically satisfies ∇·H = 0.
 | 702_wilson_loop_2d.jl | 2D Wilson loop spectrum |
 | 703_wilson_fragile.jl | Wilson loop for de Paz 2019 (fragile topology) |
 
-### 8xx: Utilities
+### 8xx: Utilities / Field Visualization
 
 | File | Description |
 |------|-------------|
 | 801_plot_structures.jl | Structure plot generation |
+| 811_field_1d.jl | 1D photonic field visualization |
+| 812_field_2d_tm.jl | 2D TM photonic field visualization |
+| 813_field_2d_sh.jl | 2D SH phononic field visualization |
 
 ### 9xx: Benchmarks / References
 

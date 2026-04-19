@@ -2009,4 +2009,7 @@ using LinearAlgebra
 
     # Band sorting
     include("band_sorting_test.jl")
+
+    # Field reconstruction
+    include("field_test.jl")
 end
