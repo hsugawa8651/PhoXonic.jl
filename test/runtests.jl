@@ -2012,4 +2012,7 @@ using LinearAlgebra
 
     # Field reconstruction
     include("field_test.jl")
+
+    # PythonPlot extension: savefig_publication
+    include("test_publication.jl")
 end

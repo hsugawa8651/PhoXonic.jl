@@ -1,0 +1,6 @@
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
+ReducedShiftedKrylov = "4d429029-a74f-409e-95c5-00936df3696f"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
