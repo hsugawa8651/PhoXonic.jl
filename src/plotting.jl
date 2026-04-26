@@ -64,10 +64,23 @@ function plot_bands! end
 # These stubs only exist to provide docstrings and allow pre-declaration
 
 """
-    savefig_publication(bs::BandStructure, filename::AbstractString; kwargs...)
+    savefig_publication(bs::BandStructure, path; kwargs...)
+    savefig_publication(bss::AbstractVector{<:BandStructure}, path; kwargs...)
 
-Save a publication-quality band structure figure using PythonPlot.
-Requires `using PythonPlot`.
+Save a publication-quality band structure figure via the PythonPlot extension.
+Requires `using PythonPlot` to activate `PhoXonicPythonPlotExt`.
+
+The output format is inferred from the file extension (`.pdf`, `.png`, `.svg`, ...).
+
+# Keyword arguments
+
+- `axis_width_cm = 8.0`, `axis_height_cm = 6.0` — Axis size in centimeters.
+- `ylims = nothing` — Y-axis range (auto if `nothing`).
+- `title = ""` — Plot title (suppressed if empty).
+- `show_gaps = false` — Shade band gaps with `axhspan`.
+- `normalize = 1.0` — Frequency normalization factor (forwarded to `band_plot_data`).
+- `layout = (1, length(bss))` — Subplot grid for the vector overload.
+- `overlay = false` — Plot all `bss` on a single axis (vector overload).
 
 See also: [`plot_bands`](@ref) for interactive plotting with Plots.jl.
 """

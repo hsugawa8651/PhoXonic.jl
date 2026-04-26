@@ -6,7 +6,7 @@ PhoXonic.jl provides two plotting paths via package extensions:
 |-----------|---------|---------------|
 | RecipesBaseExt | `using RecipesBase` (or any backend) | `plot(bs)` recipe for `BandStructure` |
 | PlotsExt | `using Plots` | `plot_bands`, `plot_bands!` (full-featured) |
-| PythonPlotExt | `using PythonPlot` | Planned |
+| PythonPlotExt | `using PythonPlot` | `savefig_publication` (publication-quality PDF/PNG) |
 
 ---
 
@@ -95,10 +95,60 @@ data = band_plot_data(bs; normalize=1.0)
 
 ---
 
+## PythonPlot — Publication-Quality Figures
+
+Activated when `using PythonPlot` is loaded. Provides `savefig_publication`
+for matplotlib-backed PDF/PNG output with precise axis-size control suitable
+for journal submissions.
+
+### `savefig_publication`
+
+Single `BandStructure`:
+
+```julia
+using PhoXonic, PythonPlot
+
+bs = compute_bands(solver, kpath)
+savefig_publication(bs, "bands.pdf"; axis_width_cm=8.0, axis_height_cm=6.0,
+                    title="TE Bands")
+```
+
+Multiple `BandStructure` as subplots:
+
+```julia
+savefig_publication([bs_te, bs_tm], "te_tm.pdf"; layout=(1, 2))
+```
+
+Multiple `BandStructure` as overlay (single axis):
+
+```julia
+savefig_publication([bs_te, bs_tm], "te_tm_overlay.pdf"; overlay=true,
+                    title="TE vs TM")
+```
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `axis_width_cm` | Real | `8.0` | Axis width in centimeters |
+| `axis_height_cm` | Real | `6.0` | Axis height in centimeters |
+| `ylims` | Tuple or `nothing` | `nothing` | Y-axis range (auto if `nothing`) |
+| `title` | String | `""` | Plot title (suppressed if empty) |
+| `show_gaps` | Bool | `false` | Highlight band gaps with `axhspan` |
+| `normalize` | Real | `1.0` | Frequency normalization factor |
+| `layout` | Tuple | `(1, n)` | Subplot grid `(nrows, ncols)` |
+| `overlay` | Bool | `false` | Plot all on a single axis |
+
+The output format is inferred from the file extension (`.pdf`, `.png`, `.svg`,
+etc., as supported by matplotlib).
+
+---
+
 ## API Reference
 
 ```@docs
 plot_bands
 plot_bands!
 band_plot_data
+savefig_publication
 ```
