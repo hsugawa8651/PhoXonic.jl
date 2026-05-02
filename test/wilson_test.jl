@@ -130,7 +130,7 @@ using LinearAlgebra
             @testset "Photonic1D" begin
                 lat = lattice_1d(1.0)
                 geo = Geometry(lat, Dielectric(1.0), [(Segment(0.2, 0.8), Dielectric(4.0))])
-                solver = Solver(Photonic1D(), geo, 64; cutoff = 10)
+                solver = Solver(Photonic1D(), geo, 64; cutoff=10)
                 W = get_weight_matrix(solver)
                 n_basis = length(solver.basis.G)
                 @test size(W) == (n_basis, n_basis)
@@ -140,9 +140,9 @@ using LinearAlgebra
             @testset "Longitudinal1D" begin
                 lat = lattice_1d(1.0)
                 # Use Lamé parameters λ, μ (not E, ν)
-                mat = IsotropicElastic(; ρ = 7800.0, λ = 115e9, μ = 82e9)
+                mat = IsotropicElastic(; ρ=7800.0, λ=115e9, μ=82e9)
                 geo = Geometry(lat, mat, [(Segment(0.2, 0.8), mat)])
-                solver = Solver(Longitudinal1D(), geo, 64; cutoff = 10)
+                solver = Solver(Longitudinal1D(), geo, 64; cutoff=10)
                 W = get_weight_matrix(solver)
                 n_basis = length(solver.basis.G)
                 @test size(W) == (n_basis, n_basis)
@@ -154,7 +154,7 @@ using LinearAlgebra
                 geo = Geometry(
                     lat, Dielectric(1.0), [(Circle([0.0, 0.0], 0.3), Dielectric(4.0))]
                 )
-                solver = Solver(TEWave(), geo, (16, 16); cutoff = 4)
+                solver = Solver(TEWave(), geo, (16, 16); cutoff=4)
                 W = get_weight_matrix(solver)
                 n_basis = length(solver.basis.G)
                 @test size(W) == (n_basis, n_basis)
@@ -166,7 +166,7 @@ using LinearAlgebra
                 geo = Geometry(
                     lat, Dielectric(1.0), [(Circle([0.0, 0.0], 0.3), Dielectric(4.0))]
                 )
-                solver = Solver(TMWave(), geo, (16, 16); cutoff = 4)
+                solver = Solver(TMWave(), geo, (16, 16); cutoff=4)
                 W = get_weight_matrix(solver)
                 n_basis = length(solver.basis.G)
                 @test size(W) == (n_basis, n_basis)
@@ -175,9 +175,9 @@ using LinearAlgebra
             # Test 2D SH
             @testset "SHWave" begin
                 lat = square_lattice(1.0)
-                mat = IsotropicElastic(; ρ = 7800.0, λ = 115e9, μ = 82e9)
+                mat = IsotropicElastic(; ρ=7800.0, λ=115e9, μ=82e9)
                 geo = Geometry(lat, mat, [(Circle([0.0, 0.0], 0.3), mat)])
-                solver = Solver(SHWave(), geo, (16, 16); cutoff = 4)
+                solver = Solver(SHWave(), geo, (16, 16); cutoff=4)
                 W = get_weight_matrix(solver)
                 n_basis = length(solver.basis.G)
                 @test size(W) == (n_basis, n_basis)
@@ -186,9 +186,9 @@ using LinearAlgebra
             # Test 2D PSV (block diagonal)
             @testset "PSVWave" begin
                 lat = square_lattice(1.0)
-                mat = IsotropicElastic(; ρ = 7800.0, λ = 115e9, μ = 82e9)
+                mat = IsotropicElastic(; ρ=7800.0, λ=115e9, μ=82e9)
                 geo = Geometry(lat, mat, [(Circle([0.0, 0.0], 0.3), mat)])
-                solver = Solver(PSVWave(), geo, (16, 16); cutoff = 4)
+                solver = Solver(PSVWave(), geo, (16, 16); cutoff=4)
                 W = get_weight_matrix(solver)
                 n_basis = length(solver.basis.G)
                 @test size(W) == (2 * n_basis, 2 * n_basis)  # block diagonal
@@ -203,7 +203,7 @@ using LinearAlgebra
             # Create a simple 1D photonic crystal
             lat = lattice_1d(1.0)
             geo = Geometry(lat, Dielectric(1.0), [(Segment(0.2, 0.8), Dielectric(4.0))])
-            solver = Solver(Photonic1D(), geo, 64; cutoff = 10)
+            solver = Solver(Photonic1D(), geo, 64; cutoff=10)
 
             # Compute Zak phase for band 1
             result = compute_zak_phase(solver, 1:1)
@@ -223,17 +223,21 @@ using LinearAlgebra
             geo_A = Geometry(lat, Dielectric(1.0), [(Segment(0.35, 0.65), Dielectric(9.0))])
 
             # Geometry B: high-index layer at edges (off-center unit cell)
-            geo_B = Geometry(lat, Dielectric(1.0), [
-                (Segment(0.0, 0.15), Dielectric(9.0)),
-                (Segment(0.85, 1.0), Dielectric(9.0)),
-            ])
+            geo_B = Geometry(
+                lat,
+                Dielectric(1.0),
+                [
+                    (Segment(0.0, 0.15), Dielectric(9.0)),
+                    (Segment(0.85, 1.0), Dielectric(9.0)),
+                ],
+            )
 
-            solver_A = Solver(Photonic1D(), geo_A, 128; cutoff = 20)
-            solver_B = Solver(Photonic1D(), geo_B, 128; cutoff = 20)
+            solver_A = Solver(Photonic1D(), geo_A, 128; cutoff=20)
+            solver_B = Solver(Photonic1D(), geo_B, 128; cutoff=20)
 
             # Compute Zak phase for first band
-            zak_A = compute_zak_phase(solver_A, 1:1; n_k = 100)
-            zak_B = compute_zak_phase(solver_B, 1:1; n_k = 100)
+            zak_A = compute_zak_phase(solver_A, 1:1; n_k=100)
+            zak_B = compute_zak_phase(solver_B, 1:1; n_k=100)
 
             # Both should be quantized to 0 or π (due to inversion symmetry)
             @test abs(zak_A.phases[1]) < 0.3 || abs(abs(zak_A.phases[1]) - π) < 0.3
@@ -249,10 +253,10 @@ using LinearAlgebra
         @testset "Multiple bands" begin
             lat = lattice_1d(1.0)
             geo = Geometry(lat, Dielectric(1.0), [(Segment(0.3, 0.7), Dielectric(9.0))])
-            solver = Solver(Photonic1D(), geo, 128; cutoff = 20)
+            solver = Solver(Photonic1D(), geo, 128; cutoff=20)
 
             # Compute Zak phase for bands 1-3
-            result = compute_zak_phase(solver, 1:3; n_k = 50)
+            result = compute_zak_phase(solver, 1:3; n_k=50)
 
             @test length(result.phases) == 3
             @test result.bands == 1:3
@@ -269,10 +273,10 @@ using LinearAlgebra
             geo = Geometry(
                 lat, Dielectric(1.0), [(Circle([0.0, 0.0], 0.3), Dielectric(9.0))]
             )
-            solver = Solver(TMWave(), geo, (32, 32); cutoff = 5)
+            solver = Solver(TMWave(), geo, (32, 32); cutoff=5)
 
             # Compute Wilson spectrum for bands 1:2 along Γ-X-Γ
-            result = compute_wilson_spectrum(solver, 1:2; n_k_path = 11, n_k_loop = 30)
+            result = compute_wilson_spectrum(solver, 1:2; n_k_path=11, n_k_loop=30)
 
             # Check result type and structure
             @test result isa PhoXonic.WilsonSpectrumResult
@@ -289,9 +293,9 @@ using LinearAlgebra
             geo = Geometry(
                 lat, Dielectric(1.0), [(Circle([0.0, 0.0], 0.2), Dielectric(4.0))]
             )
-            solver = Solver(TMWave(), geo, (32, 32); cutoff = 5)
+            solver = Solver(TMWave(), geo, (32, 32); cutoff=5)
 
-            result = compute_wilson_spectrum(solver, 1:2; n_k_path = 21, n_k_loop = 50)
+            result = compute_wilson_spectrum(solver, 1:2; n_k_path=21, n_k_loop=50)
 
             # Winding number should be an integer
             w1 = winding_number(result, 1)
@@ -312,20 +316,20 @@ using LinearAlgebra
             geo_ph = Geometry(
                 lat, Dielectric(1.0), [(Circle([0.0, 0.0], 0.3), Dielectric(4.0))]
             )
-            solver_tm = Solver(TMWave(), geo_ph, (16, 16); cutoff = 4)
-            result_tm = compute_wilson_spectrum(solver_tm, 1:1; n_k_path = 5, n_k_loop = 20)
+            solver_tm = Solver(TMWave(), geo_ph, (16, 16); cutoff=4)
+            result_tm = compute_wilson_spectrum(solver_tm, 1:1; n_k_path=5, n_k_loop=20)
             @test result_tm isa PhoXonic.WilsonSpectrumResult
 
             # TE wave
-            solver_te = Solver(TEWave(), geo_ph, (16, 16); cutoff = 4)
-            result_te = compute_wilson_spectrum(solver_te, 1:1; n_k_path = 5, n_k_loop = 20)
+            solver_te = Solver(TEWave(), geo_ph, (16, 16); cutoff=4)
+            result_te = compute_wilson_spectrum(solver_te, 1:1; n_k_path=5, n_k_loop=20)
             @test result_te isa PhoXonic.WilsonSpectrumResult
 
             # SH wave (phononic)
-            mat = IsotropicElastic(; ρ = 7800.0, λ = 115e9, μ = 82e9)
+            mat = IsotropicElastic(; ρ=7800.0, λ=115e9, μ=82e9)
             geo_ph_el = Geometry(lat, mat, [(Circle([0.0, 0.0], 0.3), mat)])
-            solver_sh = Solver(SHWave(), geo_ph_el, (16, 16); cutoff = 4)
-            result_sh = compute_wilson_spectrum(solver_sh, 1:1; n_k_path = 5, n_k_loop = 20)
+            solver_sh = Solver(SHWave(), geo_ph_el, (16, 16); cutoff=4)
+            result_sh = compute_wilson_spectrum(solver_sh, 1:1; n_k_path=5, n_k_loop=20)
             @test result_sh isa PhoXonic.WilsonSpectrumResult
         end
     end

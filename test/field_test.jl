@@ -13,9 +13,7 @@ using LinearAlgebra
     @testset "1D Photonic" begin
         # Setup: 1D photonic crystal
         lat = lattice_1d(1.0)
-        geo = Geometry(lat, Dielectric(1.0), [
-            (Segment(0.0, 0.3), Dielectric(9.0))
-        ])
+        geo = Geometry(lat, Dielectric(1.0), [(Segment(0.0, 0.3), Dielectric(9.0))])
         solver = Solver(Photonic1D(), geo, (64,); cutoff=5)
 
         # Solve at k = 0
@@ -52,9 +50,11 @@ using LinearAlgebra
 
     @testset "1D Longitudinal (Phononic)" begin
         lat = lattice_1d(1.0)
-        geo = Geometry(lat, IsotropicElastic(ρ=1000.0, λ=1e9, μ=1e9), [
-            (Segment(0.0, 0.3), IsotropicElastic(ρ=2000.0, λ=2e9, μ=2e9))
-        ])
+        geo = Geometry(
+            lat,
+            IsotropicElastic(ρ=1000.0, λ=1e9, μ=1e9),
+            [(Segment(0.0, 0.3), IsotropicElastic(ρ=2000.0, λ=2e9, μ=2e9))],
+        )
         solver = Solver(Longitudinal1D(), geo, (64,); cutoff=5)
         freqs, vecs = solve_at_k_with_vectors(solver, [0.0], DenseMethod())
 
@@ -72,9 +72,7 @@ using LinearAlgebra
     # =========================================================================
     @testset "2D TM (scalar)" begin
         lat = square_lattice(1.0)
-        geo = Geometry(lat, Dielectric(1.0), [
-            (Circle([0.5, 0.5], 0.2), Dielectric(9.0))
-        ])
+        geo = Geometry(lat, Dielectric(1.0), [(Circle([0.5, 0.5], 0.2), Dielectric(9.0))])
         solver = Solver(TMWave(), geo, (32, 32); cutoff=5)
         freqs, vecs = solve_at_k_with_vectors(solver, [0.0, 0.0], DenseMethod())
 
@@ -100,9 +98,11 @@ using LinearAlgebra
 
     @testset "2D SH (scalar phononic)" begin
         lat = square_lattice(1.0)
-        geo = Geometry(lat, IsotropicElastic(ρ=1000.0, λ=1e9, μ=1e9), [
-            (Circle([0.5, 0.5], 0.2), IsotropicElastic(ρ=2000.0, λ=2e9, μ=2e9))
-        ])
+        geo = Geometry(
+            lat,
+            IsotropicElastic(ρ=1000.0, λ=1e9, μ=1e9),
+            [(Circle([0.5, 0.5], 0.2), IsotropicElastic(ρ=2000.0, λ=2e9, μ=2e9))],
+        )
         solver = Solver(SHWave(), geo, (32, 32); cutoff=5)
         freqs, vecs = solve_at_k_with_vectors(solver, [0.0, 0.0], DenseMethod())
 
@@ -119,9 +119,7 @@ using LinearAlgebra
     # =========================================================================
     @testset "2D TE (scalar: Hz)" begin
         lat = square_lattice(1.0)
-        geo = Geometry(lat, Dielectric(1.0), [
-            (Circle([0.5, 0.5], 0.2), Dielectric(9.0))
-        ])
+        geo = Geometry(lat, Dielectric(1.0), [(Circle([0.5, 0.5], 0.2), Dielectric(9.0))])
         solver = Solver(TEWave(), geo, (32, 32); cutoff=5)
         freqs, vecs = solve_at_k_with_vectors(solver, [0.1, 0.1], DenseMethod())  # non-zero k
 
@@ -136,9 +134,11 @@ using LinearAlgebra
 
     @testset "2D PSV (vector: ux, uy)" begin
         lat = square_lattice(1.0)
-        geo = Geometry(lat, IsotropicElastic(ρ=1000.0, λ=1e9, μ=1e9), [
-            (Circle([0.5, 0.5], 0.2), IsotropicElastic(ρ=2000.0, λ=2e9, μ=2e9))
-        ])
+        geo = Geometry(
+            lat,
+            IsotropicElastic(ρ=1000.0, λ=1e9, μ=1e9),
+            [(Circle([0.5, 0.5], 0.2), IsotropicElastic(ρ=2000.0, λ=2e9, μ=2e9))],
+        )
         solver = Solver(PSVWave(), geo, (32, 32); cutoff=5)
         freqs, vecs = solve_at_k_with_vectors(solver, [0.1, 0.1], DenseMethod())
 
@@ -146,7 +146,7 @@ using LinearAlgebra
             field = reconstruct_field(solver, vecs[:, 1])
 
             # PSVWave has ncomponents=2 so returns 2-element tuple
-            @test field isa Tuple{Matrix{ComplexF64}, Matrix{ComplexF64}}
+            @test field isa Tuple{Matrix{ComplexF64},Matrix{ComplexF64}}
             @test length(field) == 2
             @test size(field[1]) == (32, 32)
             @test size(field[2]) == (32, 32)
@@ -165,9 +165,9 @@ using LinearAlgebra
     # =========================================================================
     @testset "3D TransverseEM" begin
         lat = cubic_lattice(1.0)
-        geo = Geometry(lat, Dielectric(1.0), [
-            (Sphere([0.5, 0.5, 0.5], 0.2), Dielectric(9.0))
-        ])
+        geo = Geometry(
+            lat, Dielectric(1.0), [(Sphere([0.5, 0.5, 0.5], 0.2), Dielectric(9.0))]
+        )
         solver = Solver(TransverseEM(), geo, (16, 16, 16); cutoff=3)
         freqs, vecs = solve_at_k_with_vectors(solver, [0.1, 0.1, 0.1], DenseMethod())
 
@@ -175,7 +175,7 @@ using LinearAlgebra
             field = reconstruct_field(solver, vecs[:, 1])
 
             # TransverseEM has ncomponents=2
-            @test field isa Tuple{Array{ComplexF64,3}, Array{ComplexF64,3}}
+            @test field isa Tuple{Array{ComplexF64,3},Array{ComplexF64,3}}
             @test length(field) == 2
             @test size(field[1]) == (16, 16, 16)
             @test size(field[2]) == (16, 16, 16)
@@ -188,9 +188,9 @@ using LinearAlgebra
     @testset "get_epsilon_field" begin
         @testset "2D Photonic" begin
             lat = square_lattice(1.0)
-            geo = Geometry(lat, Dielectric(1.0), [
-                (Circle([0.5, 0.5], 0.2), Dielectric(9.0))
-            ])
+            geo = Geometry(
+                lat, Dielectric(1.0), [(Circle([0.5, 0.5], 0.2), Dielectric(9.0))]
+            )
             solver = Solver(TMWave(), geo, (32, 32); cutoff=5)
 
             eps = get_epsilon_field(solver)
@@ -203,9 +203,7 @@ using LinearAlgebra
 
         @testset "1D Photonic" begin
             lat = lattice_1d(1.0)
-            geo = Geometry(lat, Dielectric(1.0), [
-                (Segment(0.0, 0.3), Dielectric(4.0))
-            ])
+            geo = Geometry(lat, Dielectric(1.0), [(Segment(0.0, 0.3), Dielectric(4.0))])
             solver = Solver(Photonic1D(), geo, (64,); cutoff=5)
 
             eps = get_epsilon_field(solver)
@@ -220,9 +218,11 @@ using LinearAlgebra
     @testset "get_material_field" begin
         @testset "Phononic - density" begin
             lat = square_lattice(1.0)
-            geo = Geometry(lat, IsotropicElastic(ρ=1000.0, λ=1e9, μ=1e9), [
-                (Circle([0.5, 0.5], 0.2), IsotropicElastic(ρ=2000.0, λ=2e9, μ=2e9))
-            ])
+            geo = Geometry(
+                lat,
+                IsotropicElastic(ρ=1000.0, λ=1e9, μ=1e9),
+                [(Circle([0.5, 0.5], 0.2), IsotropicElastic(ρ=2000.0, λ=2e9, μ=2e9))],
+            )
             solver = Solver(SHWave(), geo, (32, 32); cutoff=5)
 
             rho = get_material_field(solver, :ρ)
@@ -274,9 +274,9 @@ using LinearAlgebra
     @testset "field_energy" begin
         @testset "2D TM energy is positive" begin
             lat = square_lattice(1.0)
-            geo = Geometry(lat, Dielectric(1.0), [
-                (Circle([0.5, 0.5], 0.2), Dielectric(9.0))
-            ])
+            geo = Geometry(
+                lat, Dielectric(1.0), [(Circle([0.5, 0.5], 0.2), Dielectric(9.0))]
+            )
             solver = Solver(TMWave(), geo, (32, 32); cutoff=5)
             freqs, vecs = solve_at_k_with_vectors(solver, [0.0, 0.0], DenseMethod())
 
@@ -288,5 +288,4 @@ using LinearAlgebra
             @test sum(energy) > 0
         end
     end
-
 end  # @testset "Field Reconstruction"

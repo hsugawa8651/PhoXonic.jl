@@ -188,9 +188,7 @@ function point_in_shape_periodic(point::Vec2, e::Ellipse, lattice::Lattice{Dim2}
     return false
 end
 
-function point_in_shape_periodic(
-    point::AbstractVector, e::Ellipse, lattice::Lattice{Dim2}
-)
+function point_in_shape_periodic(point::AbstractVector, e::Ellipse, lattice::Lattice{Dim2})
     point_in_shape_periodic(Vec2(point...), e, lattice)
 end
 

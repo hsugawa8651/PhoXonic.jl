@@ -48,7 +48,7 @@ field_hires = reconstruct_field(solver, vecs[:, 1]; grid=(128, 128))
 function reconstruct_field(
     solver::Solver{D,W},
     eigenvector::AbstractVector{<:Complex};
-    grid::Union{Nothing,NTuple{N,Int} where N}=nothing
+    grid::Union{Nothing,NTuple{N,Int} where N}=nothing,
 ) where {D,W}
     resolution = isnothing(grid) ? solver.resolution : grid
     ncomp = ncomponents(solver.wave)
@@ -66,7 +66,7 @@ end
 function _reconstruct_scalar_field(
     solver::Solver{Dim1,W},
     eigenvector::AbstractVector{<:Complex},
-    resolution::NTuple{1,Int}
+    resolution::NTuple{1,Int},
 ) where {W}
     N = resolution[1]
     grid = zeros(ComplexF64, N)
@@ -80,7 +80,7 @@ end
 function _reconstruct_scalar_field(
     solver::Solver{Dim2,W},
     eigenvector::AbstractVector{<:Complex},
-    resolution::NTuple{2,Int}
+    resolution::NTuple{2,Int},
 ) where {W}
     Nx, Ny = resolution
     grid = zeros(ComplexF64, Nx, Ny)
@@ -94,7 +94,7 @@ end
 function _reconstruct_scalar_field(
     solver::Solver{Dim3,W},
     eigenvector::AbstractVector{<:Complex},
-    resolution::NTuple{3,Int}
+    resolution::NTuple{3,Int},
 ) where {W}
     Nx, Ny, Nz = resolution
     grid = zeros(ComplexF64, Nx, Ny, Nz)
@@ -109,7 +109,7 @@ function _reconstruct_vector_field(
     solver::Solver{Dim2,W},
     eigenvector::AbstractVector{<:Complex},
     resolution::NTuple{2,Int},
-    ncomp::Int
+    ncomp::Int,
 ) where {W}
     npw = solver.basis.num_pw
     @assert length(eigenvector) == ncomp * npw "Eigenvector length mismatch: expected $(ncomp * npw), got $(length(eigenvector))"
@@ -134,7 +134,7 @@ function _reconstruct_vector_field(
     solver::Solver{Dim3,W},
     eigenvector::AbstractVector{<:Complex},
     resolution::NTuple{3,Int},
-    ncomp::Int
+    ncomp::Int,
 ) where {W}
     npw = solver.basis.num_pw
     @assert length(eigenvector) == ncomp * npw "Eigenvector length mismatch"
