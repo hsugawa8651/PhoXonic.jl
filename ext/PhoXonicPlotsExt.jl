@@ -203,7 +203,7 @@ function PhoXonic.plot_field(
     title::String="Field",
     xlabel::String="x/a",
     ylabel::String="Field",
-    kwargs...
+    kwargs...,
 )
     field = reconstruct_field(solver, eigenvector)
     if fix_phase_flag
@@ -212,15 +212,9 @@ function PhoXonic.plot_field(
 
     data = _extract_quantity(field, quantity)
     N = length(data)
-    x = range(0, 1, length=N)
+    x = range(0, 1; length=N)
 
-    Plots.plot(x, data;
-        xlabel=xlabel,
-        ylabel=ylabel,
-        title=title,
-        legend=false,
-        kwargs...
-    )
+    Plots.plot(x, data; xlabel=xlabel, ylabel=ylabel, title=title, legend=false, kwargs...)
 end
 
 # -----------------------------------------------------------------------------
@@ -250,7 +244,7 @@ function PhoXonic.plot_field(
     title::String="Field",
     xlabel::String="x/a",
     ylabel::String="y/a",
-    kwargs...
+    kwargs...,
 ) where {W}
     field = reconstruct_field(solver, eigenvector)
 
@@ -269,13 +263,14 @@ function PhoXonic.plot_field(
     data = _extract_quantity(data_complex, quantity)
 
     # Transpose for correct orientation (x horizontal, y vertical)
-    Plots.heatmap(data';
+    Plots.heatmap(
+        data';
         c=colormap,
         title=title,
         xlabel=xlabel,
         ylabel=ylabel,
         aspect_ratio=:equal,
-        kwargs...
+        kwargs...,
     )
 end
 
@@ -293,7 +288,7 @@ function PhoXonic.plot_field!(
     eigenvector::AbstractVector;
     quantity::Symbol=:real,
     fix_phase_flag::Bool=true,
-    kwargs...
+    kwargs...,
 )
     field = reconstruct_field(solver, eigenvector)
     if fix_phase_flag
@@ -302,7 +297,7 @@ function PhoXonic.plot_field!(
 
     data = _extract_quantity(field, quantity)
     N = length(data)
-    x = range(0, 1, length=N)
+    x = range(0, 1; length=N)
 
     plot!(p, x, data; kwargs...)
     return p
@@ -316,7 +311,7 @@ function PhoXonic.plot_field!(
     quantity::Symbol=:real,
     fix_phase_flag::Bool=true,
     colormap::Symbol=:RdBu,
-    kwargs...
+    kwargs...,
 ) where {W}
     field = reconstruct_field(solver, eigenvector)
 
@@ -350,20 +345,22 @@ function PhoXonic.plot_epsilon(
     title::String="Permittivity",
     xlabel::String="x/a",
     ylabel::String="ε",
-    kwargs...
+    kwargs...,
 )
     eps = get_epsilon_field(solver)
     N = length(eps)
-    x = range(0, 1, length=N)
+    x = range(0, 1; length=N)
 
-    Plots.plot(x, eps;
+    Plots.plot(
+        x,
+        eps;
         xlabel=xlabel,
         ylabel=ylabel,
         title=title,
         fill=0,
         alpha=0.3,
         legend=false,
-        kwargs...
+        kwargs...,
     )
 end
 
@@ -381,17 +378,18 @@ function PhoXonic.plot_epsilon(
     title::String="Permittivity",
     xlabel::String="x/a",
     ylabel::String="y/a",
-    kwargs...
+    kwargs...,
 )
     eps = get_epsilon_field(solver)
 
-    Plots.heatmap(eps';
+    Plots.heatmap(
+        eps';
         c=colormap,
         title=title,
         xlabel=xlabel,
         ylabel=ylabel,
         aspect_ratio=:equal,
-        kwargs...
+        kwargs...,
     )
 end
 
