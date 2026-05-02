@@ -2015,4 +2015,7 @@ using LinearAlgebra
 
     # PythonPlot extension: savefig_publication
     include("test_publication.jl")
+
+    # Aqua.jl quality checks
+    include("aqua_test.jl")
 end
