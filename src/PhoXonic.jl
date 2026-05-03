@@ -43,6 +43,7 @@ include("waves.jl")
 include("solver.jl")
 include("matrixfree.jl")
 include("field.jl")  # Field reconstruction (depends on matrixfree.jl)
+include("surface_field.jl")  # Stub for MakieExt-only `surface_field`
 include("rscg.jl")
 
 # High-level API
@@ -111,7 +112,7 @@ export to_linear_map_lhs, to_linear_map_rhs
 # Exports - Field reconstruction and visualization
 export reconstruct_field, get_epsilon_field, get_material_field
 export fix_phase, field_energy
-export plot_field, plot_epsilon, plot_field!
+export plot_field, plot_epsilon, plot_field!, surface_field
 
 # Exports - Green's function and DOS/LDOS
 export compute_greens_function, compute_dos, compute_ldos
