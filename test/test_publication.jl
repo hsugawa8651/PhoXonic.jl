@@ -1,6 +1,7 @@
 using Test
 using PhoXonic
 using PythonPlot
+PythonPlot.matplotlib.use("Agg")
 using StaticArrays
 
 @testset "savefig_publication (PythonPlot)" begin
@@ -115,6 +116,14 @@ using StaticArrays
         mktempdir() do tmp
             path = joinpath(tmp, "bs2.png")
             savefig_publication(bs2, path)
+            @test isfile(path)
+        end
+    end
+
+    @testset "ylabel kwarg" begin
+        mktempdir() do tmp
+            path = joinpath(tmp, "ylabel.pdf")
+            savefig_publication(bs2, path; ylabel="Frequency [THz]")
             @test isfile(path)
         end
     end

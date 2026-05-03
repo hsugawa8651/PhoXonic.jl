@@ -20,6 +20,7 @@ function _plot_bs_on_ax!(
     linestyle="-",
     show_gaps::Bool=false,
     normalize::Real=1.0,
+    ylabel::AbstractString="Frequency",
     title::AbstractString="",
 )
     data = band_plot_data(bs; normalize)
@@ -47,7 +48,7 @@ function _plot_bs_on_ax!(
 
     ax.set_xticks(data.label_positions)
     ax.set_xticklabels(data.label_names)
-    ax.set_ylabel("Frequency")
+    ax.set_ylabel(ylabel)
     if !isempty(title)
         ax.set_title(title)
     end
