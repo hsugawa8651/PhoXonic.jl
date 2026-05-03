@@ -14,6 +14,7 @@ CI runs both groups in parallel via `test_group: [core, ext]` matrix.
 
 | Extension | Trigger package | Test file |
 |---|---|---|
+| `PhoXonicMakieExt` | `Makie` | `test/makieext_test.jl` |
 | `PhoXonicPlotsExt` | `Plots`, `RecipesBase` | `test/plotsext_test.jl` |
 | `PhoXonicPythonPlotExt` | `PythonPlot` | `test/test_publication.jl` |
 | `PhoXonicRecipesBaseExt` | `RecipesBase` | (covered transitively by `Plots` test) |
