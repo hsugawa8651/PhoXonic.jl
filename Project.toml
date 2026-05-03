@@ -29,11 +29,13 @@ PhoXonicReducedShiftedKrylovExt = "ReducedShiftedKrylov"
 
 [compat]
 Brillouin = "0.5"
+Dates = "1"
 FFTW = "1"
 IterativeSolvers = "0.9.4"
 JLD2 = "0.4, 0.5"
 Krylov = "0.10"
 KrylovKit = "0.10.2"
+LinearAlgebra = "1"
 LinearMaps = "3"
 Plots = "1"
 PythonPlot = "1"

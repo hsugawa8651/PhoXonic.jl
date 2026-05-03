@@ -67,9 +67,7 @@ column i of `a` and column j of `b` with weight matrix `W`.
 - `M`: Overlap matrix (n_bands_a × n_bands_b)
 """
 function overlap_matrix(
-    a::AbstractMatrix{<:Complex},
-    b::AbstractMatrix{<:Complex},
-    W::AbstractMatrix
+    a::AbstractMatrix{<:Complex}, b::AbstractMatrix{<:Complex}, W::AbstractMatrix
 )
     return a' * W * b
 end
@@ -135,10 +133,7 @@ For a closed loop, the last point connects back to the first point.
 # Returns
 - `W_wilson`: Wilson matrix (n_bands × n_bands), unitary
 """
-function wilson_matrix(
-    spaces::Vector{<:AbstractMatrix{<:Complex}},
-    W::AbstractMatrix
-)
+function wilson_matrix(spaces::Vector{<:AbstractMatrix{<:Complex}}, W::AbstractMatrix)
     n_k = length(spaces)
     n_bands = size(spaces[1], 2)
 
@@ -152,8 +147,8 @@ function wilson_matrix(
     W_wilson = unitary_approx(overlap_matrix(spaces[1], spaces[2], W))
 
     # Multiply by subsequent overlaps
-    for i in 2:(n_k-1)
-        M = overlap_matrix(spaces[i], spaces[i+1], W)
+    for i in 2:(n_k - 1)
+        M = overlap_matrix(spaces[i], spaces[i + 1], W)
         W_wilson = W_wilson * unitary_approx(M)
     end
 
@@ -180,10 +175,7 @@ is computed through all consecutive k-points without an explicit closing step.
 # Returns
 - `W_wilson`: Wilson matrix (n_bands × n_bands), unitary
 """
-function wilson_matrix_open(
-    spaces::Vector{<:AbstractMatrix{<:Complex}},
-    W::AbstractMatrix
-)
+function wilson_matrix_open(spaces::Vector{<:AbstractMatrix{<:Complex}}, W::AbstractMatrix)
     n_k = length(spaces)
     n_bands = size(spaces[1], 2)
 
@@ -197,8 +189,8 @@ function wilson_matrix_open(
     W_wilson = unitary_approx(overlap_matrix(spaces[1], spaces[2], W))
 
     # Multiply by subsequent overlaps (all the way to the last point)
-    for i in 2:(n_k-1)
-        M = overlap_matrix(spaces[i], spaces[i+1], W)
+    for i in 2:(n_k - 1)
+        M = overlap_matrix(spaces[i], spaces[i + 1], W)
         W_wilson = W_wilson * unitary_approx(M)
     end
 
@@ -240,17 +232,13 @@ result = compute_zak_phase(solver, 1:2)
 println(result.phases)  # Zak phases for bands 1 and 2
 ```
 """
-function compute_zak_phase(
-    solver::Solver{Dim1},
-    bands::UnitRange{Int};
-    n_k::Int = 50
-)
+function compute_zak_phase(solver::Solver{Dim1}, bands::UnitRange{Int}; n_k::Int=50)
     # Get weight matrix for inner product
     W = get_weight_matrix(solver)
 
     # Sample k-points from 0 to 1 (in units of reciprocal lattice vector)
     # Use n_k+1 points including endpoint k=1 for open Wilson line
-    k_points = range(0.0, 1.0, length = n_k + 1)
+    k_points = range(0.0, 1.0; length=n_k + 1)
 
     # Collect eigenvectors at each k-point
     n_bands = length(bands)
@@ -259,7 +247,7 @@ function compute_zak_phase(
     max_band = maximum(bands)
     for (i, k) in enumerate(k_points)
         # Solve at this k-point
-        _, vectors = solve_at_k_with_vectors(solver, k, solver.method; bands = 1:max_band)
+        _, vectors = solve_at_k_with_vectors(solver, k, solver.method; bands=1:max_band)
 
         # Extract the bands we want
         spaces[i] = vectors[:, bands]
@@ -308,9 +296,9 @@ result = compute_wilson_spectrum(solver, 1:2; n_k_path=21, n_k_loop=50)
 function compute_wilson_spectrum(
     solver::Solver{Dim2},
     bands::UnitRange{Int};
-    n_k_path::Int = 21,
-    n_k_loop::Int = 50,
-    loop_direction::Symbol = :b2
+    n_k_path::Int=21,
+    n_k_loop::Int=50,
+    loop_direction::Symbol=:b2,
 )
     # Get weight matrix for inner product
     W = get_weight_matrix(solver)
@@ -319,12 +307,12 @@ function compute_wilson_spectrum(
     max_band = maximum(bands)
 
     # k-values along the scanning path (0 to 1 in the scanning direction)
-    k_scan = range(0.0, 1.0, length = n_k_path)
+    k_scan = range(0.0, 1.0; length=n_k_path)
 
     # k-values for Wilson loop: 0 to 1 inclusive (n_k_loop+1 points)
     # This ensures proper parallel transport: k=0 → k=δ → ... → k=1
     # where k=1 is equivalent to k=0 due to BZ periodicity
-    k_loop = range(0.0, 1.0, length = n_k_loop + 1)
+    k_loop = range(0.0, 1.0; length=n_k_loop + 1)
 
     # Storage for Wilson phases at each scan point
     phases_matrix = Matrix{Float64}(undef, n_k_path, n_bands)
@@ -344,7 +332,7 @@ function compute_wilson_spectrum(
 
             # Solve at this k-point
             _, vectors = solve_at_k_with_vectors(
-                solver, k_vec, solver.method; bands = 1:max_band
+                solver, k_vec, solver.method; bands=1:max_band
             )
 
             # Extract the bands we want
@@ -392,8 +380,8 @@ function winding_number(result::WilsonSpectrumResult, band_index::Int)
 
     # Compute total phase change, accounting for branch cuts
     total_wind = 0.0
-    for i in 1:(n_k-1)
-        Δφ = phases[i+1] - phases[i]
+    for i in 1:(n_k - 1)
+        Δφ = phases[i + 1] - phases[i]
 
         # Unwrap: if jump is > π, it crossed a branch cut
         if Δφ > π

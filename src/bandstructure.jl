@@ -216,11 +216,7 @@ Reorders eigenvalues at each k-point to maintain band continuity
 by tracking eigenvector overlaps between adjacent k-points.
 """
 function _track_bands!(
-    frequencies::Matrix{Float64},
-    kpoints,
-    solver::Solver,
-    bands,
-    verbose::Bool
+    frequencies::Matrix{Float64}, kpoints, solver::Solver, bands, verbose::Bool
 )
     nk = length(kpoints)
     nbands = length(bands)
@@ -285,8 +281,11 @@ This can achieve up to 38x speedup for large problems.
 A `BandStructure` object containing frequencies for each k-point and band.
 """
 function compute_bands(
-    solver::Solver{Dim2}, kpath::SimpleKPath{2}; bands=1:10, verbose::Bool=false,
-    track_bands::Bool=false
+    solver::Solver{Dim2},
+    kpath::SimpleKPath{2};
+    bands=1:10,
+    verbose::Bool=false,
+    track_bands::Bool=false,
 )
     nk = length(kpath)
     nbands = length(bands)
@@ -316,8 +315,11 @@ function compute_bands(
 end
 
 function compute_bands(
-    solver::Solver{Dim2}, kpoints::Vector{<:AbstractVector}; bands=1:10, verbose::Bool=false,
-    track_bands::Bool=false
+    solver::Solver{Dim2},
+    kpoints::Vector{<:AbstractVector};
+    bands=1:10,
+    verbose::Bool=false,
+    track_bands::Bool=false,
 )
     nk = length(kpoints)
     nbands = length(bands)
@@ -346,8 +348,11 @@ function compute_bands(
 end
 
 function compute_bands(
-    solver::Solver{Dim2}, kpi::KPathInterpolant; bands=1:10, verbose::Bool=false,
-    track_bands::Bool=false
+    solver::Solver{Dim2},
+    kpi::KPathInterpolant;
+    bands=1:10,
+    verbose::Bool=false,
+    track_bands::Bool=false,
 )
     # Extract k-points from interpolant (only kx, ky for 2D)
     kpoints_3d = collect(kpi)
@@ -415,8 +420,11 @@ At Γ point (k=0), the lowest transverse modes also have ω→0, which can cause
 anomalous values. Consider using a small k offset or skipping the Γ point.
 """
 function compute_bands(
-    solver::Solver{Dim3}, kpath::SimpleKPath{3}; bands=1:10, verbose::Bool=false,
-    track_bands::Bool=false
+    solver::Solver{Dim3},
+    kpath::SimpleKPath{3};
+    bands=1:10,
+    verbose::Bool=false,
+    track_bands::Bool=false,
 )
     nk = length(kpath)
     nbands = length(bands)
@@ -438,8 +446,11 @@ function compute_bands(
 end
 
 function compute_bands(
-    solver::Solver{Dim3}, kpoints::Vector{<:AbstractVector}; bands=1:10, verbose::Bool=false,
-    track_bands::Bool=false
+    solver::Solver{Dim3},
+    kpoints::Vector{<:AbstractVector};
+    bands=1:10,
+    verbose::Bool=false,
+    track_bands::Bool=false,
 )
     nk = length(kpoints)
     nbands = length(bands)
@@ -468,8 +479,11 @@ function compute_bands(
 end
 
 function compute_bands(
-    solver::Solver{Dim3}, kpi::KPathInterpolant; bands=1:10, verbose::Bool=false,
-    track_bands::Bool=false
+    solver::Solver{Dim3},
+    kpi::KPathInterpolant;
+    bands=1:10,
+    verbose::Bool=false,
+    track_bands::Bool=false,
 )
     kpoints_raw = collect(kpi)
     kpoints = [SVector{3}(k[1], k[2], k[3]) for k in kpoints_raw]
