@@ -4,4 +4,7 @@
 
     # ReducedShiftedKrylov extension
     include("rsk_ext/runtests.jl")
+
+    # Plots extension (RecipesBase ext is covered transitively via Plots)
+    include("plotsext_test.jl")
 end
