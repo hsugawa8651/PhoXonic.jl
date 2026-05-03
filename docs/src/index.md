@@ -92,9 +92,9 @@ If you use PhoXonic.jl in your work, please cite:
 @software{phoxonic_jl,
   author       = {Sugawa, Hiroharu},
   title        = {PhoXonic.jl: Photonic and Phononic Crystal Band Structure},
-  year         = 2025,
+  year         = 2026,
   publisher    = {Zenodo},
-  version      = {v0.2.2},
+  version      = {v0.2.4},
   doi          = {10.5281/zenodo.18055170},
   url          = {https://doi.org/10.5281/zenodo.18055170}
 }
