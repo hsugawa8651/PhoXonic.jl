@@ -8,7 +8,15 @@
 using PhoXonic
 using LinearAlgebra
 using Plots
-default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
+default(;
+    guidefontsize=14,
+    tickfontsize=12,
+    titlefontsize=14,
+    left_margin=10Plots.mm,
+    right_margin=10Plots.mm,
+    top_margin=5Plots.mm,
+    bottom_margin=10Plots.mm,
+)
 
 println("=" ^ 60)
 println("3D FCC Phononic Crystal: WC spheres in Epoxy")
@@ -44,8 +52,12 @@ WC = from_E_ν(ρ_WC, 387.5559e9 / E_epoxy_real, 0.3459)
 epoxy = from_E_ν(ρ_epoxy, 1.0, 0.3679)
 
 println("\nMaterial parameters (normalized by epoxy):")
-println("  WC sphere:   ρ = $(round(WC.ρ, digits=2)), C11 = $(round(WC.C11, digits=2)), C44 = $(round(WC.C44, digits=2))")
-println("  Epoxy matrix: ρ = $(round(epoxy.ρ, digits=2)), C11 = $(round(epoxy.C11, digits=2)), C44 = $(round(epoxy.C44, digits=2))")
+println(
+    "  WC sphere:   ρ = $(round(WC.ρ, digits=2)), C11 = $(round(WC.C11, digits=2)), C44 = $(round(WC.C44, digits=2))",
+)
+println(
+    "  Epoxy matrix: ρ = $(round(epoxy.ρ, digits=2)), C11 = $(round(epoxy.C11, digits=2)), C44 = $(round(epoxy.C44, digits=2))",
+)
 
 # Contrast ratio
 println("\nContrast ratios:")
@@ -92,7 +104,9 @@ println("  Wave type: FullElastic (3N DOF)")
 println("  Resolution: $resolution")
 println("  Cutoff: $cutoff")
 
-solver = Solver(FullElastic(), geo, resolution, KrylovKitMethod(; shift=shift); cutoff=cutoff)
+solver = Solver(
+    FullElastic(), geo, resolution, KrylovKitMethod(; shift=shift); cutoff=cutoff
+)
 println("  Plane waves: ", solver.basis.num_pw)
 println("  Matrix size: ", 3 * solver.basis.num_pw, " × ", 3 * solver.basis.num_pw)
 

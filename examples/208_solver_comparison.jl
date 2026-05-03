@@ -9,7 +9,7 @@
 
 using PhoXonic
 using Plots
-default(
+default(;
     guidefontsize=14,
     tickfontsize=12,
     titlefontsize=14,
@@ -133,7 +133,7 @@ best_result = results[best_speedup_idx]
 
 println("Maximum frequency error: $(round(max_error, digits=1)) rad/s")
 println(
-    "Best speedup: $(round(best_result.speedup, digits=2))x at cutoff=$(best_result.cutoff)",
+    "Best speedup: $(round(best_result.speedup, digits=2))x at cutoff=$(best_result.cutoff)"
 )
 println()
 println("Recommendation:")
@@ -164,13 +164,7 @@ plot!(
     p1, matrix_sizes, times_dense; marker=:circle, label="Dense", linewidth=2, color=:blue
 )
 plot!(
-    p1,
-    matrix_sizes,
-    times_lobpcg;
-    marker=:square,
-    label="LOBPCG",
-    linewidth=2,
-    color=:red,
+    p1, matrix_sizes, times_lobpcg; marker=:square, label="LOBPCG", linewidth=2, color=:red
 )
 
 # Plot 2: Speedup

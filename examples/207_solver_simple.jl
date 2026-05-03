@@ -7,7 +7,7 @@
 
 using PhoXonic
 using Plots
-default(
+default(;
     guidefontsize=14,
     tickfontsize=12,
     titlefontsize=14,
@@ -114,22 +114,8 @@ title_lobpcg = @sprintf(
 p = plot(; layout=(1, 2), size=(1200, 500), left_margin=5Plots.mm)
 
 for b in 1:size(freq_dense_k, 2)
-    plot!(
-        p[1],
-        dists,
-        freq_dense_k[:, b];
-        color=:blue,
-        legend=false,
-        ylims=ylims_common,
-    )
-    plot!(
-        p[2],
-        dists,
-        freq_lobpcg_k[:, b];
-        color=:red,
-        legend=false,
-        ylims=ylims_common,
-    )
+    plot!(p[1], dists, freq_dense_k[:, b]; color=:blue, legend=false, ylims=ylims_common)
+    plot!(p[2], dists, freq_lobpcg_k[:, b]; color=:red, legend=false, ylims=ylims_common)
 end
 
 # Add k-path labels and vertical lines

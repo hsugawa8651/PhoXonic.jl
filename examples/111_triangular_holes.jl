@@ -5,7 +5,15 @@
 
 using PhoXonic
 using Plots
-default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
+default(;
+    guidefontsize=14,
+    tickfontsize=12,
+    titlefontsize=14,
+    left_margin=10Plots.mm,
+    right_margin=10Plots.mm,
+    top_margin=5Plots.mm,
+    bottom_margin=10Plots.mm,
+)
 
 println("=== Triangular Lattice Air Holes ===")
 println("Air holes (ε=1) in dielectric (ε=12), r=0.45a")

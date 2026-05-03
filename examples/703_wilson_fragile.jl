@@ -16,15 +16,15 @@
 
 using PhoXonic
 using Plots
-default(
-    guidefontsize = 14,
-    tickfontsize = 12,
-    titlefontsize = 14,
-    legendfontsize = 11,
-    left_margin = 10Plots.mm,
-    right_margin = 10Plots.mm,
-    top_margin = 5Plots.mm,
-    bottom_margin = 10Plots.mm,
+default(;
+    guidefontsize=14,
+    tickfontsize=12,
+    titlefontsize=14,
+    legendfontsize=11,
+    left_margin=10Plots.mm,
+    right_margin=10Plots.mm,
+    top_margin=5Plots.mm,
+    bottom_margin=10Plots.mm,
 )
 
 # ============================================================
@@ -46,7 +46,9 @@ Create the de Paz 2019 photonic crystal geometry.
 # Returns
 - `Geometry{Dim2}`: The photonic crystal geometry
 """
-function create_depaz_geometry(d1::Real, d2::Real; a0::Real=1.0, R::Real=a0/3, eps_rod::Real=11.7)
+function create_depaz_geometry(
+    d1::Real, d2::Real; a0::Real=1.0, R::Real=a0/3, eps_rod::Real=11.7
+)
     lat = hexagonal_lattice(a0)
     Si = Dielectric(eps_rod)
     air = Dielectric(1.0)
@@ -66,11 +68,7 @@ end
 # Parameters for three phases
 # ============================================================
 
-phases = [
-    ("Trivial", 0.52, 0.31),
-    ("Fragile", 0.40, 0.13),
-    ("OAL", 0.40, 0.61),
-]
+phases = [("Trivial", 0.52, 0.31), ("Fragile", 0.40, 0.13), ("OAL", 0.40, 0.61)]
 
 println("=" ^ 60)
 println("de Paz 2019: Fragile Topology in Photonic Crystals")
@@ -96,7 +94,7 @@ for (name, d1, d2) in phases
     println("\n$name phase (d1=$d1, d2=$d2):")
     for (idx, lbl) in lbls
         freqs_normalized = bands.frequencies[idx, :] ./ (2π)
-        println("  $lbl: ", round.(freqs_normalized[1:4], digits=3), " (ωa/2πc)")
+        println("  $lbl: ", round.(freqs_normalized[1:4]; digits=3), " (ωa/2πc)")
     end
 end
 
@@ -106,11 +104,7 @@ end
 
 println("\nPlotting band structures...")
 
-p_bands = plot(
-    layout = (1, 3),
-    size = (1400, 500),
-    dpi = 150,
-)
+p_bands = plot(; layout=(1, 3), size=(1400, 500), dpi=150)
 
 for (i, (name, d1, d2, bands, _)) in enumerate(band_results)
     dists = bands.distances
@@ -119,34 +113,26 @@ for (i, (name, d1, d2, bands, _)) in enumerate(band_results)
     label_names = String[l for (_, l) in bands.labels]
 
     for b in 1:size(freqs, 2)
-        plot!(
-            p_bands,
-            dists,
-            freqs[:, b];
-            linewidth = 2,
-            color = :blue,
-            label = "",
-            subplot = i,
-        )
+        plot!(p_bands, dists, freqs[:, b]; linewidth=2, color=:blue, label="", subplot=i)
     end
     vline!(
         p_bands,
         label_positions;
-        color = :gray,
-        linestyle = :dash,
-        alpha = 0.5,
-        label = "",
-        subplot = i,
+        color=:gray,
+        linestyle=:dash,
+        alpha=0.5,
+        label="",
+        subplot=i,
     )
     plot!(
         p_bands;
-        subplot = i,
-        title = "$name (d₁=$d1, d₂=$d2)",
-        xlabel = "Wave vector",
-        ylabel = i == 1 ? "Frequency (ωa/2πc)" : "",
-        ylims = (0, 5),
-        xticks = (label_positions, label_names),
-        legend = false,
+        subplot=i,
+        title="$name (d₁=$d1, d₂=$d2)",
+        xlabel="Wave vector",
+        ylabel=i == 1 ? "Frequency (ωa/2πc)" : "",
+        ylims=(0, 5),
+        xticks=(label_positions, label_names),
+        legend=false,
     )
 end
 
@@ -189,91 +175,87 @@ end
 
 println("\nPlotting Wilson spectra...")
 
-p_wilson = plot(
-    layout = (1, 2),
-    size = (1200, 500),
-    dpi = 150,
-)
+p_wilson = plot(; layout=(1, 2), size=(1200, 500), dpi=150)
 
 # Plot bands 2-3: use cross (+) and xcross (×)
 scatter!(
     p_wilson,
     result_23.k_values,
     result_23.phases[:, 2] ./ π;
-    label = "Eigenvalue 2",
-    markersize = 8,
-    markershape = :xcross,
-    color = :red,
-    markerstrokewidth = 2,
-    subplot = 1,
+    label="Eigenvalue 2",
+    markersize=8,
+    markershape=:xcross,
+    color=:red,
+    markerstrokewidth=2,
+    subplot=1,
 )
 scatter!(
     p_wilson,
     result_23.k_values,
     result_23.phases[:, 1] ./ π;
-    label = "Eigenvalue 1",
-    markersize = 8,
-    markershape = :cross,
-    color = :blue,
-    markerstrokewidth = 2,
-    subplot = 1,
+    label="Eigenvalue 1",
+    markersize=8,
+    markershape=:cross,
+    color=:blue,
+    markerstrokewidth=2,
+    subplot=1,
 )
 plot!(
     p_wilson;
-    subplot = 1,
-    title = "Wilson Spectrum (Bands 2-3)",
-    xlabel = "k₁ (2π/a)",
-    ylabel = "Wilson phase θ / π",
-    ylims = (-1.1, 1.1),
-    legend = :topright,
+    subplot=1,
+    title="Wilson Spectrum (Bands 2-3)",
+    xlabel="k₁ (2π/a)",
+    ylabel="Wilson phase θ / π",
+    ylims=(-1.1, 1.1),
+    legend=:topright,
 )
-hline!(p_wilson, [0]; color = :gray, linestyle = :dash, label = "", subplot = 1)
+hline!(p_wilson, [0]; color=:gray, linestyle=:dash, label="", subplot=1)
 
 # Plot bands 1-3: use different markers (all non-filled)
 scatter!(
     p_wilson,
     result_13.k_values,
     result_13.phases[:, 1] ./ π;
-    label = "Eigenvalue 1",
-    markersize = 7,
-    markershape = :cross,
-    color = :blue,
-    markerstrokewidth = 2,
-    subplot = 2,
+    label="Eigenvalue 1",
+    markersize=7,
+    markershape=:cross,
+    color=:blue,
+    markerstrokewidth=2,
+    subplot=2,
 )
 scatter!(
     p_wilson,
     result_13.k_values,
     result_13.phases[:, 2] ./ π;
-    label = "Eigenvalue 2",
-    markersize = 7,
-    markershape = :xcross,
-    color = :red,
-    markerstrokewidth = 2,
-    subplot = 2,
+    label="Eigenvalue 2",
+    markersize=7,
+    markershape=:xcross,
+    color=:red,
+    markerstrokewidth=2,
+    subplot=2,
 )
 # Eigenvalue 3: filled circle
 scatter!(
     p_wilson,
     result_13.k_values,
     result_13.phases[:, 3] ./ π;
-    label = "Eigenvalue 3",
-    markersize = 6,
-    markershape = :circle,
-    markercolor = :green,
-    markerstrokewidth = 0,
-    subplot = 2,
+    label="Eigenvalue 3",
+    markersize=6,
+    markershape=:circle,
+    markercolor=:green,
+    markerstrokewidth=0,
+    subplot=2,
 )
 plot!(
     p_wilson;
-    subplot = 2,
-    title = "Wilson Spectrum (Bands 1-3)",
-    xlabel = "k₁ (2π/a)",
-    ylabel = "Wilson phase θ / π",
-    ylims = (-1.1, 1.1),
-    legend = :topright,
+    subplot=2,
+    title="Wilson Spectrum (Bands 1-3)",
+    xlabel="k₁ (2π/a)",
+    ylabel="Wilson phase θ / π",
+    ylims=(-1.1, 1.1),
+    legend=:topright,
 )
-hline!(p_wilson, [0]; color = :gray, linestyle = :dash, label = "", subplot = 2)
+hline!(p_wilson, [0]; color=:gray, linestyle=:dash, label="", subplot=2)
 
 savefig(p_wilson, "703_depaz_wilson.png")
 println("Saved: 703_depaz_wilson.png")

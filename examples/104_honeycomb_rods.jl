@@ -5,7 +5,15 @@
 
 using PhoXonic
 using Plots
-default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
+default(;
+    guidefontsize=14,
+    tickfontsize=12,
+    titlefontsize=14,
+    left_margin=10Plots.mm,
+    right_margin=10Plots.mm,
+    top_margin=5Plots.mm,
+    bottom_margin=10Plots.mm,
+)
 
 println("=== Honeycomb Lattice Photonic Crystal ===")
 println("Dielectric rods (ε=12) in air, r=0.14a")
@@ -156,7 +164,9 @@ xticks!(p_tm, label_positions, label_names)
 # Highlight TM band gap (bands 2-3)
 gap_tm_2_3 = find_bandgap(bands_tm, 2, 3)
 if gap_tm_2_3.gap > 0
-    hspan!(p_tm, [gap_tm_2_3.max_lower, gap_tm_2_3.min_upper]; alpha=0.2, color=:blue, label="")
+    hspan!(
+        p_tm, [gap_tm_2_3.max_lower, gap_tm_2_3.min_upper]; alpha=0.2, color=:blue, label=""
+    )
 end
 
 # TE plot
@@ -178,7 +188,9 @@ xticks!(p_te, label_positions, label_names)
 # Highlight TE band gap (bands 5-6)
 gap_te_5_6 = find_bandgap(bands_te, 5, 6)
 if gap_te_5_6.gap > 0
-    hspan!(p_te, [gap_te_5_6.max_lower, gap_te_5_6.min_upper]; alpha=0.2, color=:red, label="")
+    hspan!(
+        p_te, [gap_te_5_6.max_lower, gap_te_5_6.min_upper]; alpha=0.2, color=:red, label=""
+    )
 end
 
 # Combined plot (side by side)
