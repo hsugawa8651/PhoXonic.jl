@@ -7,4 +7,7 @@
 
     # Plots extension (RecipesBase ext is covered transitively via Plots)
     include("plotsext_test.jl")
+
+    # Makie extension
+    include("makieext_test.jl")
 end
