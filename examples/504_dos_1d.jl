@@ -7,7 +7,7 @@
 using PhoXonic
 using Plots
 
-default(
+default(;
     guidefontsize=14,
     tickfontsize=12,
     titlefontsize=14,
@@ -20,9 +20,7 @@ println("=" ^ 50)
 
 # 1D photonic crystal - Bragg stack
 lat = lattice_1d(1.0)
-geo = Geometry(lat, Dielectric(1.0), [
-    (Segment(0.0, 0.3), Dielectric(9.0))
-])
+geo = Geometry(lat, Dielectric(1.0), [(Segment(0.0, 0.3), Dielectric(9.0))])
 solver = Solver(Photonic1D(), geo, (64,); cutoff=10)
 
 println("Structure: 1D Bragg stack")
@@ -30,10 +28,10 @@ println("Solver: Photonic1D, 64 grid, cutoff=10")
 println("Plane waves: $(solver.basis.num_pw)")
 
 # Frequency points for DOS
-ω_values = range(0.1, 5.0, length=100)
+ω_values = range(0.1, 5.0; length=100)
 
 # K-points for DOS sampling
-k_points = collect(range(0.0, 0.5, length=20))
+k_points = collect(range(0.0, 0.5; length=20))
 
 println("Frequencies: $(length(ω_values)) points")
 println("K-points: $(length(k_points))")
@@ -46,7 +44,7 @@ println("  Time: $(round(t_dos, digits=2)) s")
 
 # Compute band structure (1D uses direct Vector of k-points)
 println("Computing band structure...")
-kpath = collect(range(0.0, 0.5, length=41))
+kpath = collect(range(0.0, 0.5; length=41))
 nbands = 5
 nk = length(kpath)
 frequencies = zeros(Float64, nk, nbands)
@@ -58,43 +56,50 @@ end
 
 # Find band gaps manually
 gaps = []
-for b in 1:(nbands-1)
+for b in 1:(nbands - 1)
     max_lower = maximum(frequencies[:, b])
-    min_upper = minimum(frequencies[:, b+1])
+    min_upper = minimum(frequencies[:, b + 1])
     gap = max(0.0, min_upper - max_lower)
     if gap > 0.01
         midgap = (min_upper + max_lower) / 2
         gap_ratio = gap / midgap
-        push!(gaps, (bands=(b, b+1), gap=gap, gap_ratio=gap_ratio, min_upper=min_upper, max_lower=max_lower))
+        push!(
+            gaps,
+            (
+                bands=(b, b+1),
+                gap=gap,
+                gap_ratio=gap_ratio,
+                min_upper=min_upper,
+                max_lower=max_lower,
+            ),
+        )
     end
 end
 
 println("\nBand gaps found: $(length(gaps))")
 for g in gaps
     gap_pct = round(g.gap_ratio * 100; digits=1)
-    println("  Bands $(g.bands): $(gap_pct)% gap-to-midgap at ω = $(round((g.min_upper + g.max_lower)/2, digits=2))")
+    println(
+        "  Bands $(g.bands): $(gap_pct)% gap-to-midgap at ω = $(round((g.min_upper + g.max_lower)/2, digits=2))",
+    )
 end
 
 # Plot
-p = plot(layout=(1, 2), size=(1000, 450))
+p = plot(; layout=(1, 2), size=(1000, 450))
 
 # Left: Band structure
 dists = kpath
 
 for b in 1:size(frequencies, 2)
-    plot!(p, dists, frequencies[:, b];
-        subplot=1,
-        label="",
-        linewidth=1.5,
-        color=:blue,
-    )
+    plot!(p, dists, frequencies[:, b]; subplot=1, label="", linewidth=1.5, color=:blue)
 end
 
 # Shade band gap regions
 for g in gaps
     gap_bottom = g.max_lower
     gap_top = g.min_upper
-    plot!(p,
+    plot!(
+        p,
         [dists[1], dists[end], dists[end], dists[1], dists[1]],
         [gap_bottom, gap_bottom, gap_top, gap_top, gap_bottom];
         subplot=1,
@@ -116,7 +121,8 @@ for pos in label_positions
     vline!(p, [pos]; subplot=1, color=:gray, linestyle=:dot, alpha=0.5, label="")
 end
 
-plot!(p;
+plot!(
+    p;
     subplot=1,
     xlabel="Wave vector k (π/a)",
     ylabel="Frequency ω",
@@ -126,26 +132,17 @@ plot!(p;
 )
 
 # Right: DOS
-plot!(p, dos_result, ω_values;
-    subplot=2,
-    label="",
-    linewidth=2,
-    color=:blue,
-)
+plot!(p, dos_result, ω_values; subplot=2, label="", linewidth=2, color=:blue)
 
 # Mark band gap regions in DOS plot
 for g in gaps
     gap_bottom = g.max_lower
     gap_top = g.min_upper
-    hspan!(p, [gap_bottom, gap_top];
-        subplot=2,
-        alpha=0.3,
-        color=:lightgreen,
-        label="",
-    )
+    hspan!(p, [gap_bottom, gap_top]; subplot=2, alpha=0.3, color=:lightgreen, label="")
 end
 
-plot!(p;
+plot!(
+    p;
     subplot=2,
     xlabel="DOS (arb. units)",
     ylabel="Frequency ω",

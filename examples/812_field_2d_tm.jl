@@ -11,9 +11,7 @@ println("=" ^ 50)
 
 # Create 2D photonic crystal: square lattice with dielectric rods
 lat = square_lattice(1.0)
-geo = Geometry(lat, Dielectric(1.0), [
-    (Circle([0.5, 0.5], 0.2), Dielectric(9.0))
-])
+geo = Geometry(lat, Dielectric(1.0), [(Circle([0.5, 0.5], 0.2), Dielectric(9.0))])
 
 # Create solver
 solver = Solver(TMWave(), geo, (128, 128); cutoff=7)
@@ -22,21 +20,22 @@ println("Number of plane waves: $(solver.basis.num_pw)")
 
 # Solve at Gamma point
 freqs, vecs = solve_at_k_with_vectors(solver, [0.0, 0.0], DenseMethod())
-println("\nFirst 5 frequencies: ", round.(freqs[1:5], digits=4))
+println("\nFirst 5 frequencies: ", round.(freqs[1:5]; digits=4))
 
 # Create 2x3 panel plot
-p = plot(layout=(2, 3), size=(1200, 800),
-    tickfontsize=12, guidefontsize=14, titlefontsize=14,
-    bottom_margin=5Plots.mm, top_margin=-2Plots.mm)
+p = plot(;
+    layout=(2, 3),
+    size=(1200, 800),
+    tickfontsize=12,
+    guidefontsize=14,
+    titlefontsize=14,
+    bottom_margin=5Plots.mm,
+    top_margin=-2Plots.mm,
+)
 
 # Plot epsilon
 eps = get_epsilon_field(solver)
-heatmap!(p, eps';
-    subplot=1,
-    c=:grays,
-    title="ε(x,y)",
-    aspect_ratio=:equal
-)
+heatmap!(p, eps'; subplot=1, c=:grays, title="ε(x,y)", aspect_ratio=:equal)
 
 # Plot first 5 bands
 for i in 1:5
@@ -47,12 +46,14 @@ for i in 1:5
     # Symmetric colormap
     maxval = maximum(abs.(data))
 
-    heatmap!(p, data';
+    heatmap!(
+        p,
+        data';
         subplot=i+1,
         c=:RdBu,
         clims=(-maxval, maxval),
         title="Band $i (ω = $(round(freqs[i], digits=3)))",
-        aspect_ratio=:equal
+        aspect_ratio=:equal,
     )
 end
 

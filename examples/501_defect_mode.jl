@@ -9,7 +9,15 @@ using PhoXonic
 using LinearAlgebra
 using StaticArrays
 using Plots
-default(guidefontsize=14, tickfontsize=12, titlefontsize=14, left_margin=10Plots.mm, right_margin=10Plots.mm, top_margin=5Plots.mm, bottom_margin=10Plots.mm)
+default(;
+    guidefontsize=14,
+    tickfontsize=12,
+    titlefontsize=14,
+    left_margin=10Plots.mm,
+    right_margin=10Plots.mm,
+    top_margin=5Plots.mm,
+    bottom_margin=10Plots.mm,
+)
 
 println("=== Defect Mode in 2D Photonic Crystal ===")
 println("Supercell approach with LDOS calculation")
