@@ -34,7 +34,9 @@ See the [full documentation](https://hsugawa8651.github.io/PhoXonic.jl/dev/) for
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or pull request on [GitHub](https://github.com/hsugawa8651/PhoXonic.jl).
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for the
+test pipeline, code style, and release workflow. Please open an issue or
+pull request on [GitHub](https://github.com/hsugawa8651/PhoXonic.jl).
 
 ## Citation
 
