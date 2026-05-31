@@ -13,8 +13,8 @@ repository-code: "https://github.com/hsugawa8651/PhoXonic.jl"
 url: "https://github.com/hsugawa8651/PhoXonic.jl"
 doi: "10.5281/zenodo.18055170"
 license: MIT
-version: 0.2.5
-date-released: 2026-05-03
+version: 0.3.0
+date-released: 2026-05-31
 keywords:
   - photonic crystals
   - phononic crystals
