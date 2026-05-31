@@ -1,6 +1,7 @@
 # Build artifacts
 docs/build/
 Manifest.toml
+.CondaPkg/
 
 # Examples output
 examples/*.png

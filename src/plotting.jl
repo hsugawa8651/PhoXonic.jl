@@ -64,27 +64,41 @@ function plot_bands! end
 # These stubs only exist to provide docstrings and allow pre-declaration
 
 """
-    savefig_publication(bs::BandStructure, path; kwargs...)
-    savefig_publication(bss::AbstractVector{<:BandStructure}, path; kwargs...)
+    savefig_publication(bs::BandStructure, path; kwargs...) -> path
+    savefig_publication(bss::AbstractVector{<:BandStructure}, path; kwargs...) -> path
 
-Save a publication-quality band structure figure via the PythonPlot extension.
-Requires `using PythonPlot` to activate `PhoXonicPythonPlotExt`.
+Render a band structure (or a vector of them) to `path` and return `path`; the
+output format follows the file extension (`.pdf`, `.png`, `.svg`, …). This is the
+convenience entry point (the only exported layer): the single-`BandStructure`
+method delegates to [`figure_publication`](@ref) and closes the figure for you,
+while a vector is drawn panel-by-panel (or overlaid). Requires `using PythonPlot`
+to activate `PhoXonicPythonPlotExt`.
 
-The output format is inferred from the file extension (`.pdf`, `.png`, `.svg`, ...).
+# Arguments
 
-# Keyword arguments
+- `bs::BandStructure` / `bss::AbstractVector{<:BandStructure}`: the band structure(s) to plot
+- `path::AbstractString`: output file; the extension selects the format
 
-- `axis_width_cm = 8.0`, `axis_height_cm = 6.0` — Axis size in centimeters.
-- `ylims = nothing` — Y-axis range (auto if `nothing`).
-- `title = ""` — Plot title (suppressed if empty).
-- `show_gaps = false` — Shade band gaps with `axhspan`.
-- `normalize = 1.0` — Frequency normalization factor (forwarded to `band_plot_data`).
-- `layout = (1, length(bss))` — Subplot grid for the vector overload.
-- `overlay = false` — Plot all `bss` on a single axis (vector overload).
+# Keywords
+
+- `axis_width_mm=80.0`: plotting area width in mm
+- `axis_height_mm=60.0`: plotting area height in mm
+- `ylims=nothing`: pass a tuple to override the y axis limits
+- `title=""`: plot title (suppressed if empty)
+- `show_gaps=false`: shade band gaps with `axhspan`
+- `normalize=1.0`: frequency normalization factor (forwarded to `band_plot_data`)
+- `layout=(1, length(bss))`: subplot grid `(nrows, ncols)` (vector overload)
+- `overlay=false`: draw all band structures on a single axis (vector overload)
 
 See also: [`plot_bands`](@ref) for interactive plotting with Plots.jl.
 """
 function savefig_publication end
+
+# `plot_on_axis!` (L1) and `figure_publication` (L2) carry their per-method
+# docstrings in ext/PhoXonicPythonPlotExt.jl. The extension module is added to
+# Documenter's `modules` so `@docs` renders those docstrings.
+function plot_on_axis! end
+function figure_publication end
 
 """
     band_plot_data(bs::BandStructure; normalize=1.0)
