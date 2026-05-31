@@ -5,9 +5,10 @@ module PhoXonicPythonPlotExt
 
 using PhoXonic
 import PhoXonic: BandStructure, band_plot_data, savefig_publication
+import PhoXonic: plot_on_axis!, figure_publication
 using PythonPlot: PythonPlot
 
-const CM_PER_INCH = 2.54
+const MM_PER_INCH = 25.4
 
 """
 Plot a single BandStructure on the given matplotlib Axes.
@@ -55,42 +56,74 @@ function _plot_bs_on_ax!(
     ax.set_xlim(data.distances[1], data.distances[end])
 end
 
+# ── L1: plot_on_axis! ──
+
+"""
+    plot_on_axis!(ax, bs::BandStructure; kwargs...) -> ax
+
+Draw a [`BandStructure`](@ref) onto `ax` and return `ax`. Bands are drawn as
+lines with vertical guides and tick labels at the high-symmetry points.
+Requires `using PythonPlot`; not exported (call as `PhoXonic.plot_on_axis!`).
+
+# Arguments
+
+- `ax`: a matplotlib axis (PythonCall `Py`) to draw onto
+- `bs::BandStructure`: the band structure to plot
+
+# Keywords
+
+- `color="black"`: line color
+- `linewidth=1.5`: line width
+- `linestyle="-"`: line style
+- `show_gaps::Bool=false`: shade band gaps between consecutive bands with `axhspan`
+- `normalize::Real=1.0`: frequency normalization factor (forwarded to `band_plot_data`)
+- `xlabel::AbstractString=""`: x axis label; empty leaves the axis labelled only by
+    the high-symmetry-point xticks
+- `ylabel::AbstractString="Frequency"`: y axis label
+- `title::AbstractString=""`: title; empty leaves the axes untitled
+"""
+function plot_on_axis!(ax, bs::BandStructure; xlabel::AbstractString="", kwargs...)
+    _plot_bs_on_ax!(ax, bs; kwargs...)
+    isempty(xlabel) || ax.set_xlabel(xlabel)
+    return ax
+end
+
 """
 Compute figure size (inches) and axes positions from axis dimensions and layout.
 """
 function _layout_axes(
-    axis_width_cm,
-    axis_height_cm,
+    axis_width_mm,
+    axis_height_mm,
     n;
-    margin_left_cm=1.5,
-    margin_right_cm=0.3,
-    margin_bottom_cm=1.0,
-    margin_top_cm=0.8,
-    hgap_cm=1.8,
-    vgap_cm=1.5,
+    margin_left_mm=15.0,
+    margin_right_mm=3.0,
+    margin_bottom_mm=10.0,
+    margin_top_mm=8.0,
+    hgap_mm=18.0,
+    vgap_mm=15.0,
     nrows=1,
     ncols=1,
 )
-    widths = axis_width_cm isa AbstractVector ? axis_width_cm : fill(axis_width_cm, ncols)
+    widths = axis_width_mm isa AbstractVector ? axis_width_mm : fill(axis_width_mm, ncols)
     heights =
-        axis_height_cm isa AbstractVector ? axis_height_cm : fill(axis_height_cm, nrows)
+        axis_height_mm isa AbstractVector ? axis_height_mm : fill(axis_height_mm, nrows)
 
-    fig_w_cm = margin_left_cm + sum(widths) + hgap_cm * (ncols - 1) + margin_right_cm
-    fig_h_cm = margin_bottom_cm + sum(heights) + vgap_cm * (nrows - 1) + margin_top_cm
+    fig_w_mm = margin_left_mm + sum(widths) + hgap_mm * (ncols - 1) + margin_right_mm
+    fig_h_mm = margin_bottom_mm + sum(heights) + vgap_mm * (nrows - 1) + margin_top_mm
 
-    fig_w = fig_w_cm / CM_PER_INCH
-    fig_h = fig_h_cm / CM_PER_INCH
+    fig_w = fig_w_mm / MM_PER_INCH
+    fig_h = fig_h_mm / MM_PER_INCH
 
     positions = Vector{NTuple{4,Float64}}()
     for row in 1:nrows
         for col in 1:ncols
             left =
-                (margin_left_cm + sum(widths[1:(col - 1)]) + hgap_cm * (col - 1)) / fig_w_cm
+                (margin_left_mm + sum(widths[1:(col - 1)]) + hgap_mm * (col - 1)) / fig_w_mm
             bottom =
-                (margin_bottom_cm + sum(heights[(row + 1):end]) + vgap_cm * (nrows - row)) /
-                fig_h_cm
-            w = widths[col] / fig_w_cm
-            h = heights[row] / fig_h_cm
+                (margin_bottom_mm + sum(heights[(row + 1):end]) + vgap_mm * (nrows - row)) /
+                fig_h_mm
+            w = widths[col] / fig_w_mm
+            h = heights[row] / fig_h_mm
             push!(positions, (left, bottom, w, h))
         end
     end
@@ -98,28 +131,56 @@ function _layout_axes(
     return fig_w, fig_h, positions
 end
 
-# ── Single BandStructure ──
+# ── L2: figure_publication (single BandStructure only) ──
 
-function PhoXonic.savefig_publication(
-    bs::BandStructure,
-    path::AbstractString;
-    axis_width_cm=8.0,
-    axis_height_cm=6.0,
-    ylims=nothing,
-    kwargs...,
+"""
+    figure_publication(bs; axis_width_mm=80.0, axis_height_mm=60.0, ylims=nothing, kwargs...) -> (fig, ax)
+
+Create a publication matplotlib figure and a single axis for `bs`, draw it via
+[`plot_on_axis!`](@ref), and return `(fig, ax)` so you can tweak it before
+saving. The caller owns the figure and must call `PythonPlot.close(fig)`. Single
+`BandStructure` only; for a `Vector` use [`savefig_publication`](@ref) or compose
+with [`plot_on_axis!`](@ref) and your own `subplots()`. Requires `using
+PythonPlot`; not exported (call as `PhoXonic.figure_publication`).
+
+# Arguments
+
+- `bs::BandStructure`: the band structure to plot
+
+# Keywords
+
+- `axis_width_mm=80.0`: plotting area width in mm
+- `axis_height_mm=60.0`: plotting area height in mm
+- `ylims=nothing`: pass a tuple to override the y axis limits
+- `kwargs...`: forwarded to [`plot_on_axis!`](@ref)
+"""
+function figure_publication(
+    bs::BandStructure; axis_width_mm=80.0, axis_height_mm=60.0, ylims=nothing, kwargs...
 )
-    fig_w, fig_h, positions = _layout_axes(axis_width_cm, axis_height_cm, 1)
-
+    fig_w, fig_h, positions = _layout_axes(axis_width_mm, axis_height_mm, 1)
     fig = PythonPlot.figure(; figsize=(fig_w, fig_h))
-    ax = fig.add_axes(collect(positions[1]))
-
-    _plot_bs_on_ax!(ax, bs; kwargs...)
-    if ylims !== nothing
-        ax.set_ylim(ylims...)
+    try
+        ax = fig.add_axes(collect(positions[1]))
+        plot_on_axis!(ax, bs; kwargs...)
+        if ylims !== nothing
+            ax.set_ylim(ylims...)
+        end
+        return fig, ax
+    catch
+        PythonPlot.close(fig)
+        rethrow()
     end
+end
 
-    fig.savefig(path)
-    PythonPlot.close(fig)
+# ── L3: savefig_publication (single BandStructure → L2 delegation) ──
+
+function PhoXonic.savefig_publication(bs::BandStructure, path::AbstractString; kwargs...)
+    fig, _ = figure_publication(bs; kwargs...)
+    try
+        fig.savefig(path)
+    finally
+        PythonPlot.close(fig)
+    end
     return path
 end
 
@@ -132,13 +193,13 @@ const _OVERLAY_STYLES = [
     (color="purple", linewidth=1.2, linestyle="--"),
 ]
 
-# ── Vector{BandStructure} ──
+# ── L3: savefig_publication (Vector{BandStructure} → L1 direct loop, no L2) ──
 
 function PhoXonic.savefig_publication(
     bss::AbstractVector{<:BandStructure},
     path::AbstractString;
-    axis_width_cm=8.0,
-    axis_height_cm=6.0,
+    axis_width_mm=80.0,
+    axis_height_mm=60.0,
     layout=(1, length(bss)),
     overlay::Bool=false,
     ylims=nothing,
@@ -146,49 +207,43 @@ function PhoXonic.savefig_publication(
     kwargs...,
 )
     if overlay
-        fig_w, fig_h, positions = _layout_axes(axis_width_cm, axis_height_cm, 1)
-        fig = PythonPlot.figure(; figsize=(fig_w, fig_h))
-        ax = fig.add_axes(collect(positions[1]))
-
-        for (i, bs) in enumerate(bss)
-            style = _OVERLAY_STYLES[mod1(i, length(_OVERLAY_STYLES))]
-            _plot_bs_on_ax!(
-                ax,
-                bs;
-                color=style.color,
-                linewidth=style.linewidth,
-                linestyle=style.linestyle,
-            )
-        end
-
-        if ylims !== nothing
-            ax.set_ylim(ylims...)
-        end
-        if !isempty(title)
-            ax.set_title(title)
-        end
+        fig_w, fig_h, positions = _layout_axes(axis_width_mm, axis_height_mm, 1)
     else
         nrows, ncols = layout
-        n = length(bss)
-
         fig_w, fig_h, positions = _layout_axes(
-            axis_width_cm, axis_height_cm, n; nrows, ncols
+            axis_width_mm, axis_height_mm, length(bss); nrows, ncols
         )
+    end
 
-        fig = PythonPlot.figure(; figsize=(fig_w, fig_h))
-
-        for (i, bs) in enumerate(bss)
-            i > length(positions) && break
-            ax = fig.add_axes(collect(positions[i]))
-            _plot_bs_on_ax!(ax, bs; kwargs...)
+    fig = PythonPlot.figure(; figsize=(fig_w, fig_h))
+    try
+        if overlay
+            ax = fig.add_axes(collect(positions[1]))
+            for (i, bs) in enumerate(bss)
+                style = _OVERLAY_STYLES[mod1(i, length(_OVERLAY_STYLES))]
+                plot_on_axis!(ax, bs; style..., kwargs...)
+            end
             if ylims !== nothing
                 ax.set_ylim(ylims...)
             end
+            if !isempty(title)
+                ax.set_title(title)
+            end
+        else
+            for (i, bs) in enumerate(bss)
+                i > length(positions) && break
+                ax = fig.add_axes(collect(positions[i]))
+                plot_on_axis!(ax, bs; kwargs...)
+                if ylims !== nothing
+                    ax.set_ylim(ylims...)
+                end
+            end
         end
-    end
 
-    fig.savefig(path)
-    PythonPlot.close(fig)
+        fig.savefig(path)
+    finally
+        PythonPlot.close(fig)
+    end
     return path
 end
 

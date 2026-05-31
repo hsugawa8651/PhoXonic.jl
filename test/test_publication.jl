@@ -56,10 +56,10 @@ using StaticArrays
         end
     end
 
-    @testset "axis_width_cm / axis_height_cm カスタム" begin
+    @testset "axis_width_mm / axis_height_mm カスタム" begin
         mktempdir() do tmp
             path = joinpath(tmp, "custom_size.pdf")
-            savefig_publication(bs2, path; axis_width_cm=10.0, axis_height_cm=5.0)
+            savefig_publication(bs2, path; axis_width_mm=100.0, axis_height_mm=50.0)
             @test isfile(path)
         end
     end
@@ -126,5 +126,72 @@ using StaticArrays
             savefig_publication(bs2, path; ylabel="Frequency [THz]")
             @test isfile(path)
         end
+    end
+
+    @testset "L1 plot_on_axis!" begin
+        # returns ax, no exception, composes into a user subplot grid
+        mktempdir() do tmp
+            fig = PythonPlot.figure(; figsize=(8, 4))
+            ax1 = fig.add_subplot(1, 2, 1)
+            ax2 = fig.add_subplot(1, 2, 2)
+            @test PhoXonic.plot_on_axis!(ax1, bs2; title="TE") === ax1
+            PhoXonic.plot_on_axis!(ax2, bs2)
+            path = joinpath(tmp, "panel.pdf")
+            fig.savefig(path)
+            @test isfile(path)
+            PythonPlot.close(fig)
+        end
+        # title: non-empty applies, empty leaves no title
+        let fig = PythonPlot.figure()
+            ax = fig.add_subplot()
+            PhoXonic.plot_on_axis!(ax, bs2; title="MyBands")
+            @test occursin("MyBands", string(ax.get_title()))
+            PythonPlot.close(fig)
+        end
+        let fig = PythonPlot.figure()
+            ax = fig.add_subplot()
+            PhoXonic.plot_on_axis!(ax, bs2)
+            @test isempty(string(ax.get_title()))
+            PythonPlot.close(fig)
+        end
+        # xlabel absorbed by the wrapper (PhoXonic-specific noop resolved)
+        let fig = PythonPlot.figure()
+            ax = fig.add_subplot()
+            PhoXonic.plot_on_axis!(ax, bs2; xlabel="Wave vector")
+            @test occursin("Wave vector", string(ax.get_xlabel()))
+            PythonPlot.close(fig)
+        end
+        # PhoXonic-specific kwargs flow through L1 to the helper
+        let fig = PythonPlot.figure()
+            ax = fig.add_subplot()
+            @test PhoXonic.plot_on_axis!(ax, bs2; show_gaps=true, normalize=2.0) === ax
+            PythonPlot.close(fig)
+        end
+    end
+
+    @testset "L2 figure_publication" begin
+        res = PhoXonic.figure_publication(bs2)
+        @test res isa Tuple && length(res) == 2
+        fig, ax = res
+        @test fig isa PythonPlot.Figure
+        PythonPlot.close(fig)
+        # finalization kwarg (ylims) routed through L2
+        fig2, _ = PhoXonic.figure_publication(bs2; ylims=(0.0, 1.0))
+        PythonPlot.close(fig2)
+    end
+
+    @testset "L3 Vector overlay forwards kwargs" begin
+        mktempdir() do tmp
+            path = joinpath(tmp, "overlay_kw.pdf")
+            # overlay branch now forwards plot kwargs to L1 (previously dropped)
+            savefig_publication([bs2, bs2], path; overlay=true, show_gaps=true)
+            @test isfile(path)
+        end
+    end
+
+    @testset "L1/L2 fallback on bad-type args" begin
+        # ext loaded, but an unsupported type falls through to the untyped fallback
+        @test_throws ArgumentError PhoXonic.plot_on_axis!(nothing, nothing)
+        @test_throws ArgumentError PhoXonic.figure_publication(nothing)
     end
 end

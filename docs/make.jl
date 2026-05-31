@@ -1,9 +1,15 @@
 using Documenter
 using PhoXonic
+using PythonPlot                  # loads PhoXonicPythonPlotExt so its docstrings render
+PythonPlot.matplotlib.use("Agg")  # headless backend for CI
+
+# The PythonPlot extension carries the per-method docstrings for plot_on_axis! /
+# figure_publication; include it so @docs can render them.
+const PXPythonPlotExt = Base.get_extension(PhoXonic, :PhoXonicPythonPlotExt)
 
 makedocs(;
     sitename="PhoXonic.jl",
-    modules=[PhoXonic],
+    modules=[PhoXonic, PXPythonPlotExt],
     format=Documenter.HTML(; prettyurls=get(ENV, "CI", nothing) == "true"),
     pages=[
         "Home" => "index.md",
