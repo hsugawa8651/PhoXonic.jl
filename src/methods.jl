@@ -193,7 +193,7 @@ function KrylovKitMethod(;
     shift::Real=0.0,
     matrix_free::Bool=false,
 )
-    KrylovKitMethod(
+    return KrylovKitMethod(
         Float64(tol), maxiter, krylovdim, verbosity, Float64(shift), matrix_free
     )
 end
@@ -297,7 +297,7 @@ function LOBPCGMethod(;
     first_dense::Bool=true,
     preconditioner=:none,
 )
-    LOBPCGMethod(
+    return LOBPCGMethod(
         Float64(tol),
         maxiter,
         Float64(shift),

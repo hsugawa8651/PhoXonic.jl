@@ -120,12 +120,12 @@ end
 # Helper function to get refractive index from material
 function _get_n(mat::Dielectric)
     # n = √ε for non-magnetic materials
-    sqrt(mat.ε)
+    return sqrt(mat.ε)
 end
 
 function _get_n(mat::LossyDielectric)
     # n = √(εμ) for complex materials
-    sqrt(mat.ε * mat.μ)
+    return sqrt(mat.ε * mat.μ)
 end
 
 # ============================================================================

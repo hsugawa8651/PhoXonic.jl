@@ -300,7 +300,7 @@ Enables dispatch based on dimensionality and number of components.
 """
 # Error fallback for unsupported wave types
 function wave_structure(w::WaveType)
-    throw(ArgumentError("Unsupported wave type for wave_structure: $(typeof(w))"))
+    return throw(ArgumentError("Unsupported wave type for wave_structure: $(typeof(w))"))
 end
 
 wave_structure(::TEWave) = ScalarWave2D()
@@ -324,7 +324,7 @@ Return the number of field components for a wave type.
 """
 # Error fallback for unsupported wave types
 function ncomponents(w::WaveType)
-    throw(ArgumentError("Unsupported wave type for ncomponents: $(typeof(w))"))
+    return throw(ArgumentError("Unsupported wave type for ncomponents: $(typeof(w))"))
 end
 
 ncomponents(::TEWave) = 1
@@ -344,7 +344,7 @@ Return the applicable dimension type for a wave type.
 """
 # Error fallback for unsupported wave types
 function applicable_dimension(::Type{W}) where {W<:WaveType}
-    throw(ArgumentError("Unsupported wave type for applicable_dimension: $W"))
+    return throw(ArgumentError("Unsupported wave type for applicable_dimension: $W"))
 end
 
 applicable_dimension(::Type{TEWave}) = Dim2

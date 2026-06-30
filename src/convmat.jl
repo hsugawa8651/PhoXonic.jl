@@ -133,5 +133,5 @@ Compute the convolution matrix of 1/f.
 Useful for TM modes where we need ε⁻¹.
 """
 function inverse_convolution_matrix(f::AbstractArray, basis::PlaneWaveBasis)
-    convolution_matrix(1.0 ./ f, basis)
+    return convolution_matrix(1.0 ./ f, basis)
 end

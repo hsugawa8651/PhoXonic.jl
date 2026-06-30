@@ -72,7 +72,7 @@ function Multilayer(layers::Vector{<:Layer}, incident::Material, substrate::Mate
     # Convert layers
     converted_layers = [Layer(convert(M, material(l)), thickness(l)) for l in layers]
 
-    Multilayer{M}(converted_layers, convert(M, incident), convert(M, substrate))
+    return Multilayer{M}(converted_layers, convert(M, incident), convert(M, substrate))
 end
 
 """
@@ -150,7 +150,7 @@ function periodic_multilayer(
         substrate = incident
     end
 
-    Multilayer(repeated_layers, incident, substrate)
+    return Multilayer(repeated_layers, incident, substrate)
 end
 
 """
@@ -188,5 +188,5 @@ function bragg_mirror(
     # Unit cell: high-index then low-index
     unit_cell = [Layer(mat_hi, d_hi), Layer(mat_lo, d_lo)]
 
-    periodic_multilayer(unit_cell, N; incident=incident, substrate=substrate)
+    return periodic_multilayer(unit_cell, N; incident=incident, substrate=substrate)
 end

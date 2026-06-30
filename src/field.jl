@@ -121,7 +121,7 @@ function _reconstruct_vector_field(
         coeffs = ComplexF64.(eigenvector[start_idx:end_idx])
         grid = zeros(ComplexF64, Nx, Ny)
         fourier_to_grid!(grid, coeffs, solver.basis, resolution)
-        grid
+        return grid
     end
 
     return fields
@@ -146,7 +146,7 @@ function _reconstruct_vector_field(
         coeffs = ComplexF64.(eigenvector[start_idx:end_idx])
         grid = zeros(ComplexF64, Nx, Ny, Nz)
         fourier_to_grid!(grid, coeffs, solver.basis, resolution)
-        grid
+        return grid
     end
 
     return fields

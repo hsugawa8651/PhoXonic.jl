@@ -571,7 +571,7 @@ function _get_component_index(::Type{<:WaveType}, component::Symbol)
     component in (:x, :first, :1) && return 1
     component in (:y, :second, :2) && return 2
     component in (:z, :third, :3) && return 3
-    error("Unknown component: $component")
+    return error("Unknown component: $component")
 end
 
 end # module

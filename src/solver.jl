@@ -76,7 +76,7 @@ function Solver(
 ) where {D<:Dimension,W<:WaveType,N,M<:SolverMethod}
     basis = PlaneWaveBasis(geometry.lattice, cutoff)
     material_arrays = prepare_materials(wave, geometry, resolution, discretization)
-    Solver{D,W,M}(wave, geometry, basis, resolution, material_arrays, method)
+    return Solver{D,W,M}(wave, geometry, basis, resolution, material_arrays, method)
 end
 
 # Convenience constructor for 1D: accept single Int instead of tuple
@@ -88,7 +88,7 @@ function Solver(
     cutoff::Int=7,
     discretization::DiscretizationMethod=SimpleGrid(),
 ) where {W<:WaveType,M<:SolverMethod}
-    Solver(
+    return Solver(
         wave, geometry, (resolution,), method; cutoff=cutoff, discretization=discretization
     )
 end
@@ -124,7 +124,7 @@ X0 = Matrix(X0)
 
 """
 function matrix_dimension(solver::Solver)
-    ncomponents(solver.wave) * solver.basis.num_pw
+    return ncomponents(solver.wave) * solver.basis.num_pw
 end
 
 # ============================================================================
@@ -146,24 +146,24 @@ Select requested bands from computed results.
 =#
 _select_bands(frequencies, eigenvectors, ::Colon) = (frequencies, eigenvectors)
 function _select_bands(frequencies, eigenvectors, bands)
-    (frequencies[bands], eigenvectors[:, bands])
+    return (frequencies[bands], eigenvectors[:, bands])
 end
 
 # Variant that returns first n bands (for KrylovKit where we get all eigenvalues sorted)
 _select_first_bands(frequencies, eigenvectors, ::Colon) = (frequencies, eigenvectors)
 function _select_first_bands(frequencies, eigenvectors, bands)
     nbands = min(length(frequencies), maximum(bands))
-    (frequencies[1:nbands], eigenvectors[:, 1:nbands])
+    return (frequencies[1:nbands], eigenvectors[:, 1:nbands])
 end
 
 # Variant that filters available bands with warning support (for LOBPCG)
 function _select_available_bands(frequencies, eigenvectors, ::Colon, _)
-    (frequencies, eigenvectors, false)
+    return (frequencies, eigenvectors, false)
 end
 function _select_available_bands(frequencies, eigenvectors, bands, nev_available)
     actual_bands = filter(b -> b <= nev_available, bands)
     warn_missing = length(actual_bands) < length(bands)
-    (frequencies[actual_bands], eigenvectors[:, actual_bands], warn_missing)
+    return (frequencies[actual_bands], eigenvectors[:, actual_bands], warn_missing)
 end
 
 # ============================================================================
@@ -188,7 +188,7 @@ function prepare_materials(
     resolution,
     method::DiscretizationMethod=SimpleGrid(),
 )
-    throw(
+    return throw(
         ArgumentError(
             "Unsupported wave type / dimension combination: $(typeof(wave)) with $(typeof(geometry).parameters[1])",
         ),
@@ -205,7 +205,7 @@ function prepare_materials(
     μ = discretize(geometry, resolution, :μ, method)
     # For TE: use properly averaged ε⁻¹ (important for SubpixelAverage)
     ε_inv = discretize(geometry, resolution, :ε_inv, method)
-    (ε=ε, μ=μ, ε_inv=ε_inv)
+    return (ε=ε, μ=μ, ε_inv=ε_inv)
 end
 
 function prepare_materials(
@@ -218,7 +218,7 @@ function prepare_materials(
     μ = discretize(geometry, resolution, :μ, method)
     # For TM: use properly averaged μ⁻¹
     μ_inv = discretize(geometry, resolution, :μ_inv, method)
-    (ε=ε, μ=μ, μ_inv=μ_inv)
+    return (ε=ε, μ=μ, μ_inv=μ_inv)
 end
 
 function prepare_materials(
@@ -229,7 +229,7 @@ function prepare_materials(
 )
     ρ = discretize(geometry, resolution, :ρ, method)
     C44 = discretize(geometry, resolution, :C44, method)
-    (ρ=ρ, C44=C44)
+    return (ρ=ρ, C44=C44)
 end
 
 function prepare_materials(
@@ -242,7 +242,7 @@ function prepare_materials(
     C11 = discretize(geometry, resolution, :C11, method)
     C12 = discretize(geometry, resolution, :C12, method)
     C44 = discretize(geometry, resolution, :C44, method)
-    (ρ=ρ, C11=C11, C12=C12, C44=C44)
+    return (ρ=ρ, C11=C11, C12=C12, C44=C44)
 end
 
 # 1D Photonic
@@ -255,7 +255,7 @@ function prepare_materials(
     ε = discretize(geometry, resolution, :ε, method)
     μ = discretize(geometry, resolution, :μ, method)
     ε_inv = discretize(geometry, resolution, :ε_inv, method)
-    (ε=ε, μ=μ, ε_inv=ε_inv)
+    return (ε=ε, μ=μ, ε_inv=ε_inv)
 end
 
 # 1D Longitudinal elastic
@@ -267,7 +267,7 @@ function prepare_materials(
 )
     ρ = discretize(geometry, resolution, :ρ, method)
     C11 = discretize(geometry, resolution, :C11, method)
-    (ρ=ρ, C11=C11)
+    return (ρ=ρ, C11=C11)
 end
 
 # 3D Full Vector EM (H-field formulation)
@@ -280,7 +280,7 @@ function prepare_materials(
 )
     ε_inv = discretize(geometry, resolution, :ε_inv, method)
     μ = discretize(geometry, resolution, :μ, method)
-    (ε_inv=ε_inv, μ=μ)
+    return (ε_inv=ε_inv, μ=μ)
 end
 
 # 3D Transverse EM (H-field formulation with transverse projection)
@@ -293,7 +293,7 @@ function prepare_materials(
 )
     ε_inv = discretize(geometry, resolution, :ε_inv, method)
     μ = discretize(geometry, resolution, :μ, method)
-    (ε_inv=ε_inv, μ=μ)
+    return (ε_inv=ε_inv, μ=μ)
 end
 
 # 3D Full Elastic
@@ -308,7 +308,7 @@ function prepare_materials(
     C11 = discretize(geometry, resolution, :C11, method)
     C12 = discretize(geometry, resolution, :C12, method)
     C44 = discretize(geometry, resolution, :C44, method)
-    (ρ=ρ, C11=C11, C12=C12, C44=C44)
+    return (ρ=ρ, C11=C11, C12=C12, C44=C44)
 end
 
 # ============================================================================
@@ -559,10 +559,10 @@ end
 
 # 1D convenience methods accepting Vector{Float64} (for compatibility with solve interface)
 function build_matrices(solver::Solver{Dim1,Photonic1D}, k::Vector{Float64})
-    build_matrices(solver, k[1])
+    return build_matrices(solver, k[1])
 end
 function build_matrices(solver::Solver{Dim1,Longitudinal1D}, k::Vector{Float64})
-    build_matrices(solver, k[1])
+    return build_matrices(solver, k[1])
 end
 
 # ============================================================================
@@ -575,7 +575,7 @@ end
 Create 3x3 skew-symmetric matrix for cross product: [k]× such that [k]× v = k × v
 """
 function skew_matrix(k::AbstractVector)
-    [
+    return [
         0.0 -k[3] k[2];
         k[3] 0.0 -k[1];
         -k[2] k[1] 0.0
@@ -770,7 +770,7 @@ function block_diagonal_weight(M::AbstractMatrix, n::Int)
     Z = zeros(eltype(M), N, N)
     n == 2 && return [M Z; Z M]
     n == 3 && return [M Z Z; Z M Z; Z Z M]
-    error("Unsupported block size: $n")
+    return error("Unsupported block size: $n")
 end
 
 function get_weight_matrix(solver::Solver{Dim2,TEWave})
@@ -832,7 +832,7 @@ LHS, RHS = build_matrices(solver, k)
 - [`solve_at_k_with_vectors`](@ref): Returns eigenvectors in the 2N transverse basis
 """
 function get_weight_matrix(solver::Solver{Dim3,TransverseEM})
-    error(
+    return error(
         "get_weight_matrix for TransverseEM is k-dependent. " *
         "Use the RHS matrix from build_matrices(solver, k) instead.",
     )
@@ -863,26 +863,26 @@ Solve the eigenvalue problem at wave vector k.
 - `modes`: Corresponding eigenvectors
 """
 function solve(solver::Solver, k; bands=1:10)
-    solve_impl(solver, k, solver.method; bands=bands)
+    return solve_impl(solver, k, solver.method; bands=bands)
 end
 
 # Convenience method with SVector
 function solve(solver::Solver{Dim2}, k::SVector{2}; bands=1:10)
-    solve(solver, Vector(k); bands=bands)
+    return solve(solver, Vector(k); bands=bands)
 end
 
 # Convenience method with tuple
 function solve(solver::Solver{Dim2}, k::Tuple{Real,Real}; bands=1:10)
-    solve(solver, [Float64(k[1]), Float64(k[2])]; bands=bands)
+    return solve(solver, [Float64(k[1]), Float64(k[2])]; bands=bands)
 end
 
 # Convenience methods for 3D
 function solve(solver::Solver{Dim3}, k::SVector{3}; bands=1:10)
-    solve(solver, Vector(k); bands=bands)
+    return solve(solver, Vector(k); bands=bands)
 end
 
 function solve(solver::Solver{Dim3}, k::Tuple{Real,Real,Real}; bands=1:10)
-    solve(solver, [Float64(k[1]), Float64(k[2]), Float64(k[3])]; bands=bands)
+    return solve(solver, [Float64(k[1]), Float64(k[2]), Float64(k[3])]; bands=bands)
 end
 
 # ============================================================================
@@ -985,27 +985,27 @@ function _solve_at_k_impl(
 )
     # Dense method ignores X0 and P
     LHS, RHS = build_matrices(solver, k)
-    _solve_dense(LHS, RHS, bands, method.shift)
+    return _solve_dense(LHS, RHS, bands, method.shift)
 end
 
 function _solve_at_k_impl(
     solver::Solver, k, method::KrylovKitMethod; bands=1:10, X0=nothing, P=nothing
 )
     # KrylovKit currently ignores X0 and P
-    _solve_krylovkit(solver, k, method, bands)
+    return _solve_krylovkit(solver, k, method, bands)
 end
 
 function _solve_at_k_impl(
     solver::Solver, k, method::LOBPCGMethod; bands=1:10, X0=nothing, P=nothing
 )
-    _solve_lobpcg_at_k(solver, k, method; bands=bands, X0=X0, P=P)
+    return _solve_lobpcg_at_k(solver, k, method; bands=bands, X0=X0, P=P)
 end
 
 # Fallback
 function _solve_at_k_impl(
     solver::Solver, k, method::SolverMethod; bands=1:10, X0=nothing, P=nothing
 )
-    error("solve_at_k not implemented for method: $(typeof(method))")
+    return error("solve_at_k not implemented for method: $(typeof(method))")
 end
 
 # ============================================================================
@@ -1016,7 +1016,7 @@ function solve_impl(
     solver::Solver{Dim2}, k::Vector{<:Real}, method::DenseMethod; bands=1:10
 )
     LHS, RHS = build_matrices(solver, k)
-    _solve_dense(LHS, RHS, bands, method.shift)
+    return _solve_dense(LHS, RHS, bands, method.shift)
 end
 
 # ============================================================================
@@ -1027,7 +1027,7 @@ function solve_impl(
     solver::Solver{Dim3}, k::Vector{<:Real}, method::DenseMethod; bands=1:10
 )
     LHS, RHS = build_matrices(solver, k)
-    _solve_dense(LHS, RHS, bands, method.shift)
+    return _solve_dense(LHS, RHS, bands, method.shift)
 end
 
 # ============================================================================
@@ -1036,7 +1036,7 @@ end
 
 function solve_impl(solver::Solver{Dim1}, k::Real, method::DenseMethod; bands=1:10)
     LHS, RHS = build_matrices(solver, k)
-    _solve_dense(LHS, RHS, bands, method.shift)
+    return _solve_dense(LHS, RHS, bands, method.shift)
 end
 
 # ============================================================================
@@ -1099,7 +1099,7 @@ end
 function solve_impl(
     solver::Solver{Dim2,W}, k::Vector{<:Real}, method::KrylovKitMethod; bands=1:10
 ) where {W<:WaveType}
-    _solve_krylovkit(solver, k, method, bands)
+    return _solve_krylovkit(solver, k, method, bands)
 end
 
 # ============================================================================
@@ -1109,7 +1109,7 @@ end
 function solve_impl(
     solver::Solver{Dim1,W}, k::Real, method::KrylovKitMethod; bands=1:10
 ) where {W<:WaveType}
-    _solve_krylovkit(solver, [Float64(k)], method, bands)
+    return _solve_krylovkit(solver, [Float64(k)], method, bands)
 end
 
 # ============================================================================
@@ -1119,7 +1119,7 @@ end
 function solve_impl(
     solver::Solver{Dim3,W}, k::Vector{<:Real}, method::KrylovKitMethod; bands=1:10
 ) where {W<:WaveType}
-    _solve_krylovkit(solver, Vector{Float64}(k), method, bands)
+    return _solve_krylovkit(solver, Vector{Float64}(k), method, bands)
 end
 
 # ============================================================================
@@ -1250,7 +1250,7 @@ For photonic: ω² ~ (c/a)² ~ 1 (already normalized)
 For phononic: ω² ~ (c_s * k)² where c_s is shear wave speed
 =#
 function _estimate_eigenvalue_scale(solver::Solver{D,W}, k::Vector{Float64}) where {D,W}
-    _estimate_eigenvalue_scale(solver.wave, solver, k)
+    return _estimate_eigenvalue_scale(solver.wave, solver, k)
 end
 
 # Photonic: eigenvalues are already O(1) due to normalization
@@ -1258,7 +1258,7 @@ _estimate_eigenvalue_scale(::PhotonicWave, solver, k) = 1.0
 
 # Phononic: estimate from material properties and k (dispatch on material type)
 function _estimate_eigenvalue_scale(::PhononicWave, solver, k)
-    _eigenvalue_scale_from_material(solver.geometry.background, k)
+    return _eigenvalue_scale_from_material(solver.geometry.background, k)
 end
 
 # Multiple dispatch for material types
@@ -1267,7 +1267,7 @@ function _eigenvalue_scale_from_material(mat::IsotropicElastic, k)
     c² = mat.C11 / mat.ρ
     k_mag = norm(k)
     # Eigenvalue scale: ω² ~ c² * k²
-    max(c² * k_mag^2, 1.0)  # Ensure at least 1
+    return max(c² * k_mag^2, 1.0)  # Ensure at least 1
 end
 
 # Fallback for other material types
@@ -1316,7 +1316,7 @@ function _solve_krylovkit_shifted(
 
     # Define operator: (A - σB)⁻¹ B x
     function shifted_op(x)
-        shifted_fact \ (RHS * x)
+        return shifted_fact \ (RHS * x)
     end
 
     # Initial vector
@@ -1789,19 +1789,19 @@ end
 
 # Dispatch for each dimension
 function solve_impl(solver::Solver{Dim1}, k::Real, method::LOBPCGMethod; bands=1:10)
-    _solve_lobpcg(solver, k, method; bands=bands)
+    return _solve_lobpcg(solver, k, method; bands=bands)
 end
 
 function solve_impl(
     solver::Solver{Dim2}, k::Vector{<:Real}, method::LOBPCGMethod; bands=1:10
 )
-    _solve_lobpcg(solver, k, method; bands=bands)
+    return _solve_lobpcg(solver, k, method; bands=bands)
 end
 
 function solve_impl(
     solver::Solver{Dim3}, k::Vector{<:Real}, method::LOBPCGMethod; bands=1:10
 )
-    _solve_lobpcg(solver, k, method; bands=bands)
+    return _solve_lobpcg(solver, k, method; bands=bands)
 end
 
 # ============================================================================
@@ -1809,7 +1809,7 @@ end
 # ============================================================================
 
 function solve_impl(solver::Solver, k, ::BasicRSCG; bands=1:10)
-    error(
+    return error(
         "BasicRSCG is designed for Green's function / DOS / LDOS calculations, " *
         "not for eigenvalue problems. Use DenseMethod() for band structure, " *
         "or use compute_dos() / compute_ldos() with BasicRSCG solver.",
@@ -1821,7 +1821,7 @@ end
 # ============================================================================
 
 function solve_impl(solver::Solver, k, method::SolverMethod; bands=1:10)
-    error(
+    return error(
         "Unsupported solver method: $(typeof(method)). " *
         "Supported methods: DenseMethod(), KrylovKitMethod(), LOBPCGMethod().",
     )
@@ -1848,7 +1848,7 @@ Compute group velocity v_g = ∂ω/∂k at wave vector k.
   - 1D: Vector of Float64
 """
 function group_velocity(solver::Solver, k; bands=1:10, δk=1e-5)
-    group_velocity_impl(solver, k, solver.method; bands=bands, δk=δk)
+    return group_velocity_impl(solver, k, solver.method; bands=bands, δk=δk)
 end
 
 # ============================================================================
@@ -1882,13 +1882,15 @@ end
 function group_velocity_impl(
     solver::Solver{Dim2}, k::SVector{2}, method::DenseMethod; bands=1:10, δk=1e-5
 )
-    group_velocity_impl(solver, Vector(k), method; bands=bands, δk=δk)
+    return group_velocity_impl(solver, Vector(k), method; bands=bands, δk=δk)
 end
 
 function group_velocity_impl(
     solver::Solver{Dim2}, k::Tuple{Real,Real}, method::DenseMethod; bands=1:10, δk=1e-5
 )
-    group_velocity_impl(solver, [Float64(k[1]), Float64(k[2])], method; bands=bands, δk=δk)
+    return group_velocity_impl(
+        solver, [Float64(k[1]), Float64(k[2])], method; bands=bands, δk=δk
+    )
 end
 
 # ============================================================================
@@ -1909,7 +1911,7 @@ end
 # ============================================================================
 
 function group_velocity_impl(solver::Solver, k, ::BasicRSCG; bands=1:10, δk=1e-5)
-    error("group_velocity with BasicRSCG is not yet implemented. Use DenseMethod().")
+    return error("group_velocity with BasicRSCG is not yet implemented. Use DenseMethod().")
 end
 
 # ============================================================================
@@ -1917,7 +1919,7 @@ end
 # ============================================================================
 
 function group_velocity_impl(solver::Solver, k, method::Any; bands=1:10, δk=1e-5)
-    error("Unsupported solver method for group_velocity: $(typeof(method)).")
+    return error("Unsupported solver method for group_velocity: $(typeof(method)).")
 end
 
 # ============================================================================
@@ -1932,7 +1934,7 @@ Construct a solver for photonic/phononic crystal eigenvalue problems.
 See concrete method signatures for detailed documentation and keyword arguments.
 """
 function Solver(wave::Any, geometry::Any, resolution::Any; kwargs...)
-    error(
+    return error(
         "Solver: expected (wave::WaveType, geometry::Geometry, resolution::Tuple{Int,...}), " *
         "got ($(typeof(wave)), $(typeof(geometry)), $(typeof(resolution)))",
     )
@@ -1946,7 +1948,7 @@ Solve eigenvalue problem at a single k-point.
 See concrete method signatures for detailed documentation and keyword arguments.
 """
 function solve_at_k(solver::Any, k::Any, method::Any; kwargs...)
-    error(
+    return error(
         "solve_at_k: expected (solver::Solver, k, method::SolverMethod), " *
         "got ($(typeof(solver)), $(typeof(k)), $(typeof(method)))",
     )
@@ -1960,7 +1962,7 @@ Return the matrix dimension for the eigenvalue problem.
 See concrete method signatures for detailed documentation.
 """
 function matrix_dimension(solver::Any)
-    error("matrix_dimension: expected solver::Solver, got $(typeof(solver))")
+    return error("matrix_dimension: expected solver::Solver, got $(typeof(solver))")
 end
 
 """
@@ -1971,7 +1973,7 @@ Solve eigenvalue problem and return both frequencies and eigenvectors.
 See concrete method signatures for detailed documentation and keyword arguments.
 """
 function solve_at_k_with_vectors(solver::Any, k::Any, method::Any; kwargs...)
-    error(
+    return error(
         "solve_at_k_with_vectors: expected (solver::AbstractSolver, k, method::SolverMethod), " *
         "got ($(typeof(solver)), $(typeof(k)), $(typeof(method)))",
     )
@@ -1985,7 +1987,7 @@ Build the LHS and RHS matrices for the generalized eigenvalue problem.
 See concrete method signatures for detailed documentation.
 """
 function build_matrices(solver::Any, k::Any)
-    error(
+    return error(
         "build_matrices: expected (solver::AbstractSolver, k), " *
         "got ($(typeof(solver)), $(typeof(k)))",
     )
@@ -2003,5 +2005,7 @@ the inner product in the function space.
 See concrete method signatures for detailed documentation.
 """
 function get_weight_matrix(solver::Any)
-    error("get_weight_matrix: expected solver::AbstractSolver, got $(typeof(solver))")
+    return error(
+        "get_weight_matrix: expected solver::AbstractSolver, got $(typeof(solver))"
+    )
 end

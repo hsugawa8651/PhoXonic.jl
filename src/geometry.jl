@@ -34,7 +34,7 @@ end
 Create a homogeneous geometry with no inclusions.
 """
 function Geometry(lattice::Lattice{D}, background::M) where {D<:Dimension,M<:Material}
-    Geometry{D,M}(lattice, background, Tuple{Shape{D},M}[])
+    return Geometry{D,M}(lattice, background, Tuple{Shape{D},M}[])
 end
 
 """
@@ -48,7 +48,7 @@ function Geometry(
     # Ensure all materials have compatible types
     MT = promote_type(M, M2)
     incl = Vector{Tuple{Shape{D},MT}}([(s, convert(MT, m)) for (s, m) in inclusions])
-    Geometry{D,MT}(lattice, convert(MT, background), incl)
+    return Geometry{D,MT}(lattice, convert(MT, background), incl)
 end
 
 # Helper to extract dimension type from Shape
@@ -82,7 +82,7 @@ function Geometry(
     # If dimensions all match, use promote_type for mixed materials
     MT = promote_type(M, M2)
     typed_incl = Vector{Tuple{Shape{D},MT}}([(s, convert(MT, m)) for (s, m) in inclusions])
-    Geometry{D,MT}(lattice, convert(MT, background), typed_incl)
+    return Geometry{D,MT}(lattice, convert(MT, background), typed_incl)
 end
 
 """
@@ -141,7 +141,7 @@ function point_in_shape_periodic(point::Vec2, c::Circle, lattice::Lattice{Dim2})
 end
 
 function point_in_shape_periodic(point::AbstractVector, c::Circle, lattice::Lattice{Dim2})
-    point_in_shape_periodic(Vec2(point...), c, lattice)
+    return point_in_shape_periodic(Vec2(point...), c, lattice)
 end
 
 # Rectangle: wrap point relative to rectangle center
@@ -168,7 +168,7 @@ end
 function point_in_shape_periodic(
     point::AbstractVector, r::Rectangle, lattice::Lattice{Dim2}
 )
-    point_in_shape_periodic(Vec2(point...), r, lattice)
+    return point_in_shape_periodic(Vec2(point...), r, lattice)
 end
 
 # Ellipse: check if point is in ellipse or any periodic image
@@ -189,7 +189,7 @@ function point_in_shape_periodic(point::Vec2, e::Ellipse, lattice::Lattice{Dim2}
 end
 
 function point_in_shape_periodic(point::AbstractVector, e::Ellipse, lattice::Lattice{Dim2})
-    point_in_shape_periodic(Vec2(point...), e, lattice)
+    return point_in_shape_periodic(Vec2(point...), e, lattice)
 end
 
 # Polygon: check if point is in polygon or any periodic image
@@ -212,7 +212,7 @@ end
 function point_in_shape_periodic(
     point::AbstractVector, poly::Polygon, lattice::Lattice{Dim2}
 )
-    point_in_shape_periodic(Vec2(point...), poly, lattice)
+    return point_in_shape_periodic(Vec2(point...), poly, lattice)
 end
 
 # 3D Sphere: wrap point relative to sphere center
@@ -238,7 +238,7 @@ function point_in_shape_periodic(point::Vec3, s::Sphere, lattice::Lattice{Dim3})
 end
 
 function point_in_shape_periodic(point::AbstractVector, s::Sphere, lattice::Lattice{Dim3})
-    point_in_shape_periodic(Vec3(point...), s, lattice)
+    return point_in_shape_periodic(Vec3(point...), s, lattice)
 end
 
 # 3D Cylinder: check all periodic images
@@ -263,7 +263,7 @@ end
 function point_in_shape_periodic(
     point::AbstractVector, cyl::Cylinder, lattice::Lattice{Dim3}
 )
-    point_in_shape_periodic(Vec3(point...), cyl, lattice)
+    return point_in_shape_periodic(Vec3(point...), cyl, lattice)
 end
 
 # 3D Slab: only check z-direction periodic images (infinite in xy)
@@ -282,7 +282,7 @@ function point_in_shape_periodic(point::Vec3, slab::Slab, lattice::Lattice{Dim3}
 end
 
 function point_in_shape_periodic(point::AbstractVector, slab::Slab, lattice::Lattice{Dim3})
-    point_in_shape_periodic(Vec3(point...), slab, lattice)
+    return point_in_shape_periodic(Vec3(point...), slab, lattice)
 end
 
 # ============================================================================
@@ -336,7 +336,7 @@ function discretize(
     property::Symbol,
     method::DiscretizationMethod=SimpleGrid(),
 )
-    discretize_impl(geo, resolution, property, method)
+    return discretize_impl(geo, resolution, property, method)
 end
 
 function discretize_impl(
@@ -397,7 +397,7 @@ Extract a specific property from a material.
 """
 # Error fallback for unsupported material types
 function get_property(mat, property::Symbol)
-    throw(ArgumentError("Unsupported material type: $(typeof(mat))"))
+    return throw(ArgumentError("Unsupported material type: $(typeof(mat))"))
 end
 
 function get_property(mat::Dielectric, property::Symbol)
@@ -457,7 +457,7 @@ function discretize(
     property::Symbol,
     method::DiscretizationMethod=SimpleGrid(),
 )
-    discretize_impl(geo, resolution, property, method)
+    return discretize_impl(geo, resolution, property, method)
 end
 
 # Also accept Int directly for 1D
@@ -467,7 +467,7 @@ function discretize(
     property::Symbol,
     method::DiscretizationMethod=SimpleGrid(),
 )
-    discretize_impl(geo, (resolution,), property, method)
+    return discretize_impl(geo, (resolution,), property, method)
 end
 
 function discretize_impl(
@@ -574,7 +574,7 @@ function discretize(
     property::Symbol,
     method::DiscretizationMethod=SimpleGrid(),
 )
-    discretize_impl(geo, resolution, property, method)
+    return discretize_impl(geo, resolution, property, method)
 end
 
 function discretize_impl(
@@ -676,7 +676,7 @@ Discretize geometry on a grid.
 See concrete method signatures for detailed documentation and keyword arguments.
 """
 function discretize(geometry::Any, args...; kwargs...)
-    error(
+    return error(
         "discretize: expected geometry::Geometry as first argument, " *
         "got $(typeof(geometry))",
     )
@@ -685,7 +685,7 @@ end
 # Error fallback for invalid Geometry constructor arguments
 function Geometry(args...)
     arg_types = isempty(args) ? "()" : "(" * join(typeof.(args), ", ") * ")"
-    error(
+    return error(
         "No matching Geometry constructor for arguments: $arg_types. " *
         "Use Geometry(lattice, background) or Geometry(lattice, background, inclusions).",
     )

@@ -82,7 +82,9 @@ function FFTContext(resolution::NTuple{N,Int}, (::Type{T})=ComplexF64) where {N,
     work = zeros(T, resolution)
     fft_plan = plan_fft!(work)
     ifft_plan = plan_ifft!(work)
-    FFTContext{N,T,typeof(fft_plan),typeof(ifft_plan)}(resolution, fft_plan, ifft_plan)
+    return FFTContext{N,T,typeof(fft_plan),typeof(ifft_plan)}(
+        resolution, fft_plan, ifft_plan
+    )
 end
 
 """
@@ -115,7 +117,7 @@ Create workspace arrays for the given resolution.
 function MatrixFreeWorkspace(
     resolution::NTuple{N,Int}, (::Type{T})=ComplexF64
 ) where {N,T<:Complex}
-    MatrixFreeWorkspace{N,T}(zeros(T, resolution), zeros(T, resolution))
+    return MatrixFreeWorkspace{N,T}(zeros(T, resolution), zeros(T, resolution))
 end
 
 """
@@ -124,7 +126,7 @@ end
 Create workspace arrays matching the FFT context.
 """
 function MatrixFreeWorkspace(ctx::FFTContext{N,T,F,I}) where {N,T,F,I}
-    MatrixFreeWorkspace(ctx.resolution, T)
+    return MatrixFreeWorkspace(ctx.resolution, T)
 end
 
 # ============================================================================
@@ -193,7 +195,7 @@ function MatrixFreeOperator(
     ctx::FFTContext{N,T,F,I},
     workspace::MatrixFreeWorkspace{N,T},
 ) where {D<:Dimension,W<:WaveType,N,T,F,I}
-    MatrixFreeOperator{D,W,T,N,F,I}(solver, k, ctx, workspace)
+    return MatrixFreeOperator{D,W,T,N,F,I}(solver, k, ctx, workspace)
 end
 
 function MatrixFreeOperator(
@@ -202,7 +204,7 @@ function MatrixFreeOperator(
     ctx::FFTContext{1,T,F,I},
     workspace::MatrixFreeWorkspace{1,T},
 ) where {W<:WaveType,T,F,I}
-    MatrixFreeOperator{Dim1,W,T,1,F,I}(solver, [Float64(k)], ctx, workspace)
+    return MatrixFreeOperator{Dim1,W,T,1,F,I}(solver, [Float64(k)], ctx, workspace)
 end
 
 """
@@ -214,24 +216,24 @@ For better performance in loops, create `FFTContext` once and reuse.
 function MatrixFreeOperator(solver::Solver{Dim2,W}, k::Vector{Float64}) where {W<:WaveType}
     ctx = FFTContext(solver.resolution, ComplexF64)
     workspace = MatrixFreeWorkspace(ctx)
-    MatrixFreeOperator(solver, k, ctx, workspace)
+    return MatrixFreeOperator(solver, k, ctx, workspace)
 end
 
 function MatrixFreeOperator(solver::Solver{Dim1,W}, k::Real) where {W<:WaveType}
     ctx = FFTContext(solver.resolution, ComplexF64)
     workspace = MatrixFreeWorkspace(ctx)
-    MatrixFreeOperator(solver, Float64(k), ctx, workspace)
+    return MatrixFreeOperator(solver, Float64(k), ctx, workspace)
 end
 
 # 1D convenience constructor accepting Vector{Float64} (for compatibility with solve interface)
 function MatrixFreeOperator(solver::Solver{Dim1,W}, k::Vector{Float64}) where {W<:WaveType}
-    MatrixFreeOperator(solver, k[1])
+    return MatrixFreeOperator(solver, k[1])
 end
 
 function MatrixFreeOperator(solver::Solver{Dim3,W}, k::Vector{Float64}) where {W<:WaveType}
     ctx = FFTContext(solver.resolution, ComplexF64)
     workspace = MatrixFreeWorkspace(ctx)
-    MatrixFreeOperator(solver, k, ctx, workspace)
+    return MatrixFreeOperator(solver, k, ctx, workspace)
 end
 
 # ============================================================================
@@ -1044,7 +1046,7 @@ function to_linear_map_lhs(op::MatrixFreeOperator{D,W}) where {D,W}
     N = op.solver.basis.num_pw
     nc = ncomponents(op.solver.wave)
     dim = N * nc
-    LinearMap{ComplexF64}(
+    return LinearMap{ComplexF64}(
         x -> begin
             y = zeros(ComplexF64, dim)
             apply_lhs!(y, op, x)
@@ -1062,7 +1064,7 @@ function to_linear_map_rhs(op::MatrixFreeOperator{D,W}) where {D,W}
     N = op.solver.basis.num_pw
     nc = ncomponents(op.solver.wave)
     dim = N * nc
-    LinearMap{ComplexF64}(
+    return LinearMap{ComplexF64}(
         x -> begin
             y = zeros(ComplexF64, dim)
             apply_rhs!(y, op, x)
@@ -1272,7 +1274,7 @@ Create a shifted operator representing `(A - σB)`.
 function ShiftedOperator(op::MatrixFreeOperator{D,W,T,N,F,I}, σ::Real) where {D,W,T,N,F,I}
     dim = op.solver.basis.num_pw * ncomponents(op.solver.wave)
     tmp = zeros(T, dim)
-    ShiftedOperator{D,W,T,N,F,I}(op, Float64(σ), tmp)
+    return ShiftedOperator{D,W,T,N,F,I}(op, Float64(σ), tmp)
 end
 
 Base.size(S::ShiftedOperator) = (length(S.tmp), length(S.tmp))
@@ -1316,5 +1318,5 @@ Create a LinearMap representing `(A - σB)` for use with iterative solvers.
 function to_linear_map_shifted(op::MatrixFreeOperator{D,W}, σ::Real) where {D,W}
     S = ShiftedOperator(op, σ)
     dim = length(S.tmp)
-    LinearMap{ComplexF64}(x -> S * x, dim; ismutating=false, ishermitian=true)
+    return LinearMap{ComplexF64}(x -> S * x, dim; ismutating=false, ishermitian=true)
 end

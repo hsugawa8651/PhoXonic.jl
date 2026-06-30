@@ -60,7 +60,7 @@ function find_bandgap(bs::BandStructure, band1::Int, band2::Int)
     midgap = (min_upper + max_lower) / 2
     gap_ratio = midgap > 0 ? gap / midgap : 0.0
 
-    (gap=gap, gap_ratio=gap_ratio, min_upper=min_upper, max_lower=max_lower)
+    return (gap=gap, gap_ratio=gap_ratio, min_upper=min_upper, max_lower=max_lower)
 end
 
 """
@@ -311,7 +311,7 @@ function compute_bands(
         end
     end
 
-    BandStructure{2}(kpath.points, kpath.distances, frequencies, kpath.labels)
+    return BandStructure{2}(kpath.points, kpath.distances, frequencies, kpath.labels)
 end
 
 function compute_bands(
@@ -344,7 +344,7 @@ function compute_bands(
         push!(distances, distances[end] + norm(points[i] - points[i - 1]))
     end
 
-    BandStructure{2}(points, distances, frequencies, Tuple{Int,String}[])
+    return BandStructure{2}(points, distances, frequencies, Tuple{Int,String}[])
 end
 
 function compute_bands(
@@ -383,7 +383,7 @@ function compute_bands(
     # Extract labels from KPathInterpolant if available
     labels = Tuple{Int,String}[]
 
-    BandStructure{2}(kpoints, distances, frequencies, labels)
+    return BandStructure{2}(kpoints, distances, frequencies, labels)
 end
 
 # ============================================================================
@@ -442,7 +442,7 @@ function compute_bands(
         end
     end
 
-    BandStructure{3}(kpath.points, kpath.distances, frequencies, kpath.labels)
+    return BandStructure{3}(kpath.points, kpath.distances, frequencies, kpath.labels)
 end
 
 function compute_bands(
@@ -475,7 +475,7 @@ function compute_bands(
         push!(distances, distances[end] + norm(points[i] - points[i - 1]))
     end
 
-    BandStructure{3}(points, distances, frequencies, Tuple{Int,String}[])
+    return BandStructure{3}(points, distances, frequencies, Tuple{Int,String}[])
 end
 
 function compute_bands(
@@ -513,7 +513,7 @@ function compute_bands(
     # Extract labels from KPathInterpolant if available
     labels = Tuple{Int,String}[]
 
-    BandStructure{3}(kpoints, distances, frequencies, labels)
+    return BandStructure{3}(kpoints, distances, frequencies, labels)
 end
 
 # ============================================================================
@@ -528,7 +528,7 @@ Compute band structure along a k-path.
 See concrete method signatures for detailed documentation and keyword arguments.
 """
 function compute_bands(solver::Any, kpath::Any; kwargs...)
-    error(
+    return error(
         "compute_bands: expected (solver::Solver, kpath), " *
         "got ($(typeof(solver)), $(typeof(kpath)))",
     )

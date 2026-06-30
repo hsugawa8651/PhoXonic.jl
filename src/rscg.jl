@@ -105,7 +105,7 @@ struct CGRHSInv <: RHSInvMethod
     maxiter::Int
 end
 function CGRHSInv(; atol::Float64=1e-10, rtol::Float64=1e-10, maxiter::Int=100)
-    CGRHSInv(atol, rtol, maxiter)
+    return CGRHSInv(atol, rtol, maxiter)
 end
 
 # Conversion from Symbol (deprecated, for backward compatibility)
@@ -126,7 +126,7 @@ _convert_rhs_inv_method(method::RHSInvMethod) = method
 
 # Error fallback for unsupported types
 function _convert_rhs_inv_method(method)
-    throw(
+    return throw(
         ArgumentError(
             "Unsupported rhs_inv_method type: $(typeof(method)). Use ApproximateRHSInv() or CGRHSInv().",
         ),
@@ -187,7 +187,7 @@ function compute_greens_function(
     source::AbstractVector;
     η::Real=1e-3,
 )
-    compute_greens_function(op.solver, op.k, ω_values, source; η=η)
+    return compute_greens_function(op.solver, op.k, ω_values, source; η=η)
 end
 
 # ============================================================================
@@ -477,7 +477,7 @@ function EffectiveHamiltonian(LHS::AbstractMatrix{T}, RHS::AbstractMatrix{T}) wh
     @assert size(LHS) == size(RHS) == (n, n) "LHS and RHS must be square and same size"
     RHS_fact = lu(RHS)
     tmp = Vector{T}(undef, n)
-    EffectiveHamiltonian(LHS, RHS, RHS_fact, n, tmp)
+    return EffectiveHamiltonian(LHS, RHS, RHS_fact, n, tmp)
 end
 
 """
@@ -487,7 +487,7 @@ Create an EffectiveHamiltonian from a PhoXonic Solver at wave vector k.
 """
 function EffectiveHamiltonian(solver::Solver, k)
     LHS, RHS = build_matrices(solver, k)
-    EffectiveHamiltonian(Matrix(LHS), Matrix(RHS))
+    return EffectiveHamiltonian(Matrix(LHS), Matrix(RHS))
 end
 
 # Size interface for LinearMaps compatibility
@@ -666,7 +666,7 @@ function MatrixFreeEffectiveHamiltonian(
     tmp_fourier2 = zeros(T, n)
     tmp_grid = zeros(T, res)
 
-    MatrixFreeEffectiveHamiltonian{D,W,T,N,F,I,typeof(rhs_inv_method)}(
+    return MatrixFreeEffectiveHamiltonian{D,W,T,N,F,I,typeof(rhs_inv_method)}(
         op, rhs_inv, tmp_fourier, tmp_fourier2, tmp_grid, n, rhs_inv_method
     )
 end
@@ -690,33 +690,33 @@ function MatrixFreeEffectiveHamiltonian(
     else
         throw(ArgumentError("rhs_inv_method must be :approximate or :cg"))
     end
-    MatrixFreeEffectiveHamiltonian(op, method)
+    return MatrixFreeEffectiveHamiltonian(op, method)
 end
 
 # Helper to get 1/RHS material array
 # Error fallback for unsupported wave types
 function _get_rhs_inv(wave::WaveType, mats, res, ::Type{T}) where {T}
-    throw(ArgumentError("Unsupported wave type for _get_rhs_inv: $(typeof(wave))"))
+    return throw(ArgumentError("Unsupported wave type for _get_rhs_inv: $(typeof(wave))"))
 end
 
 function _get_rhs_inv(::TEWave, mats, res, ::Type{T}) where {T}
     # TE: RHS = μ
-    T.(1.0 ./ mats.μ)
+    return T.(1.0 ./ mats.μ)
 end
 
 function _get_rhs_inv(::TMWave, mats, res, ::Type{T}) where {T}
     # TM: RHS = ε
-    T.(1.0 ./ mats.ε)
+    return T.(1.0 ./ mats.ε)
 end
 
 function _get_rhs_inv(::SHWave, mats, res, ::Type{T}) where {T}
     # SH: RHS = ρ
-    T.(1.0 ./ mats.ρ)
+    return T.(1.0 ./ mats.ρ)
 end
 
 function _get_rhs_inv(::PSVWave, mats, res, ::Type{T}) where {T}
     # PSV: RHS = ρ (same for both components)
-    T.(1.0 ./ mats.ρ)
+    return T.(1.0 ./ mats.ρ)
 end
 
 # Size interface
@@ -745,12 +745,12 @@ end
 function _apply_rhs_inv!(
     y::AbstractVector{T}, H::MatrixFreeEffectiveHamiltonian{Dim2,W,T}, x::AbstractVector{T}
 ) where {W<:WaveType,T}
-    _apply_rhs_inv_impl!(wave_structure(W()), H.rhs_inv_method, y, H, x)
+    return _apply_rhs_inv_impl!(wave_structure(W()), H.rhs_inv_method, y, H, x)
 end
 
 # Error fallback for unsupported combinations
 function _apply_rhs_inv_impl!(trait, method, y, H, x)
-    throw(
+    return throw(
         ArgumentError(
             "Unsupported wave structure/method combination: $(typeof(trait)), $(typeof(method))",
         ),
@@ -960,12 +960,12 @@ end
 # Helper to get 1/RHS for 3D waves
 function _get_rhs_inv(::FullVectorEM, mats, res, ::Type{T}) where {T}
     # FullVectorEM: RHS = μ (same for all 3 components)
-    T.(1.0 ./ mats.μ)
+    return T.(1.0 ./ mats.μ)
 end
 
 function _get_rhs_inv(::FullElastic, mats, res, ::Type{T}) where {T}
     # FullElastic: RHS = ρ (same for all 3 components)
-    T.(1.0 ./ mats.ρ)
+    return T.(1.0 ./ mats.ρ)
 end
 
 # 3D mul! implementation
@@ -985,12 +985,12 @@ end
 function _apply_rhs_inv_3d!(
     y::AbstractVector{T}, H::MatrixFreeEffectiveHamiltonian{Dim3,W,T}, x::AbstractVector{T}
 ) where {W<:WaveType,T}
-    _apply_rhs_inv_3d_impl!(wave_structure(W()), H.rhs_inv_method, y, H, x)
+    return _apply_rhs_inv_3d_impl!(wave_structure(W()), H.rhs_inv_method, y, H, x)
 end
 
 # Error fallback for unsupported combinations (3D)
 function _apply_rhs_inv_3d_impl!(trait, method, y, H, x)
-    throw(
+    return throw(
         ArgumentError(
             "Unsupported wave structure/method combination for 3D: $(typeof(trait)), $(typeof(method))",
         ),
@@ -1134,7 +1134,7 @@ struct RSKGF <: GFMethod
     verbose::Int
 end
 function RSKGF(; atol::Float64=1e-10, rtol::Float64=1e-10, itmax::Int=0, verbose::Int=0)
-    RSKGF(atol, rtol, itmax, verbose)
+    return RSKGF(atol, rtol, itmax, verbose)
 end
 
 """
@@ -1169,7 +1169,7 @@ function MatrixFreeGF(;
     verbose::Int=0,
 )
     method = _convert_rhs_inv_method(rhs_inv_method)
-    MatrixFreeGF{typeof(method)}(method, atol, rtol, itmax, verbose)
+    return MatrixFreeGF{typeof(method)}(method, atol, rtol, itmax, verbose)
 end
 
 # ============================================================================

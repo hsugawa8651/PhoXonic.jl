@@ -53,7 +53,7 @@ function _plot_bs_on_ax!(
     if !isempty(title)
         ax.set_title(title)
     end
-    ax.set_xlim(data.distances[1], data.distances[end])
+    return ax.set_xlim(data.distances[1], data.distances[end])
 end
 
 # ── L1: plot_on_axis! ──

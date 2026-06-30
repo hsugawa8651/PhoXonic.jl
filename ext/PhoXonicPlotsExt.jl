@@ -214,7 +214,9 @@ function PhoXonic.plot_field(
     N = length(data)
     x = range(0, 1; length=N)
 
-    Plots.plot(x, data; xlabel=xlabel, ylabel=ylabel, title=title, legend=false, kwargs...)
+    return Plots.plot(
+        x, data; xlabel=xlabel, ylabel=ylabel, title=title, legend=false, kwargs...
+    )
 end
 
 # -----------------------------------------------------------------------------
@@ -263,7 +265,7 @@ function PhoXonic.plot_field(
     data = _extract_quantity(data_complex, quantity)
 
     # Transpose for correct orientation (x horizontal, y vertical)
-    Plots.heatmap(
+    return Plots.heatmap(
         data';
         c=colormap,
         title=title,
@@ -351,7 +353,7 @@ function PhoXonic.plot_epsilon(
     N = length(eps)
     x = range(0, 1; length=N)
 
-    Plots.plot(
+    return Plots.plot(
         x,
         eps;
         xlabel=xlabel,
@@ -382,7 +384,7 @@ function PhoXonic.plot_epsilon(
 )
     eps = get_epsilon_field(solver)
 
-    Plots.heatmap(
+    return Plots.heatmap(
         eps';
         c=colormap,
         title=title,
@@ -416,7 +418,7 @@ function _get_component_index(::Type{<:WaveType}, component::Symbol)
     component in (:x, :first, :1) && return 1
     component in (:y, :second, :2) && return 2
     component in (:z, :third, :3) && return 3
-    error("Unknown component: $component")
+    return error("Unknown component: $component")
 end
 
 end # module

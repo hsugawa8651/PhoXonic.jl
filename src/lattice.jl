@@ -30,7 +30,7 @@ Create a 1D lattice with period `a`.
 function Lattice(a::Real)
     v = (Vec1(a),)
     r = (Vec1(2π / a),)
-    Lattice{Dim1}(v, r)
+    return Lattice{Dim1}(v, r)
 end
 
 # ============================================================================
@@ -49,7 +49,7 @@ function Lattice(a1::Vec2, a2::Vec2)
     V = a1[1] * a2[2] - a1[2] * a2[1]  # Area of unit cell
     b1 = (2π / V) * Vec2(a2[2], -a2[1])
     b2 = (2π / V) * Vec2(-a1[2], a1[1])
-    Lattice{Dim2}((a1, a2), (b1, b2))
+    return Lattice{Dim2}((a1, a2), (b1, b2))
 end
 
 """
@@ -58,7 +58,7 @@ end
 Create a 2D lattice from any vector types (converted to Vec2).
 """
 function Lattice(a1::AbstractVector, a2::AbstractVector)
-    Lattice(Vec2(a1...), Vec2(a2...))
+    return Lattice(Vec2(a1...), Vec2(a2...))
 end
 
 # ============================================================================
@@ -77,7 +77,7 @@ function Lattice(a1::Vec3, a2::Vec3, a3::Vec3)
     b1 = (2π / V) * cross(a2, a3)
     b2 = (2π / V) * cross(a3, a1)
     b3 = (2π / V) * cross(a1, a2)
-    Lattice{Dim3}((a1, a2, a3), (b1, b2, b3))
+    return Lattice{Dim3}((a1, a2, a3), (b1, b2, b3))
 end
 
 # ============================================================================
@@ -97,7 +97,7 @@ lattice_1d(a::Real=1.0) = Lattice(Float64(a))
 Create a 2D square lattice with lattice constant `a`.
 """
 function square_lattice(a::Real=1.0)
-    Lattice(Vec2(a, 0), Vec2(0, a))
+    return Lattice(Vec2(a, 0), Vec2(0, a))
 end
 
 """
@@ -106,7 +106,7 @@ end
 Create a 2D hexagonal (triangular) lattice with lattice constant `a`.
 """
 function hexagonal_lattice(a::Real=1.0)
-    Lattice(Vec2(a, 0), Vec2(a / 2, a * sqrt(3) / 2))
+    return Lattice(Vec2(a, 0), Vec2(a / 2, a * sqrt(3) / 2))
 end
 
 """
@@ -115,7 +115,7 @@ end
 Create a 3D simple cubic lattice with lattice constant `a`.
 """
 function cubic_lattice(a::Real=1.0)
-    Lattice(Vec3(a, 0, 0), Vec3(0, a, 0), Vec3(0, 0, a))
+    return Lattice(Vec3(a, 0, 0), Vec3(0, a, 0), Vec3(0, 0, a))
 end
 
 """
@@ -124,7 +124,7 @@ end
 Create a 3D face-centered cubic lattice with conventional lattice constant `a`.
 """
 function fcc_lattice(a::Real=1.0)
-    Lattice(Vec3(0, a/2, a/2), Vec3(a/2, 0, a/2), Vec3(a/2, a/2, 0))
+    return Lattice(Vec3(0, a/2, a/2), Vec3(a/2, 0, a/2), Vec3(a/2, a/2, 0))
 end
 
 # ============================================================================
@@ -152,7 +152,7 @@ Return the area of the 2D unit cell.
 """
 function cell_area(lattice::Lattice{Dim2})
     a1, a2 = lattice.vectors
-    abs(a1[1] * a2[2] - a1[2] * a2[1])
+    return abs(a1[1] * a2[2] - a1[2] * a2[1])
 end
 
 """
@@ -162,13 +162,13 @@ Return the volume of the 3D unit cell.
 """
 function cell_volume(lattice::Lattice{Dim3})
     a1, a2, a3 = lattice.vectors
-    abs(dot(a1, cross(a2, a3)))
+    return abs(dot(a1, cross(a2, a3)))
 end
 
 # Error fallback for invalid constructor arguments
 function Lattice(args...)
     arg_types = isempty(args) ? "()" : "(" * join(typeof.(args), ", ") * ")"
-    error(
+    return error(
         "No matching Lattice constructor for arguments: $arg_types. " *
         "Use Lattice(a::Real) for 1D, Lattice(a1, a2) for 2D, or Lattice(a1, a2, a3) for 3D.",
     )
