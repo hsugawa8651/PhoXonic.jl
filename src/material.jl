@@ -118,7 +118,7 @@ refractive_index(m::LossyDielectric) = sqrt(m.ε * m.μ)
 
 # Type conversion: Dielectric → LossyDielectric
 function Base.convert(::Type{LossyDielectric}, d::Dielectric)
-    LossyDielectric(ComplexF64(d.ε), ComplexF64(d.μ))
+    return LossyDielectric(ComplexF64(d.ε), ComplexF64(d.μ))
 end
 
 # Type promotion rules
@@ -163,7 +163,7 @@ end
 Create isotropic elastic material from Lamé parameters.
 """
 function IsotropicElastic(; ρ::Real, λ::Real, μ::Real)
-    IsotropicElastic(Float64(ρ), Float64(λ + 2μ), Float64(λ), Float64(μ))
+    return IsotropicElastic(Float64(ρ), Float64(λ + 2μ), Float64(λ), Float64(μ))
 end
 
 """
@@ -174,7 +174,7 @@ Create isotropic elastic material from Young's modulus `E` and Poisson's ratio `
 function from_E_ν(ρ::Real, E::Real, ν::Real)
     λ = E * ν / ((1 + ν) * (1 - 2ν))
     μ = E / (2 * (1 + ν))
-    IsotropicElastic(; ρ=ρ, λ=λ, μ=μ)
+    return IsotropicElastic(; ρ=ρ, λ=λ, μ=μ)
 end
 
 """
@@ -247,7 +247,7 @@ function ElasticVoid(; ρ_ratio::Real=1e-7)
     μ = 1.0
     λ = 1.0
     ρ = ρ_ratio * μ  # Small density for Tanaka limit
-    ElasticVoid(Float64(ρ), Float64(λ + 2μ), Float64(λ), Float64(μ))
+    return ElasticVoid(Float64(ρ), Float64(λ + 2μ), Float64(λ), Float64(μ))
 end
 
 """
@@ -294,7 +294,7 @@ Base.convert(::Type{ElasticMaterial}, x::ElasticVoid) = x
 # Error fallback for invalid Dielectric constructor arguments
 function Dielectric(args...)
     arg_types = isempty(args) ? "()" : "(" * join(typeof.(args), ", ") * ")"
-    error(
+    return error(
         "No matching Dielectric constructor for arguments: $arg_types. " *
         "Use Dielectric(ε::Real) or Dielectric(ε::Real, μ::Real).",
     )

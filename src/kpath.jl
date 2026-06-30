@@ -141,7 +141,7 @@ function SimpleKPath(
         end
     end
 
-    SimpleKPath{D}(all_points, all_labels, all_distances)
+    return SimpleKPath{D}(all_points, all_labels, all_distances)
 end
 
 """
@@ -156,7 +156,7 @@ function simple_kpath_square(; a::Real=1.0, npoints::Int=50)
     X = [0.5 * scale, 0.0]
     M = [0.5 * scale, 0.5 * scale]
 
-    SimpleKPath([Γ, X, M, Γ], ["Γ", "X", "M", "Γ"]; npoints=npoints)
+    return SimpleKPath([Γ, X, M, Γ], ["Γ", "X", "M", "Γ"]; npoints=npoints)
 end
 
 """
@@ -174,7 +174,7 @@ function simple_kpath_hexagonal(; a::Real=1.0, npoints::Int=50)
     M = collect(0.5 * b1)
     K = collect((1.0 / 3.0) * b1 + (1.0 / 3.0) * b2)
 
-    SimpleKPath([Γ, M, K, Γ], ["Γ", "M", "K", "Γ"]; npoints=npoints)
+    return SimpleKPath([Γ, M, K, Γ], ["Γ", "M", "K", "Γ"]; npoints=npoints)
 end
 
 # Iteration interface for SimpleKPath
@@ -337,7 +337,7 @@ function simple_kpath_cubic(; a::Real=1.0, npoints::Int=50)
     M = [0.5 * scale, 0.5 * scale, 0.0]
     R = [0.5 * scale, 0.5 * scale, 0.5 * scale]
 
-    SimpleKPath([Γ, X, M, Γ, R, X], ["Γ", "X", "M", "Γ", "R", "X"]; npoints=npoints)
+    return SimpleKPath([Γ, X, M, Γ, R, X], ["Γ", "X", "M", "Γ", "R", "X"]; npoints=npoints)
 end
 
 """
@@ -381,7 +381,7 @@ function simple_kpath_fcc(; a::Real=1.0, npoints::Int=50)
     L = [0.5 * scale, 0.5 * scale, 0.5 * scale]  # (1/2, 1/2, 1/2) × 2π/a
     K = [0.75 * scale, 0.75 * scale, 0.0]        # (3/4, 3/4, 0) × 2π/a
 
-    SimpleKPath([Γ, X, W, L, Γ, K], ["Γ", "X", "W", "L", "Γ", "K"]; npoints=npoints)
+    return SimpleKPath([Γ, X, W, L, Γ, K], ["Γ", "X", "W", "L", "Γ", "K"]; npoints=npoints)
 end
 
 """
@@ -417,7 +417,9 @@ function kpath_fcc_joannopoulos(; a::Real=1.0, npoints::Int=15)
     L = [0.5 * scale, 0.5 * scale, 0.5 * scale]  # (1/2, 1/2, 1/2) × 2π/a
 
     # Path: X → U|K → Γ → X → W → K (Joannopoulos style)
-    SimpleKPath([X, U, Γ, X, W, K], ["X", "U|K", "Γ", "X", "W", "K"]; npoints=npoints)
+    return SimpleKPath(
+        [X, U, Γ, X, W, K], ["X", "U|K", "Γ", "X", "W", "K"]; npoints=npoints
+    )
 end
 
 """
@@ -456,5 +458,5 @@ function simple_kpath_bcc(; a::Real=1.0, npoints::Int=50)
     N = [0.0, 0.5 * scale, 0.5 * scale]
     P = [0.25 * scale, 0.25 * scale, 0.25 * scale]
 
-    SimpleKPath([Γ, H, N, Γ, P, H], ["Γ", "H", "N", "Γ", "P", "H"]; npoints=npoints)
+    return SimpleKPath([Γ, H, N, Γ, P, H], ["Γ", "H", "N", "Γ", "P", "H"]; npoints=npoints)
 end

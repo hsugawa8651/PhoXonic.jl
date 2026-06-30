@@ -211,7 +211,7 @@ function draw_circle!(p, cx, cy, r; color=:blue, fillalpha=1.0, n=100)
     θ = range(0, 2π; length=n)
     xs = cx .+ r .* cos.(θ)
     ys = cy .+ r .* sin.(θ)
-    plot!(
+    return plot!(
         p,
         xs,
         ys;

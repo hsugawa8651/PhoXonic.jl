@@ -255,29 +255,29 @@ function add_absorbing_layer_concept()
     # ε(x) = ε_real + i * σ(x) / ω
     # where σ(x) increases towards boundaries
 
-    println("""
-    # Pseudo-code for absorbing layer:
+    return println("""
+           # Pseudo-code for absorbing layer:
 
-    function create_pml_supercell(inner_geo, n_pml_layers, σ_max)
-        # 1. Create larger lattice with PML layers
-        total_x = inner_geo.size_x + 2 * n_pml_layers * a
-        total_y = inner_geo.size_y + 2 * n_pml_layers * a
+           function create_pml_supercell(inner_geo, n_pml_layers, σ_max)
+               # 1. Create larger lattice with PML layers
+               total_x = inner_geo.size_x + 2 * n_pml_layers * a
+               total_y = inner_geo.size_y + 2 * n_pml_layers * a
 
-        # 2. Copy inner inclusions
-        inclusions = copy_to_center(inner_geo.inclusions)
+               # 2. Copy inner inclusions
+               inclusions = copy_to_center(inner_geo.inclusions)
 
-        # 3. Add absorbing material at edges
-        for layer in 1:n_pml_layers
-            # Conductivity profile (polynomial grading)
-            σ = σ_max * (layer / n_pml_layers)^2
+               # 3. Add absorbing material at edges
+               for layer in 1:n_pml_layers
+                   # Conductivity profile (polynomial grading)
+                   σ = σ_max * (layer / n_pml_layers)^2
 
-            # Add absorbing elements at this layer distance from edge
-            # (Implementation depends on how complex ε is handled)
-        end
+                   # Add absorbing elements at this layer distance from edge
+                   # (Implementation depends on how complex ε is handled)
+               end
 
-        return Geometry(large_lattice, background, inclusions)
-    end
-    """)
+               return Geometry(large_lattice, background, inclusions)
+           end
+           """)
 end
 
 add_absorbing_layer_concept()

@@ -100,7 +100,7 @@ idx_gamma2 = n_kpts
 # Extract TM frequencies
 # frequencies is (nk × nbands) matrix
 function get_frequencies_at_k(bands, idx)
-    bands.frequencies[idx, :]
+    return bands.frequencies[idx, :]
 end
 
 freq_tm_gamma = get_frequencies_at_k(bands_tm, idx_gamma1)

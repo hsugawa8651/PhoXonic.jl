@@ -44,7 +44,7 @@ function PlaneWaveBasis(lattice::Lattice{Dim1}, cutoff::Int)
         push!(G_vectors, p * b1)
     end
 
-    PlaneWaveBasis{Dim1}(lattice, cutoff, indices, G_vectors, length(indices))
+    return PlaneWaveBasis{Dim1}(lattice, cutoff, indices, G_vectors, length(indices))
 end
 
 # ============================================================================
@@ -72,7 +72,7 @@ function PlaneWaveBasis(lattice::Lattice{Dim2}, cutoff::Int)
         end
     end
 
-    PlaneWaveBasis{Dim2}(lattice, cutoff, indices, G_vectors, length(indices))
+    return PlaneWaveBasis{Dim2}(lattice, cutoff, indices, G_vectors, length(indices))
 end
 
 """
@@ -93,7 +93,7 @@ function PlaneWaveBasis(lattice::Lattice{Dim2}, cutoff_p::Int, cutoff_q::Int)
         end
     end
 
-    PlaneWaveBasis{Dim2}(
+    return PlaneWaveBasis{Dim2}(
         lattice, max(cutoff_p, cutoff_q), indices, G_vectors, length(indices)
     )
 end
@@ -124,7 +124,7 @@ function PlaneWaveBasis(lattice::Lattice{Dim3}, cutoff::Int)
         end
     end
 
-    PlaneWaveBasis{Dim3}(lattice, cutoff, indices, G_vectors, length(indices))
+    return PlaneWaveBasis{Dim3}(lattice, cutoff, indices, G_vectors, length(indices))
 end
 
 # ============================================================================
@@ -137,7 +137,7 @@ end
 Create a dictionary mapping indices to their position in the basis.
 """
 function index_map(basis::PlaneWaveBasis)
-    Dict(idx => i for (i, idx) in enumerate(basis.indices))
+    return Dict(idx => i for (i, idx) in enumerate(basis.indices))
 end
 
 """
@@ -159,7 +159,7 @@ Base.length(basis::PlaneWaveBasis) = basis.num_pw
 # Error fallback for invalid PlaneWaveBasis constructor arguments
 function PlaneWaveBasis(args...)
     arg_types = isempty(args) ? "()" : "(" * join(typeof.(args), ", ") * ")"
-    error(
+    return error(
         "No matching PlaneWaveBasis constructor for arguments: $arg_types. " *
         "Use PlaneWaveBasis(lattice, cutoff).",
     )

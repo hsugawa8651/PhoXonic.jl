@@ -16,19 +16,19 @@ Create a supercell lattice by scaling the original lattice vectors.
 function _supercell_lattice(lat::Lattice{Dim1}, size::Tuple{Int})
     Nx = size[1]
     a1 = lat.vectors[1][1]  # Extract scalar from Vec1
-    Lattice(Nx * a1)  # Lattice(::Real) constructor for 1D
+    return Lattice(Nx * a1)  # Lattice(::Real) constructor for 1D
 end
 
 function _supercell_lattice(lat::Lattice{Dim2}, size::NTuple{2,Int})
     Nx, Ny = size
     a1, a2 = lat.vectors
-    Lattice(Nx * a1, Ny * a2)
+    return Lattice(Nx * a1, Ny * a2)
 end
 
 function _supercell_lattice(lat::Lattice{Dim3}, size::NTuple{3,Int})
     Nx, Ny, Nz = size
     a1, a2, a3 = lat.vectors
-    Lattice(Nx * a1, Ny * a2, Nz * a3)
+    return Lattice(Nx * a1, Ny * a2, Nz * a3)
 end
 
 #=
@@ -151,7 +151,7 @@ function create_supercell(
     new_inclusions = _replicate_inclusions(
         geo.inclusions, geo.lattice, size; skip_positions=point_defects
     )
-    Geometry(new_lat, geo.background, new_inclusions)
+    return Geometry(new_lat, geo.background, new_inclusions)
 end
 
 function create_supercell(
@@ -163,7 +163,7 @@ function create_supercell(
     new_inclusions = _replicate_inclusions(
         geo.inclusions, geo.lattice, size; skip_positions=point_defects
     )
-    Geometry(new_lat, geo.background, new_inclusions)
+    return Geometry(new_lat, geo.background, new_inclusions)
 end
 
 function create_supercell(
@@ -175,12 +175,12 @@ function create_supercell(
     new_inclusions = _replicate_inclusions(
         geo.inclusions, geo.lattice, size; skip_positions=point_defects
     )
-    Geometry(new_lat, geo.background, new_inclusions)
+    return Geometry(new_lat, geo.background, new_inclusions)
 end
 
 # Convenience: allow integer for 1D
 function create_supercell(geo::Geometry{Dim1}, n::Int; kwargs...)
-    create_supercell(geo, (n,); kwargs...)
+    return create_supercell(geo, (n,); kwargs...)
 end
 
 # ============================================================================
@@ -273,7 +273,7 @@ end
 # Error fallback for invalid create_supercell arguments
 function create_supercell(args...)
     arg_types = isempty(args) ? "()" : "(" * join(typeof.(args), ", ") * ")"
-    error(
+    return error(
         "No matching create_supercell method for arguments: $arg_types. " *
         "Use create_supercell(geo::Geometry, size::NTuple{D,Int}; point_defects=[]).",
     )

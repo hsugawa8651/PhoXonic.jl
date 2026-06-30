@@ -37,11 +37,11 @@ Circle(center::AbstractVector, radius::Real) = Circle(Vec2(center...), Float64(r
 Check if a point is inside the circle.
 """
 function Base.in(point::Vec2, c::Circle)
-    norm(point - c.center) <= c.radius
+    return norm(point - c.center) <= c.radius
 end
 
 function Base.in(point::AbstractVector, c::Circle)
-    Vec2(point...) in c
+    return Vec2(point...) in c
 end
 
 """
@@ -60,7 +60,7 @@ struct Rectangle <: Shape{Dim2}
 end
 
 function Rectangle(center::AbstractVector, size::AbstractVector)
-    Rectangle(Vec2(center...), Vec2(size...))
+    return Rectangle(Vec2(center...), Vec2(size...))
 end
 
 """
@@ -71,11 +71,11 @@ Check if a point is inside the rectangle.
 function Base.in(point::Vec2, r::Rectangle)
     dx = abs(point[1] - r.center[1])
     dy = abs(point[2] - r.center[2])
-    dx <= r.size[1] / 2 && dy <= r.size[2] / 2
+    return dx <= r.size[1] / 2 && dy <= r.size[2] / 2
 end
 
 function Base.in(point::AbstractVector, r::Rectangle)
-    Vec2(point...) in r
+    return Vec2(point...) in r
 end
 
 """
@@ -114,7 +114,7 @@ end
 
 # Constructor with default angle
 function Ellipse(center::AbstractVector, a::Real, b::Real, angle::Real=0.0)
-    Ellipse(Vec2(center...), Float64(a), Float64(b), Float64(angle))
+    return Ellipse(Vec2(center...), Float64(a), Float64(b), Float64(angle))
 end
 
 """
@@ -132,11 +132,11 @@ function Base.in(point::Vec2, e::Ellipse)
     dy_rot = -dx * s + dy * c
 
     # Check if inside ellipse (normalized to unit circle)
-    (dx_rot / e.a)^2 + (dy_rot / e.b)^2 <= 1.0
+    return (dx_rot / e.a)^2 + (dy_rot / e.b)^2 <= 1.0
 end
 
 function Base.in(point::AbstractVector, e::Ellipse)
-    Vec2(point...) in e
+    return Vec2(point...) in e
 end
 
 """
@@ -168,7 +168,7 @@ function Base.in(point::Vec2, poly::Polygon)
         end
         j = i
     end
-    inside
+    return inside
 end
 
 # ============================================================================
@@ -193,11 +193,11 @@ Sphere(center::AbstractVector, radius::Real) = Sphere(Vec3(center...), Float64(r
 Check if a point is inside the sphere.
 """
 function Base.in(point::Vec3, s::Sphere)
-    norm(point - s.center) <= s.radius
+    return norm(point - s.center) <= s.radius
 end
 
 function Base.in(point::AbstractVector, s::Sphere)
-    Vec3(point...) in s
+    return Vec3(point...) in s
 end
 
 """
@@ -214,13 +214,15 @@ struct Cylinder <: Shape{Dim3}
 end
 
 function Cylinder(center::Vec3, radius::Real, height::Real, axis::Vec3=Vec3(0, 0, 1))
-    Cylinder(center, Float64(radius), Float64(height), normalize(axis))
+    return Cylinder(center, Float64(radius), Float64(height), normalize(axis))
 end
 
 function Cylinder(
     center::AbstractVector, radius::Real, height::Real, axis::AbstractVector=Vec3(0, 0, 1)
 )
-    Cylinder(Vec3(center...), Float64(radius), Float64(height), normalize(Vec3(axis...)))
+    return Cylinder(
+        Vec3(center...), Float64(radius), Float64(height), normalize(Vec3(axis...))
+    )
 end
 
 """
@@ -238,7 +240,7 @@ function Base.in(point::Vec3, cyl::Cylinder)
     end
     # Check radial distance
     r_vec = d - z * cyl.axis
-    norm(r_vec) <= cyl.radius
+    return norm(r_vec) <= cyl.radius
 end
 
 """
@@ -259,7 +261,7 @@ end
 
 function Slab(z_min::Real, z_max::Real)
     @assert z_min < z_max "z_min must be less than z_max"
-    Slab(Float64(z_min), Float64(z_max))
+    return Slab(Float64(z_min), Float64(z_max))
 end
 
 """
@@ -268,11 +270,11 @@ end
 Check if a point is inside the slab (z_min ≤ z ≤ z_max).
 """
 function Base.in(point::Vec3, slab::Slab)
-    slab.z_min <= point[3] <= slab.z_max
+    return slab.z_min <= point[3] <= slab.z_max
 end
 
 function Base.in(point::AbstractVector, slab::Slab)
-    Vec3(point...) in slab
+    return Vec3(point...) in slab
 end
 
 # ============================================================================
@@ -295,11 +297,11 @@ end
 Check if a point is inside the segment.
 """
 function Base.in(point::Real, seg::Segment)
-    seg.start <= point <= seg.stop
+    return seg.start <= point <= seg.stop
 end
 
 function Base.in(point::Vec1, seg::Segment)
-    point[1] in seg
+    return point[1] in seg
 end
 
 # ============================================================================
@@ -353,7 +355,7 @@ translate(s::Sphere, offset::Vec3) = Sphere(s.center + offset, s.radius)
 translate(s::Sphere, offset::AbstractVector) = translate(s, Vec3(offset...))
 
 function translate(c::Cylinder, offset::Vec3)
-    Cylinder(c.center + offset, c.radius, c.height, c.axis)
+    return Cylinder(c.center + offset, c.radius, c.height, c.axis)
 end
 translate(c::Cylinder, offset::AbstractVector) = translate(c, Vec3(offset...))
 

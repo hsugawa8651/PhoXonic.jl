@@ -79,7 +79,7 @@ function save_bands(
         file["kpoints"] = bands.kpoints
         file["distances"] = bands.distances
         file["labels"] = bands.labels
-        file["metadata"] = meta
+        return file["metadata"] = meta
     end
 
     return filename
@@ -216,7 +216,7 @@ end
 
 # Error fallback for unsupported wave types
 function _save_material_arrays!(file, wave, mats)
-    throw(ArgumentError("Unsupported wave type for save_epsilon: $(typeof(wave))"))
+    return throw(ArgumentError("Unsupported wave type for save_epsilon: $(typeof(wave))"))
 end
 
 # Fallback for all PhotonicWave (TEWave, TMWave, Photonic1D)
@@ -302,7 +302,7 @@ function save_epsilon(
         file["metadata"] = meta
 
         # Save based on wave type (uses multiple dispatch)
-        _save_material_arrays!(file, wave, mats)
+        return _save_material_arrays!(file, wave, mats)
     end
 
     return filename
