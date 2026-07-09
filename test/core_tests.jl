@@ -2007,6 +2007,9 @@
     # Field reconstruction
     include("field_test.jl")
 
+    # (dimension, wave type) coupling and analysis-function dimension guards
+    include("dimension_guards_test.jl")
+
     # Aqua.jl quality checks
     include("aqua_test.jl")
 end
