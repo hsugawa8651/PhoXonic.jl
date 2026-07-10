@@ -33,6 +33,7 @@ makedocs(;
             "Plotting" => "api-plotting.md",
             "I/O" => "api-io.md",
         ],
+        "Architecture" => "architecture.md",
         "Dependencies" => "dependencies.md",
     ],
     # Source links always point to public repo

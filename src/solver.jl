@@ -851,7 +851,11 @@ end
 """
     solve(solver::Solver, k; bands=1:10)
 
-Solve the eigenvalue problem at wave vector k.
+Solve the eigenvalue problem at the single wave vector `k`.
+
+One call yields the frequencies and modes at that one point of the Brillouin
+zone. To obtain a band structure, sweep a path of wave vectors with
+[`compute_bands`](@ref), which calls this function at each of them.
 
 # Arguments
 - `solver`: The solver
@@ -861,6 +865,10 @@ Solve the eigenvalue problem at wave vector k.
 # Returns
 - `frequencies`: Eigenfrequencies (sorted, positive)
 - `modes`: Corresponding eigenvectors
+
+!!! note
+    This is not the `solve(problem, algorithm)` entry point of the SciML idiom.
+    That is a design, and is not part of v0.3.0.
 """
 function solve(solver::Solver, k; bands=1:10)
     return solve_impl(solver, k, solver.method; bands=bands)

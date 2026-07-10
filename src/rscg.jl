@@ -1258,6 +1258,10 @@ end
 
 Compute density of states (DOS) using the specified method.
 
+This form is available for 2D solvers only. In 1D, use
+`compute_dos(solver, ω_values, k_points)`. There is no 3D method, with or without
+an explicit `GFMethod`.
+
 # Methods
 - `DirectGF()`: Dense direct solve (most accurate)
 - `RSKGF()`: Dense RSK with stochastic trace estimation
@@ -1354,6 +1358,11 @@ end
     compute_ldos(solver, position, ω_values, k_points, method::GFMethod; η=1e-3)
 
 Compute local density of states (LDOS) using the specified method.
+
+This form is available for 2D solvers, and in 3D for `MatrixFreeGF()` alone,
+where it also requires a wave type whose right-hand side can be inverted
+(`FullVectorEM` or `FullElastic`, not `TransverseEM`). In 1D, use
+`compute_ldos(solver, position, ω_values, k_points)`.
 
 # Methods
 - `DirectGF()`: Dense direct solve (most accurate, O(N²) memory)
