@@ -28,8 +28,11 @@ G = compute_greens_function(solver, k, ω_values, source, MatrixFreeGF(); η=0.0
 | Method | Memory | Best For | Requires RSK |
 |--------|--------|----------|:------------:|
 | [`DirectGF()`](api-advanced.md#PhoXonic.DirectGF) | O(N²) | Small systems, high accuracy | No |
-| [`RSKGF()`](api-advanced.md#PhoXonic.RSKGF) | O(N²) | Many frequencies, 2D | Yes |
-| [`MatrixFreeGF()`](api-advanced.md#PhoXonic.MatrixFreeGF) | O(N) | Large systems, 2D/3D | Yes |
+| [`RSKGF()`](api-advanced.md#PhoXonic.RSKGF) | O(N²) | Many frequencies | Yes |
+| [`MatrixFreeGF()`](api-advanced.md#PhoXonic.MatrixFreeGF) | O(N) | Large systems | Yes |
+
+Which method a function accepts depends on the dimension; see
+[Dimension Support](#Dimension-Support).
 
 ### DirectGF
 
@@ -82,9 +85,9 @@ CGRHSInv(; atol=1e-10, rtol=1e-10, maxiter=100)
 
 ## Functions
 
-### [compute_greens_function](api-advanced.md#PhoXonic.compute_greens_function)
+### `compute_greens_function`
 
-Compute the Green's function G(ω) = (ω² - H)⁻¹ for multiple frequencies.
+Compute the Green's function G(ω) = (ω² - H)⁻¹ for multiple frequencies ([API reference](api-advanced.md#PhoXonic.compute_greens_function)).
 
 ```julia
 G_values = compute_greens_function(solver, k, ω_values, source, method; η=1e-3)
@@ -95,14 +98,16 @@ G_values = compute_greens_function(solver, k, ω_values, source, method; η=1e-3
 - `k`: Wave vector (e.g., `[0.0, 0.0]`)
 - `ω_values`: Vector of frequencies
 - `source`: Source vector in plane wave basis
-- `method`: `DirectGF()`, `RSKGF()`, or `MatrixFreeGF()`
+- `method`: a [`GFMethod`](api-advanced.md#PhoXonic.GFMethod); which ones are accepted depends on the dimension, see [Dimension Support](#Dimension-Support)
 - `η`: Broadening parameter (imaginary part of ω²)
 
 **Returns:** Vector of Green's function solutions, one for each frequency.
 
-### [compute_ldos](api-advanced.md#PhoXonic.compute_ldos)
+Available in every dimension.
 
-Compute the Local Density of States at a specific position.
+### `compute_ldos`
+
+Compute the Local Density of States at a specific position ([API reference](api-advanced.md#PhoXonic.compute_ldos)).
 
 ```julia
 ldos = compute_ldos(solver, position, ω_values, k_points, method; η=1e-3)
@@ -113,14 +118,16 @@ ldos = compute_ldos(solver, position, ω_values, k_points, method; η=1e-3)
 - `position`: Real-space position (e.g., `[0.5, 0.5]`)
 - `ω_values`: Vector of frequencies
 - `k_points`: Vector of k-points for BZ sampling
-- `method`: `DirectGF()`, `RSKGF()`, or `MatrixFreeGF()`
+- `method`: a [`GFMethod`](api-advanced.md#PhoXonic.GFMethod); 2D only, except [`MatrixFreeGF()`](api-advanced.md#PhoXonic.MatrixFreeGF), which also works in 3D
 - `η`: Broadening parameter
 
 **Returns:** Vector of LDOS values for each frequency.
 
-### [compute_dos](api-advanced.md#PhoXonic.compute_dos)
+In 1D, omit the method: `compute_ldos(solver, position, ω_values, k_points)`.
 
-Compute the Density of States (stochastic trace method for RSKGF/MatrixFreeGF).
+### `compute_dos`
+
+Compute the Density of States (stochastic trace method for RSKGF/MatrixFreeGF) ([API reference](api-advanced.md#PhoXonic.compute_dos)).
 
 ```julia
 dos = compute_dos(solver, ω_values, k_points, method; η=1e-3, n_random=10)
@@ -130,11 +137,14 @@ dos = compute_dos(solver, ω_values, k_points, method; η=1e-3, n_random=10)
 - `solver`: Solver instance
 - `ω_values`: Vector of frequencies
 - `k_points`: Vector of k-points for BZ sampling
-- `method`: `DirectGF()`, `RSKGF()`, or `MatrixFreeGF()`
+- `method`: a [`GFMethod`](api-advanced.md#PhoXonic.GFMethod); 2D only
 - `η`: Broadening parameter
 - `n_random`: Number of random vectors for stochastic trace (RSKGF/MatrixFreeGF only)
 
 **Returns:** Vector of DOS values for each frequency.
+
+In 1D, omit the method: `compute_dos(solver, ω_values, k_points)`. There is no
+three-dimensional `compute_dos`.
 
 ## Examples
 
@@ -178,11 +188,39 @@ ldos_cg = compute_ldos(solver, position, ω_values, k_points,
 
 ## Dimension Support
 
-| Method | 1D | 2D | 3D |
-|--------|:--:|:--:|:--:|
-| [`DirectGF()`](api-advanced.md#PhoXonic.DirectGF) | Yes | Yes | No |
-| [`RSKGF()`](api-advanced.md#PhoXonic.RSKGF) | No | Yes | No |
-| [`MatrixFreeGF()`](api-advanced.md#PhoXonic.MatrixFreeGF) | No | Yes | Yes |
+The three functions do not support the same dimensions, so the table is per
+function rather than per method. Each cell lists the
+[`GFMethod`](api-advanced.md#PhoXonic.GFMethod)s that the function accepts in that
+dimension; ✝ marks a method that further restricts the wave type.
+
+| Function | 1D | 2D | 3D |
+|----------|----|----|----|
+| [`compute_greens_function`](api-advanced.md#PhoXonic.compute_greens_function) | [`DirectGF()`](api-advanced.md#PhoXonic.DirectGF), [`RSKGF()`](api-advanced.md#PhoXonic.RSKGF) | every method | [`DirectGF()`](api-advanced.md#PhoXonic.DirectGF), [`RSKGF()`](api-advanced.md#PhoXonic.RSKGF), [`MatrixFreeGF()`](api-advanced.md#PhoXonic.MatrixFreeGF)✝ |
+| [`compute_dos`](api-advanced.md#PhoXonic.compute_dos) | — (use the three-argument form) | every method | — |
+| [`compute_ldos`](api-advanced.md#PhoXonic.compute_ldos) | — (use the four-argument form) | every method | [`MatrixFreeGF()`](api-advanced.md#PhoXonic.MatrixFreeGF)✝ only |
+
+An explicit [`GFMethod`](api-advanced.md#PhoXonic.GFMethod) is accepted by
+[`compute_dos`](api-advanced.md#PhoXonic.compute_dos) and
+[`compute_ldos`](api-advanced.md#PhoXonic.compute_ldos) only in 2D, and, for
+`compute_ldos`, in 3D with
+[`MatrixFreeGF()`](api-advanced.md#PhoXonic.MatrixFreeGF). In 1D, call them
+without a method:
+
+```julia
+dos = compute_dos(solver, ω_values, k_points)
+ldos = compute_ldos(solver, position, ω_values, k_points)
+```
+
+There is no three-dimensional `compute_dos`, with or without a method. Green's
+functions, by contrast, are available in every dimension.
+
+✝ [`MatrixFreeGF()`](api-advanced.md#PhoXonic.MatrixFreeGF) in 3D needs a wave
+type whose right-hand side can be inverted:
+[`FullVectorEM`](api-solver.md#PhoXonic.FullVectorEM) and
+[`FullElastic`](api-solver.md#PhoXonic.FullElastic), but not
+[`TransverseEM`](api-solver.md#PhoXonic.TransverseEM)
+([issue #72](https://github.com/hsugawa8651/PhoXonic.jl/issues/72)). This applies
+to both marked cells, `compute_greens_function` and `compute_ldos`.
 
 ## See Also
 
