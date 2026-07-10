@@ -30,6 +30,13 @@ ERROR: ArgumentError: Unsupported wave type / dimension combination: TEWave with
 there is nothing for it to solve on a one-dimensional lattice. The same holds for
 every combination absent from the table.
 
+The nine pairs describe [`Solver`](api-solver.md#PhoXonic.Solver), which expands
+the fields in a plane-wave basis. `TMMSolver` is a separate type, outside this
+lattice: it takes a one-dimensional multilayer with `Photonic1D` or
+`Longitudinal1D`, and a transfer matrix rather than a basis. Its entry points are
+`tmm_spectrum` and `tmm_bandstructure`. See
+[Transfer Matrix Method (1D)](tmm.md).
+
 ## Dimension support of the analysis functions
 
 Band structures are available in every dimension. The post-analysis functions are
@@ -38,19 +45,29 @@ because some of them are not implemented yet.
 
 | Function | 1D | 2D | 3D |
 |----------|:--:|:--:|----|
-| [`solve`](api-solver.md#PhoXonic.solve), [`compute_bands`](api-solver.md#PhoXonic.compute_bands) | ✓ | ✓ | ✓ |
+| [`solve`](api-solver.md#PhoXonic.solve) | ✓ | ✓ | ✓ |
+| [`compute_bands`](api-solver.md#PhoXonic.compute_bands) | — | ✓ | ✓ |
 | [`compute_greens_function`](api-advanced.md#PhoXonic.compute_greens_function) | ✓ | ✓ | ✓ |
 | [`compute_dos`](api-advanced.md#PhoXonic.compute_dos) | ✓ | ✓ | — |
 | [`compute_ldos`](api-advanced.md#PhoXonic.compute_ldos) | ✓ | ✓ | [`MatrixFreeGF()`](api-advanced.md#PhoXonic.MatrixFreeGF) only |
 | [`compute_zak_phase`](api-advanced.md#PhoXonic.compute_zak_phase) | ✓ | — | — |
 | [`compute_wilson_spectrum`](api-advanced.md#PhoXonic.compute_wilson_spectrum) | — | ✓ | — |
 
-A dash means the quantity is unavailable, but for two different reasons. The Zak
-phase is a one-dimensional invariant and the Wilson loop spectrum a
+A dash marks a function that cannot be called in that dimension, for three
+different reasons.
+
+The Zak phase is a one-dimensional invariant and the Wilson loop spectrum a
 two-dimensional one, so outside their dimension there is nothing to compute;
-calling them there is a `MethodError`, never a wrong number. A three-dimensional
-[`compute_dos`](api-advanced.md#PhoXonic.compute_dos), by contrast, would be
-meaningful and is simply not implemented.
+calling them there is a `MethodError`, never a wrong number.
+
+A three-dimensional [`compute_dos`](api-advanced.md#PhoXonic.compute_dos), by
+contrast, would be meaningful and is simply not implemented.
+
+[`compute_bands`](api-solver.md#PhoXonic.compute_bands) in 1D is a third case:
+the band structure exists and can be obtained, just not through this function.
+Sweep the wave vectors yourself with [`solve`](api-solver.md#PhoXonic.solve), as
+[`examples/301_bragg_reflector.jl`](https://github.com/hsugawa8651/PhoXonic.jl/blob/main/examples/301_bragg_reflector.jl)
+does, or use `tmm_bandstructure` for a multilayer.
 
 The one conditional cell is
 [`compute_ldos`](api-advanced.md#PhoXonic.compute_ldos) in 3D: it needs
@@ -64,13 +81,17 @@ function accepts in each dimension.
 
 ## Two stages
 
-Every calculation in PhoXonic.jl passes through the same two stages.
+Every plane-wave calculation in PhoXonic.jl passes through the same two stages.
+`TMMSolver` is outside this account: it obtains a dispersion from the trace of a
+transfer matrix, not from an eigenvalue problem, and is described in
+[Transfer Matrix Method (1D)](tmm.md).
 
 **Stage 1, dispersion.** A [`Solver`](api-solver.md#PhoXonic.Solver) assembles the
 eigenvalue problem for a wave type on a geometry, and
-[`solve`](api-solver.md#PhoXonic.solve) or
-[`compute_bands`](api-solver.md#PhoXonic.compute_bands) returns the frequencies
-ω_n(k) and the modes.
+[`solve`](api-solver.md#PhoXonic.solve) returns the frequencies ω_n(k) and the
+modes at one wave vector.
+[`compute_bands`](api-solver.md#PhoXonic.compute_bands) sweeps a path of them, in
+2D and 3D.
 
 **Stage 2, post-analysis.** Everything else consumes the output of stage 1, or
 the operator behind it: the density of states, the local density of states,
