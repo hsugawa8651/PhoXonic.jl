@@ -115,4 +115,49 @@ using ReducedShiftedKrylov  # This triggers the extension loading
 
         @test length(dos_rsk) == length(ω_values)
     end
+
+    @testset "3D: no DOS anywhere, LDOS only for MatrixFreeGF" begin
+        lat3 = cubic_lattice(1.0)
+        geo3 = Geometry(
+            lat3, Dielectric(1.0), [(Sphere([0.5, 0.5, 0.5], 0.2), Dielectric(9.0))]
+        )
+        ω_values = [0.5, 1.0, 1.5]
+        k_points = [[0.1, 0.1, 0.1]]
+        pos = [0.5, 0.5, 0.5]
+
+        s_fv = Solver(FullVectorEM(), geo3, (8, 8, 8), DenseMethod(); cutoff=2)
+        s_te = Solver(TransverseEM(), geo3, (8, 8, 8), DenseMethod(); cutoff=2)
+
+        function failure_message(f)
+            try
+                f()
+            catch e
+                return sprint(showerror, e)
+            end
+            return ""
+        end
+
+        # ReducedShiftedKrylov is loaded in this file, so the error must not ask
+        # the user to load it.
+        for method in (DirectGF(), RSKGF(), MatrixFreeGF())
+            msg = failure_message(() -> compute_dos(s_fv, ω_values, k_points, method))
+            @test occursin("2D solvers only", msg)
+            @test !occursin("requires ReducedShiftedKrylov", msg)
+        end
+
+        msg = failure_message(() -> compute_ldos(s_fv, pos, ω_values, k_points, RSKGF()))
+        @test occursin("MatrixFreeGF() only", msg)
+        @test !occursin("requires ReducedShiftedKrylov", msg)
+
+        # 3D LDOS does exist, with MatrixFreeGF. This is the proof asymmetry.
+        ldos = compute_ldos(s_fv, pos, ω_values, k_points, MatrixFreeGF())
+        @test length(ldos) == length(ω_values)
+        @test all(isfinite, ldos)
+
+        # ... but not for every 3D wave type: TransverseEM has no right-hand-side
+        # inverse, so it reaches the extension method and fails there (#72).
+        @test_throws "TransverseEM" compute_ldos(
+            s_te, pos, ω_values, k_points, MatrixFreeGF()
+        )
+    end
 end

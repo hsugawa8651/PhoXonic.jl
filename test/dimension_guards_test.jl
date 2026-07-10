@@ -83,4 +83,22 @@ using PhoXonic
         @test_throws MethodError compute_dos_stochastic(s3, ω_values, k_points)
         @test_throws MethodError compute_ldos(s3, [0.5, 0.5, 0.5], ω_values, k_points)
     end
+
+    @testset "an unsupported dimension is reported as such" begin
+        s3 = Solver(TransverseEM(), geo3, (8, 8, 8), DenseMethod(); cutoff=2)
+        ω_values = [0.5, 1.0, 1.5]
+        k_points = [[0.1, 0.1, 0.1]]
+
+        # The failure must name the dimension, not blame the algorithm.
+        @test_throws ArgumentError compute_dos(s3, ω_values, k_points, DirectGF())
+        @test_throws "2D solvers only" compute_dos(s3, ω_values, k_points, DirectGF())
+        @test_throws "2D solvers only" compute_dos(s3, ω_values, k_points, RSKGF())
+        @test_throws "MatrixFreeGF() only" compute_ldos(
+            s3, [0.5, 0.5, 0.5], ω_values, k_points, DirectGF()
+        )
+
+        # 1D DOS exists, but only without an explicit GFMethod.
+        s1 = Solver(Photonic1D(), geo1, (64,); cutoff=5)
+        @test_throws "2D solvers only" compute_dos(s1, ω_values, [0.1, 0.2], DirectGF())
+    end
 end

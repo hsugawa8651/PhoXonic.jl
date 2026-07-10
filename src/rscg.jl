@@ -1317,6 +1317,17 @@ function compute_dos(
     η::Real=1e-3,
     n_random::Int=10,
 )
+    if !(solver isa Solver{Dim2})
+        throw(
+            ArgumentError(
+                "compute_dos with an explicit GFMethod is implemented for 2D solvers only. " *
+                "In 1D, use compute_dos(solver, ω_values, k_points). " *
+                "There is no 3D method; Green's functions, by contrast, are " *
+                "dimension-generic (see compute_greens_function).",
+            ),
+        )
+    end
+
     method_name = typeof(method).name.name
     if method_name in (:RSKGF, :MatrixFreeGF)
         throw(
@@ -1406,6 +1417,26 @@ function compute_ldos(
     method::GFMethod;
     η::Real=1e-3,
 )
+    if solver isa Solver{Dim3}
+        if !(method isa MatrixFreeGF)
+            throw(
+                ArgumentError(
+                    "compute_ldos in 3D is implemented for MatrixFreeGF() only; " *
+                    "got $(typeof(method)).",
+                ),
+            )
+        end
+        # MatrixFreeGF in 3D exists in the extension. Reaching here means the
+        # extension is not loaded, so the branch below is the correct message.
+    elseif !(solver isa Solver{Dim2})
+        throw(
+            ArgumentError(
+                "compute_ldos with an explicit GFMethod is implemented for 2D solvers only. " *
+                "In 1D, use compute_ldos(solver, position, ω_values, k_points).",
+            ),
+        )
+    end
+
     method_name = typeof(method).name.name
     if method_name in (:RSKGF, :MatrixFreeGF)
         throw(
