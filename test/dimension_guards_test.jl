@@ -102,6 +102,40 @@ using PhoXonic
         @test_throws "2D solvers only" compute_dos(s1, ω_values, [0.1, 0.2], DirectGF())
     end
 
+    @testset "an odd resolution is a resolution" begin
+        # fftshift puts the zero frequency at N ÷ 2 + 1.  convolution_matrix looked for
+        # it at (N + 1) ÷ 2 + 1, which is the same entry only when N is even.  At an odd
+        # resolution it read the Fourier coefficients one entry off centre, the
+        # convolution matrix stopped being Hermitian, the mass matrix stopped being
+        # positive definite, and solve returned zeros for every band.
+        #
+        # FullVectorEM is left out: it has spurious longitudinal modes at ω ≈ 0 at every
+        # resolution, which is what its recommended `shift` exists to skip, so zeros
+        # there mean nothing about this.
+
+        for (wave, geo, res, k) in (
+            (Photonic1D(), geo1, r -> (r,), 0.3),
+            (TEWave(), geo2, r -> (r, r), [0.1, 0.2]),
+            (TMWave(), geo2, r -> (r, r), [0.1, 0.2]),
+            (SHWave(), geo2_el, r -> (r, r), [0.1, 0.2]),
+            (TransverseEM(), geo3, r -> (r, r, r), [0.1, 0.2, 0.3]),
+        )
+            odd, _ = solve(
+                Solver(wave, geo, res(13), DenseMethod(); cutoff=3), k; bands=1:3
+            )
+            even, _ = solve(
+                Solver(wave, geo, res(14), DenseMethod(); cutoff=3), k; bands=1:3
+            )
+
+            # It used to be [0.0, 0.0, 0.0].
+            @test all(odd .> 1e-6)
+
+            # Two neighbouring resolutions differ by discretization error, not by orders
+            # of magnitude.
+            @test maximum(abs.(odd .- even) ./ even) < 0.2
+        end
+    end
+
     @testset "a wave vector is the same wave vector at every entry point" begin
         # solve and solve_at_k used to accept different shapes of k, in opposite
         # directions, and a shape that matched neither was reported as an unsupported
