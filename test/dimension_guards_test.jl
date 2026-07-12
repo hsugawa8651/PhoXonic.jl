@@ -101,4 +101,108 @@ using PhoXonic
         s1 = Solver(Photonic1D(), geo1, (64,); cutoff=5)
         @test_throws "2D solvers only" compute_dos(s1, ω_values, [0.1, 0.2], DirectGF())
     end
+
+    @testset "a wave vector is the same wave vector at every entry point" begin
+        # solve and solve_at_k used to accept different shapes of k, in opposite
+        # directions, and a shape that matched neither was reported as an unsupported
+        # solver method.  Every shape now reaches every entry point.
+        #
+        # LOBPCGMethod appears in 2D only.  The 1D fixture here has a matrix dimension
+        # of 7, and asking for two bands puts LOBPCG's search block at 3*2 = 6 columns
+        # against those 7 rows.  There it breaks down: it throws, or it returns an
+        # eigenvalue that is not in the spectrum and reports convergence (#95).
+
+        function failure_message(f)
+            try
+                f()
+            catch e
+                return sprint(showerror, e)
+            end
+            return ""
+        end
+
+        @testset "1D: a scalar, a vector and a tuple agree" begin
+            for method in (DenseMethod(), KrylovKitMethod())
+                s = Solver(Photonic1D(), geo1, (16,), method; cutoff=3)
+                scalar, _ = solve(s, 0.3; bands=1:2)
+
+                @test solve(s, [0.3]; bands=1:2)[1] ≈ scalar
+                @test solve(s, (0.3,); bands=1:2)[1] ≈ scalar
+
+                # solve_at_k took a vector, but not a scalar with KrylovKitMethod.
+                @test solve_at_k(s, 0.3, method; bands=1:2) ≈ scalar
+                @test solve_at_k(s, [0.3], method; bands=1:2) ≈ scalar
+                @test solve_at_k(s, (0.3,), method; bands=1:2) ≈ scalar
+            end
+        end
+
+        @testset "2D: an integer Γ, a tuple and a vector agree" begin
+            # Normalization is a type conversion, so a deterministic method returns the
+            # same numbers whichever shape the caller wrote.  The iterative methods
+            # start from random vectors and do not repeat themselves at Γ, where the
+            # lowest TM band sits at zero; for those the point is that the call is
+            # accepted at all.
+            s_dense = Solver(TMWave(), geo2, (16, 16), DenseMethod(); cutoff=3)
+
+            gamma, _ = solve(s_dense, [0.0, 0.0]; bands=1:2)
+            @test solve(s_dense, [0, 0]; bands=1:2)[1] == gamma
+            @test solve_at_k(s_dense, [0, 0], DenseMethod(); bands=1:2) == gamma
+
+            k, _ = solve(s_dense, [0.1, 0.2]; bands=1:2)
+            @test solve(s_dense, (0.1, 0.2); bands=1:2)[1] == k
+            @test solve_at_k(s_dense, (0.1, 0.2), DenseMethod(); bands=1:2) == k
+
+            # _solve_krylovkit asks for a Vector{Float64}.  An integer Γ and a tuple
+            # used to reach it unconverted, or to reach build_matrices, which has no
+            # method for a tuple.
+            for method in (KrylovKitMethod(), LOBPCGMethod())
+                s = Solver(TMWave(), geo2, (16, 16), method; cutoff=3)
+
+                @test length(solve(s, [0, 0]; bands=1:2)[1]) == 2
+                @test length(solve(s, (0.1, 0.2); bands=1:2)[1]) == 2
+                @test length(solve_at_k(s, [0, 0], method; bands=1:2)) == 2
+                @test length(solve_at_k(s, (0.1, 0.2), method; bands=1:2)) == 2
+            end
+        end
+
+        @testset "3D: a tuple and a vector agree" begin
+            # DenseMethod only.  KrylovKitMethod is the matrix-free path, and it has no
+            # operator for TransverseEM, so it throws from inside KrylovKit before the
+            # wave vector matters.  LOBPCGMethod starts from random vectors and does not
+            # repeat itself, which is what the 2D testset above compares against.
+            s = Solver(TransverseEM(), geo3, (8, 8, 8), DenseMethod(); cutoff=2)
+            k, _ = solve(s, [0.1, 0.2, 0.3]; bands=1:2)
+
+            @test solve(s, (0.1, 0.2, 0.3); bands=1:2)[1] ≈ k
+            @test solve_at_k(s, (0.1, 0.2, 0.3), DenseMethod(); bands=1:2) ≈ k
+            @test solve_at_k_with_vectors(s, (0.1, 0.2, 0.3), DenseMethod(); bands=1:2)[1] ≈
+                k
+        end
+
+        @testset "the wrong number of components names the dimension, not the method" begin
+            s1 = Solver(Photonic1D(), geo1, (16,); cutoff=3)
+            s2 = Solver(TMWave(), geo2, (16, 16); cutoff=3)
+            s3 = Solver(TransverseEM(), geo3, (8, 8, 8), DenseMethod(); cutoff=2)
+
+            @test_throws ArgumentError solve(s2, [0.1]; bands=1:1)
+            @test_throws "must have 2 components" solve(s2, [0.1]; bands=1:1)
+            @test_throws "must have 2 components" solve(s2, 0.3; bands=1:1)
+            @test_throws "must have 3 components" solve_at_k(
+                s3, (0.1, 0.2), DenseMethod(); bands=1:1
+            )
+            @test_throws "must be a real number or a 1-element container" solve(
+                s1, [0.1, 0.2]; bands=1:1
+            )
+
+            # The message used to blame the solver method, and then list that same
+            # method among the supported ones.  It must not do that again.
+            for f in (
+                () -> solve(s2, [0.1]; bands=1:1),
+                () -> solve(s1, [0.1, 0.2]; bands=1:1),
+                () -> solve_at_k(s3, (0.1, 0.2), DenseMethod(); bands=1:1),
+            )
+                @test !occursin("Unsupported solver method", failure_message(f))
+            end
+        end
+    end
 end

@@ -106,8 +106,13 @@ using LinearAlgebra
         @test_throws ErrorException solve_at_k_with_vectors(123, k, DenseMethod())
         @test_throws ErrorException solve_at_k_with_vectors("invalid", k, DenseMethod())
 
-        # Invalid k type
-        @test_throws ErrorException solve_at_k_with_vectors(
+        # Invalid k type.  The wave vector is normalized at the entry point, so this
+        # is now an ArgumentError naming the dimension and the accepted shapes,
+        # rather than an ErrorException blaming the solver method.
+        @test_throws ArgumentError solve_at_k_with_vectors(
+            solver_tm, "invalid", DenseMethod()
+        )
+        @test_throws "must have 2 components" solve_at_k_with_vectors(
             solver_tm, "invalid", DenseMethod()
         )
 
