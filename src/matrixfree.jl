@@ -257,8 +257,8 @@ function fourier_to_grid!(
 ) where {T}
     fill!(grid, zero(T))
     Nx, Ny = resolution
-    cx = (Nx + 1) ÷ 2 + 1
-    cy = (Ny + 1) ÷ 2 + 1
+    cx = Nx ÷ 2 + 1
+    cy = Ny ÷ 2 + 1
 
     # Place coefficients in shifted grid (centered at cx, cy)
     for (i, (p, q)) in enumerate(basis.indices)
@@ -283,7 +283,7 @@ function fourier_to_grid!(
 ) where {T}
     fill!(grid, zero(T))
     N = resolution[1]
-    cx = (N + 1) ÷ 2 + 1
+    cx = N ÷ 2 + 1
 
     for (i, (p,)) in enumerate(basis.indices)
         ix = cx + p
@@ -304,9 +304,9 @@ function fourier_to_grid!(
 ) where {T}
     fill!(grid, zero(T))
     Nx, Ny, Nz = resolution
-    cx = (Nx + 1) ÷ 2 + 1
-    cy = (Ny + 1) ÷ 2 + 1
-    cz = (Nz + 1) ÷ 2 + 1
+    cx = Nx ÷ 2 + 1
+    cy = Ny ÷ 2 + 1
+    cz = Nz ÷ 2 + 1
 
     for (i, (p, q, r)) in enumerate(basis.indices)
         ix = cx + p
@@ -334,8 +334,8 @@ function grid_to_fourier!(
     resolution::NTuple{2,Int},
 ) where {T}
     Nx, Ny = resolution
-    cx = (Nx + 1) ÷ 2 + 1
-    cy = (Ny + 1) ÷ 2 + 1
+    cx = Nx ÷ 2 + 1
+    cy = Ny ÷ 2 + 1
 
     # FFT with same convention as convolution_matrix
     grid_fft = fftshift(fft(fftshift(grid))) / (Nx * Ny)
@@ -360,7 +360,7 @@ function grid_to_fourier!(
     resolution::NTuple{1,Int},
 ) where {T}
     N = resolution[1]
-    cx = (N + 1) ÷ 2 + 1
+    cx = N ÷ 2 + 1
 
     grid_fft = fftshift(fft(fftshift(grid))) / N
 
@@ -383,9 +383,9 @@ function grid_to_fourier!(
     resolution::NTuple{3,Int},
 ) where {T}
     Nx, Ny, Nz = resolution
-    cx = (Nx + 1) ÷ 2 + 1
-    cy = (Ny + 1) ÷ 2 + 1
-    cz = (Nz + 1) ÷ 2 + 1
+    cx = Nx ÷ 2 + 1
+    cy = Ny ÷ 2 + 1
+    cz = Nz ÷ 2 + 1
 
     grid_fft = fftshift(fft(fftshift(grid))) / (Nx * Ny * Nz)
 

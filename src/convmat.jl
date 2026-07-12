@@ -28,9 +28,11 @@ function convolution_matrix(f::AbstractMatrix, basis::PlaneWaveBasis{Dim2})
     # fftshift moves zero-frequency to center
     f_fft = fftshift(fft(fftshift(f))) / length(f)
 
-    # Center indices for accessing FFT result
-    cx = (Nx + 1) ÷ 2 + 1
-    cy = (Ny + 1) ÷ 2 + 1
+    # Where fftshift puts the zero frequency.  It is N ÷ 2 + 1, not (N + 1) ÷ 2 + 1:
+    # the two agree only for even N, and for odd N the second is one entry too far,
+    # which reads the wrong Fourier coefficients and leaves C non-Hermitian.
+    cx = Nx ÷ 2 + 1
+    cy = Ny ÷ 2 + 1
 
     # Build convolution matrix
     C = zeros(ComplexF64, N, N)
@@ -67,7 +69,7 @@ function convolution_matrix(f::AbstractVector, basis::PlaneWaveBasis{Dim1})
     f_fft = fftshift(fft(fftshift(f))) / Nx
 
     # Center index
-    cx = (Nx + 1) ÷ 2 + 1
+    cx = Nx ÷ 2 + 1
 
     # Build convolution matrix
     C = zeros(ComplexF64, N, N)
@@ -100,9 +102,9 @@ function convolution_matrix(f::AbstractArray{T,3}, basis::PlaneWaveBasis{Dim3}) 
     f_fft = fftshift(fft(fftshift(f))) / length(f)
 
     # Center indices
-    cx = (Nx + 1) ÷ 2 + 1
-    cy = (Ny + 1) ÷ 2 + 1
-    cz = (Nz + 1) ÷ 2 + 1
+    cx = Nx ÷ 2 + 1
+    cy = Ny ÷ 2 + 1
+    cz = Nz ÷ 2 + 1
 
     # Build convolution matrix
     C = zeros(ComplexF64, N, N)
