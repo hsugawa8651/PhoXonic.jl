@@ -134,6 +134,48 @@ using PhoXonic
             # of magnitude.
             @test maximum(abs.(odd .- even) ./ even) < 0.2
         end
+
+        @testset "the matrix-free path agrees with the dense one" begin
+            # The first fix to this only corrected the centering index, and the tests
+            # for it ran DenseMethod alone.  The matrix-free operator, which is what a
+            # plain KrylovKitMethod() uses, stayed broken at odd resolutions because
+            # fourier_to_grid! and grid_to_fourier! were not inverses of each other.
+            #
+            # TransverseEM is left out: it has no matrix-free operator at all, at any
+            # resolution (#90).
+            for (wave, geo, res, k) in (
+                (Photonic1D(), geo1, r -> (r,), 0.3),
+                (TEWave(), geo2, r -> (r, r), [0.1, 0.2]),
+                (TMWave(), geo2, r -> (r, r), [0.1, 0.2]),
+            )
+                for r in (13, 14)
+                    dense, _ = solve(
+                        Solver(wave, geo, res(r), DenseMethod(); cutoff=3), k; bands=1:3
+                    )
+                    free, _ = solve(
+                        Solver(wave, geo, res(r), KrylovKitMethod(); cutoff=3), k; bands=1:3
+                    )
+                    @test maximum(abs.(free .- dense) ./ dense) < 1e-6
+                end
+            end
+        end
+
+        @testset "the Fourier round trip is the identity" begin
+            # fourier_to_grid! then grid_to_fourier! has to give back what went in.  It
+            # did not at an odd resolution: fftshift is its own inverse only for even N,
+            # and the forward transform used it where ifftshift belongs.
+            for r in (10, 11, 12, 13, 15, 16)
+                basis = Solver(TMWave(), geo2, (r, r); cutoff=3).basis
+                coeffs = randn(ComplexF64, basis.num_pw)
+                grid = zeros(ComplexF64, r, r)
+                back = zeros(ComplexF64, basis.num_pw)
+
+                PhoXonic.fourier_to_grid!(grid, coeffs, basis, (r, r))
+                PhoXonic.grid_to_fourier!(back, grid, basis, (r, r))
+
+                @test maximum(abs.(back .- coeffs)) / maximum(abs.(coeffs)) < 1e-12
+            end
+        end
     end
 
     @testset "a wave vector is the same wave vector at every entry point" begin
