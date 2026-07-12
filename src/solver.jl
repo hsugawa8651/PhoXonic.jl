@@ -845,6 +845,57 @@ function get_weight_matrix(solver::Solver{Dim3,FullElastic})
 end
 
 # ============================================================================
+# Wave vector normalization
+# ============================================================================
+
+# `solve` and `solve_at_k` descend into different stacks, and each used to accept a
+# different set of shapes for `k`.  `solve` took a scalar and a tuple but not a
+# one-element vector in 1D; `solve_at_k` took a vector but not a tuple, and not a
+# scalar when the method was KrylovKitMethod.  A shape that matched neither fell
+# through to a generic fallback that blamed the solver method.
+#
+# Every entry point now normalizes first: a wave vector is a real number in 1D and a
+# `Vector{Float64}` in 2D and 3D, whatever the caller wrote it as.
+
+_kdim(::Solver{Dim1}) = 1
+_kdim(::Solver{Dim2}) = 2
+_kdim(::Solver{Dim3}) = 3
+
+function _k_message(solver::Solver{D}, k) where {D}
+    n = _kdim(solver)
+    got = if k isa Union{Tuple,AbstractVector}
+        "a $(typeof(k)) of length $(length(k))"
+    else
+        "a $(typeof(k))"
+    end
+    n == 1 && return "The wave vector for a $(nameof(D)) solver must be a real number " *
+           "or a 1-element container. Got $got."
+    return "The wave vector for a $(nameof(D)) solver must have $n components. " *
+           "Got $got. Accepted forms: a $n-element vector, a $n-tuple, " *
+           "or an SVector{$n}."
+end
+
+_normalize_k(::Solver{Dim1}, k::Real) = Float64(k)
+
+function _normalize_k(solver::Solver{Dim1}, k::Union{Tuple,AbstractVector})
+    length(k) == 1 || throw(ArgumentError(_k_message(solver, k)))
+    return Float64(first(k))
+end
+
+function _normalize_k(solver::Solver{Dim2}, k::Union{Tuple,AbstractVector})
+    length(k) == 2 || throw(ArgumentError(_k_message(solver, k)))
+    return Float64[k[1], k[2]]
+end
+
+function _normalize_k(solver::Solver{Dim3}, k::Union{Tuple,AbstractVector})
+    length(k) == 3 || throw(ArgumentError(_k_message(solver, k)))
+    return Float64[k[1], k[2], k[3]]
+end
+
+# A scalar in 2D or 3D, or anything that is not a number or a container of numbers.
+_normalize_k(solver::Solver, k) = throw(ArgumentError(_k_message(solver, k)))
+
+# ============================================================================
 # Solve eigenvalue problem
 # ============================================================================
 
@@ -859,7 +910,9 @@ zone. To obtain a band structure, sweep a path of wave vectors with
 
 # Arguments
 - `solver`: The solver
-- `k`: Wave vector (in units of reciprocal lattice vectors or absolute)
+- `k`: Wave vector, with one component per dimension. Write it as a vector, a tuple or
+  an `SVector`; in 1D a bare real number is also accepted. The same shapes work at
+  every entry point and with every solver method.
 - `bands`: Which bands to return (default: 1:10)
 
 # Returns
@@ -871,26 +924,7 @@ zone. To obtain a band structure, sweep a path of wave vectors with
     That is a design, and is not part of v0.3.0.
 """
 function solve(solver::Solver, k; bands=1:10)
-    return solve_impl(solver, k, solver.method; bands=bands)
-end
-
-# Convenience method with SVector
-function solve(solver::Solver{Dim2}, k::SVector{2}; bands=1:10)
-    return solve(solver, Vector(k); bands=bands)
-end
-
-# Convenience method with tuple
-function solve(solver::Solver{Dim2}, k::Tuple{Real,Real}; bands=1:10)
-    return solve(solver, [Float64(k[1]), Float64(k[2])]; bands=bands)
-end
-
-# Convenience methods for 3D
-function solve(solver::Solver{Dim3}, k::SVector{3}; bands=1:10)
-    return solve(solver, Vector(k); bands=bands)
-end
-
-function solve(solver::Solver{Dim3}, k::Tuple{Real,Real,Real}; bands=1:10)
-    return solve(solver, [Float64(k[1]), Float64(k[2]), Float64(k[3])]; bands=bands)
+    return solve_impl(solver, _normalize_k(solver, k), solver.method; bands=bands)
 end
 
 # ============================================================================
@@ -907,7 +941,8 @@ For eigenvectors, use [`solve_at_k_with_vectors`](@ref) instead.
 
 # Arguments
 - `solver::Solver`: Solver instance
-- `k`: Wave vector (2D: Vector{Float64}, 1D: Float64)
+- `k`: Wave vector, with one component per dimension, in 1D, 2D or 3D. Write it as a
+  vector, a tuple or an `SVector`; in 1D a bare real number is also accepted.
 - `method::SolverMethod`: Solver method (DenseMethod, LOBPCGMethod, etc.)
 
 # Keyword Arguments
@@ -945,7 +980,9 @@ See also: [`solve_at_k_with_vectors`](@ref), [`solve`](@ref), [`matrix_dimension
 function solve_at_k(
     solver::Solver, k, method::SolverMethod; bands=1:10, X0=nothing, P=nothing
 )
-    frequencies, _ = _solve_at_k_impl(solver, k, method; bands=bands, X0=X0, P=P)
+    frequencies, _ = _solve_at_k_impl(
+        solver, _normalize_k(solver, k), method; bands=bands, X0=X0, P=P
+    )
     return frequencies
 end
 
@@ -960,7 +997,8 @@ overlaps, mode profiles, or topological invariants).
 
 # Arguments
 - `solver::AbstractSolver`: The solver object
-- `k`: Wave vector (Real for 1D, AbstractVector for 2D/3D)
+- `k`: Wave vector, with one component per dimension, in 1D, 2D or 3D. Write it as a
+  vector, a tuple or an `SVector`; in 1D a bare real number is also accepted.
 - `method::SolverMethod`: Solver method (DenseMethod(), KrylovKitMethod(), LOBPCGMethod())
 
 # Keyword Arguments
@@ -983,7 +1021,9 @@ See also: [`solve_at_k`](@ref), [`get_weight_matrix`](@ref), [`build_matrices`](
 function solve_at_k_with_vectors(
     solver::Solver, k, method::SolverMethod; bands=1:10, X0=nothing, P=nothing
 )
-    frequencies, eigenvectors = _solve_at_k_impl(solver, k, method; bands=bands, X0=X0, P=P)
+    frequencies, eigenvectors = _solve_at_k_impl(
+        solver, _normalize_k(solver, k), method; bands=bands, X0=X0, P=P
+    )
     return (frequencies, eigenvectors)
 end
 
@@ -1147,6 +1187,14 @@ This finds eigenvalues closest to σ, which is useful for:
 - Skipping spurious longitudinal modes in 3D H-field formulation
 - Targeting specific frequency ranges
 =#
+# In 1D the normalized wave vector is a real number, but the KrylovKit core works from
+# a vector of coordinates in every dimension.
+function _solve_krylovkit(
+    solver::Solver{Dim1,W}, k::Real, method::KrylovKitMethod, bands
+) where {W}
+    return _solve_krylovkit(solver, [Float64(k)], method, bands)
+end
+
 function _solve_krylovkit(
     solver::Solver{D,W}, k::Vector{Float64}, method::KrylovKitMethod, bands
 ) where {D,W}
