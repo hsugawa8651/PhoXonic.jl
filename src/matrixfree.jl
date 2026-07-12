@@ -240,7 +240,17 @@ end
 # Fourier space ↔ Grid space conversion
 # ============================================================================
 
-# Use same convention as convolution_matrix: fftshift(fft(fftshift(f)))
+# fourier_to_grid! and grid_to_fourier! must be exact inverses of each other, or the
+# matrix-free operator is not the operator the basis describes.  Starting from
+#
+#     g = fftshift(ifft(ifftshift(G)))
+#
+# and using ifftshift ∘ fftshift = id, the inverse is
+#
+#     G = fftshift(fft(ifftshift(g)))
+#
+# The inner shift is ifftshift, not fftshift.  The two are the same only for even N,
+# which is why every even resolution worked and every odd one did not (#93).
 # For coefficients: place in shifted grid, then ifftshift(ifft(ifftshift))
 
 """
@@ -270,7 +280,7 @@ function fourier_to_grid!(
     end
 
     # Transform to real space: ifftshift, then ifft, then fftshift
-    # This is inverse of: fftshift(fft(fftshift(f))) / N
+    # Inverse of grid_to_fourier!: fftshift(fft(ifftshift(g))) / N
     grid .= fftshift(ifft(ifftshift(grid))) * (Nx * Ny)
     return grid
 end
@@ -338,7 +348,7 @@ function grid_to_fourier!(
     cy = Ny ÷ 2 + 1
 
     # FFT with same convention as convolution_matrix
-    grid_fft = fftshift(fft(fftshift(grid))) / (Nx * Ny)
+    grid_fft = fftshift(fft(ifftshift(grid))) / (Nx * Ny)
 
     for (i, (p, q)) in enumerate(basis.indices)
         ix = cx + p
@@ -362,7 +372,7 @@ function grid_to_fourier!(
     N = resolution[1]
     cx = N ÷ 2 + 1
 
-    grid_fft = fftshift(fft(fftshift(grid))) / N
+    grid_fft = fftshift(fft(ifftshift(grid))) / N
 
     for (i, (p,)) in enumerate(basis.indices)
         ix = cx + p
@@ -387,7 +397,7 @@ function grid_to_fourier!(
     cy = Ny ÷ 2 + 1
     cz = Nz ÷ 2 + 1
 
-    grid_fft = fftshift(fft(fftshift(grid))) / (Nx * Ny * Nz)
+    grid_fft = fftshift(fft(ifftshift(grid))) / (Nx * Ny * Nz)
 
     for (i, (p, q, r)) in enumerate(basis.indices)
         ix = cx + p
