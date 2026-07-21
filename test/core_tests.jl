@@ -2010,6 +2010,9 @@
     # (dimension, wave type) coupling and analysis-function dimension guards
     include("dimension_guards_test.jl")
 
+    # TransverseEM (3D photonic): polarization basis, matrices, solve, FCC
+    include("test_transverse_em.jl")
+
     # Aqua.jl quality checks
     include("aqua_test.jl")
 end
