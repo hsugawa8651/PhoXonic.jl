@@ -92,7 +92,7 @@ using StaticArrays
 
         geo = Geometry(lat, air, [(Sphere([0.0, 0.0, 0.0], 0.2), dielectric),])
 
-        resolution = (4, 4, 4)
+        resolution = (10, 10, 10)
         cutoff = 2
 
         # Need FullVectorEM solver to get basis (TransverseEM not yet implemented)
@@ -126,7 +126,7 @@ using StaticArrays
 
         geo = Geometry(lat, air, [(Sphere([0.0, 0.0, 0.0], 0.2), dielectric),])
 
-        resolution = (4, 4, 4)
+        resolution = (10, 10, 10)
         cutoff = 2
 
         solver = Solver(TransverseEM(), geo, resolution, DenseMethod(); cutoff=cutoff)
@@ -193,7 +193,7 @@ using StaticArrays
 
         geo = Geometry(lat, air, [(Sphere([0.0, 0.0, 0.0], 0.2), dielectric),])
 
-        resolution = (4, 4, 4)
+        resolution = (10, 10, 10)
         cutoff = 2
         solver = Solver(TransverseEM(), geo, resolution, DenseMethod(); cutoff=cutoff)
         N = solver.basis.num_pw
@@ -240,11 +240,18 @@ using StaticArrays
             solver_full = Solver(
                 FullVectorEM(), geo, resolution, DenseMethod(); cutoff=cutoff
             )
-            freqs_full, _ = solve(solver_full, k; bands=1:10)
+            # FullVectorEM carries num_pw spurious longitudinal modes at omega=0,
+            # so the physical modes only begin at index num_pw+1. bands=1:10 never
+            # reached them: the filter came back empty and this comparison asserted
+            # nothing at all. Reach past the longitudinal block.
+            freqs_full, _ = solve(solver_full, k; bands=1:(N + 4))
             freqs_full_physical = filter(f -> f > 0.01, freqs_full)
 
+            # Guard: keep this comparison from silently going vacuous again
+            @test length(freqs_full_physical) >= 4
+
             # First few physical modes should match
-            for i in 1:min(4, length(freqs_full_physical))
+            for i in 1:4
                 @test freqs_trans[i] ≈ freqs_full_physical[i] rtol=0.01
             end
         end
@@ -263,7 +270,7 @@ using StaticArrays
         geo = Geometry(lat, air, [(Sphere([0.0, 0.0, 0.0], 0.25), dielectric),])
 
         # Use moderate resolution for tests
-        resolution = (8, 8, 8)
+        resolution = (18, 18, 18)
         cutoff = 4
 
         solver = Solver(TransverseEM(), geo, resolution, DenseMethod(); cutoff=cutoff)
@@ -310,7 +317,7 @@ using StaticArrays
         k_test = [0.5, 0.25, 0.0]  # General k-point
 
         # Test at different resolutions
-        resolutions = [(4, 4, 4), (6, 6, 6), (8, 8, 8)]
+        resolutions = [(14, 14, 14), (16, 16, 16), (18, 18, 18)]
         cutoff = 3
 
         freqs_at_res = Float64[]
