@@ -130,12 +130,59 @@ end
     end
 
     @testset "Multiphysics actually computes, not just constructs" begin
-        # This is the point of B-14: _get_n reads mat.ε directly, so a
-        # MultiphysicsMaterial stack has to reach the photonic side.
+        # Constructing is not the same as reaching the material. The photonic
+        # side reads mat.ε and the elastic side reads the velocities, so both
+        # paths have to be run, not merely built.
         solver = TMMSolver(Photonic1D(), ml_mp)
         r = tmm_spectrum(solver, 600.0)
         @test r.R >= 0.0
         @test r.T >= 0.0
         @test r.R + r.T + r.A ≈ 1.0 atol = 1e-8
+    end
+end
+
+@testset "Multiphysics through the phononic TMM path" begin
+    # Same materials and geometry as test_phononic.jl, wrapped so that each
+    # region also carries an electromagnetic side. The elastic numbers must not
+    # depend on that wrapping.
+    steel = IsotropicElastic(; ρ=7800.0, λ=115e9, μ=82e9)
+    epoxy = IsotropicElastic(; ρ=1180.0, λ=4.43e9, μ=1.59e9)
+
+    d = 0.001          # 1 mm
+    λ_long = 10 * d    # λ = 10 mm >> d
+
+    mp_steel = MultiphysicsMaterial(Dielectric(11.7), steel)
+    mp_epoxy = MultiphysicsMaterial(Dielectric(3.6), epoxy)
+
+    ml_plain = Multilayer([Layer(steel, d)], epoxy, epoxy)
+    ml_mp = Multilayer([Layer(mp_steel, d)], mp_epoxy, mp_epoxy)
+
+    @testset "tmm_spectrum" begin
+        plain = tmm_spectrum(TMMSolver(Longitudinal1D(), ml_plain), λ_long)
+        mp = tmm_spectrum(TMMSolver(Longitudinal1D(), ml_mp), λ_long)
+
+        @test mp.R ≈ plain.R
+        @test mp.T ≈ plain.T
+        @test mp.R + mp.T + mp.A ≈ 1.0 atol = 1e-8
+    end
+
+    @testset "tmm_bandstructure" begin
+        # A separate entry point, and it reaches the material through its own
+        # code path rather than through system_matrix_acoustic.
+        unit = [Layer(steel, d), Layer(epoxy, 2d)]
+        unit_mp = [Layer(mp_steel, d), Layer(mp_epoxy, 2d)]
+
+        plain = tmm_bandstructure(
+            TMMSolver(Longitudinal1D(), Multilayer(unit, epoxy, epoxy));
+            k_points=5,
+            bands=1:2,
+        )
+        mp = tmm_bandstructure(
+            TMMSolver(Longitudinal1D(), Multilayer(unit_mp, mp_epoxy, mp_epoxy));
+            k_points=5,
+            bands=1:2,
+        )
+
+        @test mp.frequencies ≈ plain.frequencies
     end
 end

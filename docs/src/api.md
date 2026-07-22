@@ -25,6 +25,7 @@ reciprocal_vectors
 ```@docs
 Dielectric
 IsotropicElastic
+MultiphysicsMaterial
 from_E_ν
 ```
 

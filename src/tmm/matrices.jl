@@ -133,6 +133,12 @@ function _get_n(mat::MultiphysicsMaterial)
     return _get_n(mat.photonic)
 end
 
+# Helper function to get the elastic side of a material. The acoustic routines
+# below work on velocities and impedances, which a MultiphysicsMaterial keeps on
+# its elastic half.
+_elastic_of(mat::ElasticMaterial) = mat
+_elastic_of(mat::MultiphysicsMaterial) = mat.elastic
+
 # ============================================================================
 # Phononic (elastic wave) support
 # ============================================================================
@@ -159,6 +165,8 @@ function acoustic_impedance(mat::ElasticVoid)
     c = longitudinal_velocity(mat)
     return ρ * c
 end
+
+acoustic_impedance(mat::MultiphysicsMaterial) = acoustic_impedance(mat.elastic)
 
 """
     acoustic_fresnel(Z1, Z2) -> (r, t)
@@ -199,9 +207,9 @@ Calculate the 2×2 propagation matrix for an elastic layer.
 - `λ`: Wavelength (in physical units matching d)
 """
 function acoustic_propagation_matrix(
-    mat::Union{IsotropicElastic,ElasticVoid}, d::Real, λ::Real
+    mat::Union{ElasticMaterial,MultiphysicsMaterial}, d::Real, λ::Real
 )
-    c = longitudinal_velocity(mat)
+    c = longitudinal_velocity(_elastic_of(mat))
     # Phase: δ = k*d = 2π*d/λ (wavelength in the material)
     # For physical wavelength λ in incident medium, we need λ_mat = λ * c_mat / c_inc
     # But for TMM we use wavelength directly
@@ -219,7 +227,8 @@ Calculate the 2×2 interface matrix for elastic waves.
 - `mat2`: Material on transmitted side
 """
 function acoustic_interface_matrix(
-    mat1::Union{IsotropicElastic,ElasticVoid}, mat2::Union{IsotropicElastic,ElasticVoid}
+    mat1::Union{ElasticMaterial,MultiphysicsMaterial},
+    mat2::Union{ElasticMaterial,MultiphysicsMaterial},
 )
     Z1 = acoustic_impedance(mat1)
     Z2 = acoustic_impedance(mat2)
@@ -239,7 +248,9 @@ Calculate the total transfer matrix for a phononic multilayer structure.
 # Returns
 - 2×2 complex transfer matrix
 """
-function system_matrix_acoustic(ml::Multilayer{<:ElasticMaterial}, λ::Real)
+function system_matrix_acoustic(
+    ml::Multilayer{<:Union{ElasticMaterial,MultiphysicsMaterial}}, λ::Real
+)
     # Start with identity
     M = ComplexF64[1 0; 0 1]
 
