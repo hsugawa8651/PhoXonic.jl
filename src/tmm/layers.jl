@@ -61,16 +61,51 @@ struct Multilayer{M<:Material}
     substrate::M
 end
 
+"""
+    _assert_same_material_class_stack(incident, substrate, layers)
+
+Reject a stack that mixes material classes. Same rule as `Geometry`: a structure has
+to define the same material fields throughout, so that the wave family it is handed
+to finds parameters everywhere.
+"""
+function _assert_same_material_class_stack(incident::Material, substrate::Material, layers)
+    want = _material_class(incident)
+    named = (
+        ("substrate", substrate),
+        (("layer $i", material(l)) for (i, l) in enumerate(layers))...,
+    )
+    for (where, mat) in named
+        cls = _material_class(mat)
+        cls === want && continue
+        throw(
+            ArgumentError(
+                "Cannot mix material classes in one Multilayer: the incident medium " *
+                "is $want ($(nameof(typeof(incident)))), but $where is $cls " *
+                "($(nameof(typeof(mat)))). Use MultiphysicsMaterial to give a layer " *
+                "both electromagnetic and elastic parameters.",
+            ),
+        )
+    end
+    return nothing
+end
+
 # Constructor with automatic type promotion
 function Multilayer(layers::Vector{<:Layer}, incident::Material, substrate::Material)
+    _assert_same_material_class_stack(incident, substrate, layers)
+
     # Promote all materials to common type
     M = promote_type(typeof(incident), typeof(substrate))
     for l in layers
         M = promote_type(M, typeof(material(l)))
     end
 
-    # Convert layers
-    converted_layers = [Layer(convert(M, material(l)), thickness(l)) for l in layers]
+    # Convert layers. The element type has to be Layer{M}, not whatever concrete
+    # type each material happens to have: when M is abstract (a legal mixture such
+    # as IsotropicElastic with ElasticVoid) the inferred Layer{IsotropicElastic}
+    # does not convert to Layer{ElasticMaterial}.
+    converted_layers = Layer{M}[
+        Layer{M}(convert(M, material(l)), thickness(l)) for l in layers
+    ]
 
     return Multilayer{M}(converted_layers, convert(M, incident), convert(M, substrate))
 end

@@ -280,6 +280,42 @@ For Tanaka limit: v_T → ∞ as ρ → 0.
 transverse_velocity(m::ElasticVoid) = sqrt(m.C44 / m.ρ)
 
 # ============================================================================
+# Multiphysics Material
+# ============================================================================
+
+"""
+    MultiphysicsMaterial(photonic, elastic)
+    MultiphysicsMaterial(elastic, photonic)
+
+A material carrying both electromagnetic and elastic parameters, so that one
+`Geometry` can be handed to photonic and phononic wave types alike.
+
+Both argument orders construct the same object: the fields are always stored as
+`photonic` and `elastic`. Two materials of the same family do not construct.
+
+This does not couple the two physics. It only says that both parameter sets are
+defined over the same region; the wave equations remain independent.
+
+# Examples
+
+```julia
+si = MultiphysicsMaterial(
+    Dielectric(11.7),
+    IsotropicElastic(2330.0, 165.7e9, 63.9e9, 79.6e9),
+)
+air_void = MultiphysicsMaterial(Dielectric(1.0), ElasticVoid())
+```
+"""
+struct MultiphysicsMaterial{P<:PhotonicMaterial,E<:ElasticMaterial} <: Material
+    photonic::P
+    elastic::E
+end
+
+# Accept the reversed argument order. PhotonicMaterial and ElasticMaterial are
+# disjoint, so this cannot be ambiguous with the default constructor.
+MultiphysicsMaterial(e::ElasticMaterial, p::PhotonicMaterial) = MultiphysicsMaterial(p, e)
+
+# ============================================================================
 # Type Promotion for Mixed Elastic Materials
 # ============================================================================
 
@@ -290,6 +326,15 @@ Base.promote_rule(::Type{ElasticVoid}, ::Type{IsotropicElastic}) = ElasticMateri
 # Convert to common supertype
 Base.convert(::Type{ElasticMaterial}, x::IsotropicElastic) = x
 Base.convert(::Type{ElasticMaterial}, x::ElasticVoid) = x
+
+# Two multiphysics materials rarely share both parameter types: a void background
+# with a solid inclusion is the ordinary case. Fall back to the abstract type rather
+# than let the default rule drop a type parameter.
+function Base.promote_rule(::Type{<:MultiphysicsMaterial}, ::Type{<:MultiphysicsMaterial})
+    return MultiphysicsMaterial
+end
+
+Base.convert(::Type{MultiphysicsMaterial}, x::MultiphysicsMaterial) = x
 
 # Error fallback for invalid Dielectric constructor arguments
 function Dielectric(args...)

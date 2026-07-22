@@ -249,7 +249,9 @@ function tmm_bandstructure(
     # Estimate ω_max if not provided
     # For phononic crystal, ω ~ c*k, use c_max for upper bound
     if ω_max === nothing
-        c_max = maximum(longitudinal_velocity(layer.material) for layer in ml.layers)
+        c_max = maximum(
+            longitudinal_velocity(_elastic_of(layer.material)) for layer in ml.layers
+        )
         ω_max = 2π * maximum(band_range) / a * c_max * 1.5
     end
 
@@ -286,7 +288,11 @@ end
 Find frequencies where Tr(M_acoustic(ω)) = target for phononic crystals.
 """
 function find_band_frequencies_acoustic(
-    ml::Multilayer{<:ElasticMaterial}, target::Real, nbands::Int, ω_max::Real, a::Real
+    ml::Multilayer{<:Union{ElasticMaterial,MultiphysicsMaterial}},
+    target::Real,
+    nbands::Int,
+    ω_max::Real,
+    a::Real,
 )
     # Number of points to sweep
     nω = 2000
@@ -297,7 +303,8 @@ function find_band_frequencies_acoustic(
     # We need average velocity for wavelength conversion
     c_avg =
         sum(
-            longitudinal_velocity(layer.material) * thickness(layer) for layer in ml.layers
+            longitudinal_velocity(_elastic_of(layer.material)) * thickness(layer) for
+            layer in ml.layers
         ) / a
 
     trace_values = zeros(nω)

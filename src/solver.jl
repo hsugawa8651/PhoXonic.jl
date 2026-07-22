@@ -40,6 +40,36 @@ struct Solver{D<:Dimension,W<:WaveType,M<:SolverMethod} <: AbstractSolver
 end
 
 """
+    _required_material_class(::WaveType) -> Symbol
+
+Which material parameters a wave family needs: `:photonic` or `:elastic`.
+"""
+_required_material_class(::PhotonicWave) = :photonic
+_required_material_class(::PhononicWave) = :elastic
+
+"""
+    _assert_wave_matches_geometry(wave, geometry)
+
+Reject a wave family the geometry has no parameters for, before any material array
+is built. A geometry is class-coherent by construction, so the background speaks for
+all of it. `MultiphysicsMaterial` satisfies either family.
+"""
+function _assert_wave_matches_geometry(wave::WaveType, geometry::Geometry)
+    have = _material_class(geometry.background)
+    have === :multiphysics && return nothing
+    need = _required_material_class(wave)
+    have === need && return nothing
+    return throw(
+        ArgumentError(
+            "$(nameof(typeof(wave))) needs $need material parameters, but this " *
+            "geometry is $have ($(nameof(typeof(geometry.background)))). Build the " *
+            "geometry from $need materials, or from MultiphysicsMaterial to serve " *
+            "both wave families.",
+        ),
+    )
+end
+
+"""
     Solver(wave, geometry, resolution, [method]; cutoff=7, discretization=SimpleGrid())
 
 Create a solver for the given wave type and geometry.
@@ -74,6 +104,7 @@ function Solver(
     cutoff::Int=7,
     discretization::DiscretizationMethod=SimpleGrid(),
 ) where {D<:Dimension,W<:WaveType,N,M<:SolverMethod}
+    _assert_wave_matches_geometry(wave, geometry)
     basis = PlaneWaveBasis(geometry.lattice, cutoff)
     material_arrays = prepare_materials(wave, geometry, resolution, discretization)
     return Solver{D,W,M}(wave, geometry, basis, resolution, material_arrays, method)

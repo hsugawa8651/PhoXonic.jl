@@ -25,6 +25,29 @@ struct TMMSolver{W<:WaveType,M<:Material}
     structure::Multilayer{M}
 end
 
+# Reject a wave family the stack has no parameters for, with the same rule the PWE
+# solver uses. Note the inner constructor must be called by its parametric name:
+# writing TMMSolver(wavetype, structure) here would recurse forever.
+function TMMSolver(wavetype::W, structure::Multilayer{M}) where {W<:WaveType,M<:Material}
+    _assert_wave_matches_stack(wavetype, structure)
+    return TMMSolver{W,M}(wavetype, structure)
+end
+
+function _assert_wave_matches_stack(wave::WaveType, structure::Multilayer)
+    have = _material_class(structure.incident)
+    have === :multiphysics && return nothing
+    need = _required_material_class(wave)
+    have === need && return nothing
+    return throw(
+        ArgumentError(
+            "$(nameof(typeof(wave))) needs $need material parameters, but this " *
+            "multilayer is $have ($(nameof(typeof(structure.incident)))). Build the " *
+            "stack from $need materials, or from MultiphysicsMaterial to serve both " *
+            "wave families.",
+        ),
+    )
+end
+
 """
     TMMResult
 

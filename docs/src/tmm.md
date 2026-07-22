@@ -81,6 +81,11 @@ Supported materials:
 - `Dielectric(ε)` - lossless dielectric
 - `LossyDielectric(ε)` - complex permittivity for absorption
 - `IsotropicElastic(ρ, λ, μ)` - elastic material for phononic waves
+- `MultiphysicsMaterial(photonic, elastic)` - both parameter sets, so one stack
+  serves `Photonic1D` and `Longitudinal1D` alike
+
+All layers of a `Multilayer` have to carry the same kind of material; a stack that
+mixes an electromagnetic layer with an elastic one is rejected at construction.
 
 ### Multilayer
 
