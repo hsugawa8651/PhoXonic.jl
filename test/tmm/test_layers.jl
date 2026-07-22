@@ -40,6 +40,17 @@ end
     @test layers(ml)[2] === layer2
 end
 
+@testset "Multilayer with mixed elastic materials" begin
+    # A solid layer in a void: the ordinary phononic stack, and the mixture
+    # promote_rule has always allowed. It lands on the abstract ElasticMaterial,
+    # which is where the layer element type used to be lost.
+    steel = IsotropicElastic(7800.0, 280e9, 130e9, 75e9)
+    ml = Multilayer([Layer(steel, 1.0)], ElasticVoid(), ElasticVoid())
+
+    @test ml isa Multilayer{ElasticMaterial}
+    @test nlayers(ml) == 1
+end
+
 @testset "Helper functions" begin
     @testset "periodic_multilayer" begin
         air = Dielectric(1.0)

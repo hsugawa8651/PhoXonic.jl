@@ -69,8 +69,13 @@ function Multilayer(layers::Vector{<:Layer}, incident::Material, substrate::Mate
         M = promote_type(M, typeof(material(l)))
     end
 
-    # Convert layers
-    converted_layers = [Layer(convert(M, material(l)), thickness(l)) for l in layers]
+    # Convert layers. The element type has to be Layer{M}, not whatever concrete
+    # type each material happens to have: when M is abstract (a legal mixture such
+    # as IsotropicElastic with ElasticVoid) the inferred Layer{IsotropicElastic}
+    # does not convert to Layer{ElasticMaterial}.
+    converted_layers = Layer{M}[
+        Layer{M}(convert(M, material(l)), thickness(l)) for l in layers
+    ]
 
     return Multilayer{M}(converted_layers, convert(M, incident), convert(M, substrate))
 end
