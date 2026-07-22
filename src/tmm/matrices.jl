@@ -128,6 +128,11 @@ function _get_n(mat::LossyDielectric)
     return sqrt(mat.ε * mat.μ)
 end
 
+function _get_n(mat::MultiphysicsMaterial)
+    # Only the electromagnetic side has a refractive index
+    return _get_n(mat.photonic)
+end
+
 # ============================================================================
 # Phononic (elastic wave) support
 # ============================================================================

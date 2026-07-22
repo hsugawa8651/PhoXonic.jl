@@ -38,6 +38,39 @@ function Geometry(lattice::Lattice{D}, background::M) where {D<:Dimension,M<:Mat
 end
 
 """
+    _material_class(::Material) -> Symbol
+
+Which parameter set a material carries: `:photonic`, `:elastic`, or `:multiphysics`.
+
+A geometry describes which material fields are defined over the whole unit cell, so
+every region has to carry the same set. Note that a legal mixture can still promote
+to an abstract type (`IsotropicElastic` with `ElasticVoid` promotes to
+`ElasticMaterial`), which is why the class is asked of each material separately
+rather than read off the promoted type.
+"""
+_material_class(::PhotonicMaterial) = :photonic
+_material_class(::ElasticMaterial) = :elastic
+_material_class(::MultiphysicsMaterial) = :multiphysics
+
+function _assert_same_material_class(background::Material, inclusions)
+    bg = _material_class(background)
+    for (i, (_, mat)) in enumerate(inclusions)
+        cls = _material_class(mat)
+        cls === bg && continue
+        throw(
+            ArgumentError(
+                "Cannot mix material classes in one Geometry: the background is " *
+                "$bg ($(nameof(typeof(background)))), but inclusion $i is $cls " *
+                "($(nameof(typeof(mat)))). A geometry has to define the same " *
+                "material fields everywhere. Use MultiphysicsMaterial to give a " *
+                "region both electromagnetic and elastic parameters.",
+            ),
+        )
+    end
+    return nothing
+end
+
+"""
     Geometry(lattice, background, inclusions)
 
 Create a geometry with inclusions.
@@ -45,6 +78,7 @@ Create a geometry with inclusions.
 function Geometry(
     lattice::Lattice{D}, background::M, inclusions::Vector{<:Tuple{<:Shape{D},M2}}
 ) where {D,M<:Material,M2<:Material}
+    _assert_same_material_class(background, inclusions)
     # Ensure all materials have compatible types
     MT = promote_type(M, M2)
     incl = Vector{Tuple{Shape{D},MT}}([(s, convert(MT, m)) for (s, m) in inclusions])
@@ -79,6 +113,8 @@ function Geometry(
             )
         end
     end
+    # Dimensions check out; the material field has to be coherent too
+    _assert_same_material_class(background, inclusions)
     # If dimensions all match, use promote_type for mixed materials
     MT = promote_type(M, M2)
     typed_incl = Vector{Tuple{Shape{D},MT}}([(s, convert(MT, m)) for (s, m) in inclusions])
@@ -411,6 +447,21 @@ function get_property(mat::Dielectric, property::Symbol)
         return 1.0 / mat.μ
     else
         error("Unknown property $property for Dielectric")
+    end
+end
+
+# The complete set of properties `discretize` ever asks for, split by family.
+# See src/solver.jl and the discretize calls below: nothing else is requested.
+const _PHOTONIC_PROPERTIES = (:ε, :μ, :ε_inv, :μ_inv)
+const _ELASTIC_PROPERTIES = (:ρ, :C11, :C12, :C44)
+
+function get_property(mat::MultiphysicsMaterial, property::Symbol)
+    if property in _PHOTONIC_PROPERTIES
+        return get_property(mat.photonic, property)
+    elseif property in _ELASTIC_PROPERTIES
+        return get_property(mat.elastic, property)
+    else
+        error("Unknown property $property for MultiphysicsMaterial")
     end
 end
 

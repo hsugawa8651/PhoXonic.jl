@@ -77,3 +77,65 @@ end
         @test thickness(layers(ml)[2]) ≈ d_lo
     end
 end
+
+@testset "Multilayer material-class validation" begin
+    air = Dielectric(1.0)
+    glass = Dielectric(2.25)
+    steel = IsotropicElastic(7800.0, 280e9, 130e9, 75e9)
+    epoxy = IsotropicElastic(1180.0, 7.61e9, 4.43e9, 1.59e9)
+
+    mp_air = MultiphysicsMaterial(air, ElasticVoid())
+    mp_glass = MultiphysicsMaterial(glass, steel)
+
+    @testset "Coherent stacks are accepted" begin
+        @test Multilayer([Layer(glass, 100.0)], air, air) isa Multilayer
+        @test Multilayer([Layer(steel, 1.0)], epoxy, epoxy) isa Multilayer
+        @test Multilayer([Layer(mp_glass, 100.0)], mp_air, mp_air) isa Multilayer
+    end
+
+    @testset "Mixed classes are rejected" begin
+        @test_throws ArgumentError Multilayer([Layer(steel, 1.0)], air, air)
+        @test_throws ArgumentError Multilayer([Layer(glass, 100.0)], epoxy, epoxy)
+        @test_throws ArgumentError Multilayer([Layer(mp_glass, 100.0)], air, air)
+    end
+end
+
+@testset "TMMSolver wave/material compatibility" begin
+    air = Dielectric(1.0)
+    glass = Dielectric(2.25)
+    steel = IsotropicElastic(7800.0, 280e9, 130e9, 75e9)
+    epoxy = IsotropicElastic(1180.0, 7.61e9, 4.43e9, 1.59e9)
+
+    ml_ph = Multilayer([Layer(glass, 100.0)], air, air)
+    ml_el = Multilayer([Layer(steel, 1.0)], epoxy, epoxy)
+    ml_mp = Multilayer(
+        [Layer(MultiphysicsMaterial(glass, steel), 100.0)],
+        MultiphysicsMaterial(air, ElasticVoid()),
+        MultiphysicsMaterial(air, ElasticVoid()),
+    )
+
+    @testset "Matching families construct" begin
+        @test TMMSolver(Photonic1D(), ml_ph) isa TMMSolver
+        @test TMMSolver(Longitudinal1D(), ml_el) isa TMMSolver
+    end
+
+    @testset "Multiphysics serves either family" begin
+        @test TMMSolver(Photonic1D(), ml_mp) isa TMMSolver
+        @test TMMSolver(Longitudinal1D(), ml_mp) isa TMMSolver
+    end
+
+    @testset "Mismatched families are rejected" begin
+        @test_throws ArgumentError TMMSolver(Photonic1D(), ml_el)
+        @test_throws ArgumentError TMMSolver(Longitudinal1D(), ml_ph)
+    end
+
+    @testset "Multiphysics actually computes, not just constructs" begin
+        # This is the point of B-14: _get_n reads mat.ε directly, so a
+        # MultiphysicsMaterial stack has to reach the photonic side.
+        solver = TMMSolver(Photonic1D(), ml_mp)
+        r = tmm_spectrum(solver, 600.0)
+        @test r.R >= 0.0
+        @test r.T >= 0.0
+        @test r.R + r.T + r.A ≈ 1.0 atol = 1e-8
+    end
+end

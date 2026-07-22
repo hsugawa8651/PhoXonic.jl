@@ -70,6 +70,7 @@ export reciprocal_vectors
 # Exports - Materials
 export Material, PhotonicMaterial, ElasticMaterial
 export Dielectric, LossyDielectric, IsotropicElastic, ElasticVoid, from_E_ν
+export MultiphysicsMaterial
 export permittivity, permeability, refractive_index
 export density, shear_modulus, transverse_velocity, longitudinal_velocity
 
