@@ -23,13 +23,21 @@ result = tmm_spectrum(solver, 600.0)
 struct TMMSolver{W<:WaveType,M<:Material}
     wavetype::W
     structure::Multilayer{M}
+
+    # Reject a wave family the stack has no parameters for, with the same rule the PWE
+    # solver uses. The check lives in an inner constructor so that no default outer
+    # constructor is generated: an outer `TMMSolver(::W, ::Multilayer{M})` would carry
+    # the same signature as the generated one and overwrite it, which is an error while
+    # a module is being precompiled (it broke the Plots and RecipesBase extensions).
+    function TMMSolver{W,M}(
+        wavetype::W, structure::Multilayer{M}
+    ) where {W<:WaveType,M<:Material}
+        _assert_wave_matches_stack(wavetype, structure)
+        return new{W,M}(wavetype, structure)
+    end
 end
 
-# Reject a wave family the stack has no parameters for, with the same rule the PWE
-# solver uses. Note the inner constructor must be called by its parametric name:
-# writing TMMSolver(wavetype, structure) here would recurse forever.
 function TMMSolver(wavetype::W, structure::Multilayer{M}) where {W<:WaveType,M<:Material}
-    _assert_wave_matches_stack(wavetype, structure)
     return TMMSolver{W,M}(wavetype, structure)
 end
 
